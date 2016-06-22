@@ -1,7 +1,7 @@
 <?php
-if ( ! class_exists( 'TMSConnect' ) ) {
+if ( ! class_exists( 'TMSC' ) ) {
 
-	class TMSConnect {
+	class TMSC {
 
 		private static $instance;
 
@@ -18,7 +18,7 @@ if ( ! class_exists( 'TMSConnect' ) ) {
 
 		public static function instance() {
 			if ( ! isset( self::$instance ) ) {
-				self::$instance = new TMSConnect();
+				self::$instance = new TMSC();
 				self::$instance->setup();
 			}
 			return self::$instance;
@@ -30,7 +30,7 @@ if ( ! class_exists( 'TMSConnect' ) ) {
 	}
 }
 
-function TMSConnect() {
-	return TMSConnect::instance();
+function TMSC() {
+	return TMSC::instance();
 }
-add_action( 'after_setup_theme', 'TMSConnect' );
+add_action( 'after_setup_theme', 'TMSC' );
