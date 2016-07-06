@@ -1,0 +1,4 @@
+{
+	"object_types": ["tms_object"],
+	"rewrite": {"with_front": false}
+}

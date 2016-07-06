@@ -47,13 +47,13 @@ if ( ! class_exists( 'TMSC_Plugin_Dependency' ) ) {
 		 */
 		public function verify() {
 			$plugin_uri = $this->info();
-			if( false === $plugin_uri ) {
+			if ( false === $plugin_uri ) {
 				// The plugin is not installed. Display the appropriate message and return false.
 				$this->verify_message = $this->install_message();
 				return false;
 			} else {
 				// Determine if the plugin is active
-				if( ! is_plugin_active( $plugin_uri ) ) {
+				if ( ! is_plugin_active( $plugin_uri ) ) {
 					// The plugin is not active. Display the appropriate message and return false.
 					$this->verify_message = $this->activate_message();
 					return false;
@@ -146,8 +146,8 @@ if ( ! class_exists( 'TMSC_Plugin_Dependency' ) ) {
 		 * @return mixed
 		 */
 		private function info() {
-			foreach( $this->installed_plugins as $plugin_url => $plugin_data ) {
-				if( $this->dependency_name == $plugin_data['Name'] ) {
+			foreach ( $this->installed_plugins as $plugin_url => $plugin_data ) {
+				if ( $this->dependency_name == $plugin_data['Name'] ) {
 					return $plugin_url;
 				}
 			}

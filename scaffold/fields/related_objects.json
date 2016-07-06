@@ -1,0 +1,22 @@
+{
+  "name": "related_objects",
+  "contexts": [
+    {
+      "type": "post",
+      "post_types": [ "tms_object" ],
+      "title": { "__": "Related Records" }
+    }
+  ],
+  "limit": 0,
+  "label": "TMS Object Name",
+  "add_more_label": { "__": "Add another object" },
+  "type": "autocomplete",
+  "datasource": {
+    "type": "post",
+    "query_args": {
+      "post_type": [
+        "tms_object"
+      ]
+    }
+  }
+}
