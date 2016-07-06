@@ -1,0 +1,16 @@
+{
+  "version": "0.4.1",
+  "cpt:tms_object": "63e676e0c0be1fd7c1778fd58a36a398",
+  "tax:catalog": "531a8d08a0bce81acdecfd973242c154",
+  "tax:classification": "8937bbeaa9fd5b62399caf5662845002",
+  "tax:constituent": "82873d70c9d9f50d4c970699a7f972eb",
+  "tax:period": "e56527e47dcda6b9d3c812a4e257d836",
+  "tax:exhibition": "5e1cb648dae645f9c73a7fcf2838ef10",
+  "tax:collection": "86601f9602a0819b924ef57828872c27",
+  "tax:reference": "9a654161a5e5609542880029928a85f1",
+  "tax:maker": "d9fe78abbd7fb11bdcebac454905e1b2",
+  "tax:location": "ac40d49dc2f5e1b422ce0e07c4adb17e",
+  "tax:material": "f8c79d5acf989bad8c034229db7259c5",
+  "tax:geography": "9e1e63b3e6f20612faed98386dc05210",
+  "fm:related_objects": "61d38c057acfe32d86f4a5d7e55c4f63"
+}
