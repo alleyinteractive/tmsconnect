@@ -36,6 +36,9 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-maker.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-material.php' );
 
+	// TMSC Sync Class
+	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-object-sync.php' );
+
 	// Metabox FM Fields
 	require_once( TMSCONNECT_PATH . '/inc/fields.php' );
 

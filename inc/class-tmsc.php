@@ -58,6 +58,14 @@ if ( ! class_exists( 'TMSC' ) ) {
 			add_action( 'zoninator_post_init', array( $this, 'zoninator_post_type_support' ), 99 );
 			add_filter( 'zoninator_recent_posts_args', array( $this, 'filter_zone_post_types' ) );
 			add_filter( 'zoninator_search_args', array( $this, 'filter_zone_post_types' ) );
+
+			// Add in our sync options page
+			if ( function_exists( 'fm_register_submenu_page' ) ) {
+				if ( current_user_can( 'manage_options' ) ) {
+					fm_register_submenu_page( 'tmsc_guide_terms', 'edit.php?post_type=tms_object', __( 'Sync Guide Terms', 'tmsc' ) );
+				}
+			}
+			add_action( 'fm_submenu_tmsc_guide_terms', array( $this, 'sync_init' ) );
 		}
 
 		/**
@@ -96,6 +104,33 @@ if ( ! class_exists( 'TMSC' ) ) {
 			}
 
 			return $args;
+		}
+
+		/**
+		 * Generate our sync options admin area.
+		 *
+		 */
+		public function sync_init() {
+			$fm = new Fieldmanager_Group( array(
+				'name' => 'tmsc_guide_terms',
+				'children' => array(
+					'term' => new Fieldmanager_Group( array(
+						'description' => __( 'Use the CN number of the guide terms that should serve as parent taxonomies', 'tmsc' ),
+						'collapsible' => true,
+						'label' => __( 'Guide Terms', 'tmsc' ),
+						'children' => array(
+							'data' => new Fieldmanager_Group( array(
+								'limit' => 0,
+								'add_more_label' => __( 'Add another guide term', 'tmsc' ),
+								'children' => array(
+									'CN' => new Fieldmanager_Textfield( __( 'Guide Term CN', 'tmsc' ) ),
+								),
+							) ),
+						),
+					) ),
+				),
+			) );
+			$fm->activate_submenu_page();
 		}
 	}
 }
