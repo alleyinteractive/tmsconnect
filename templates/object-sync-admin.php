@@ -8,19 +8,27 @@
 				<input type="text" id="tmsc-db-host" name="tmsc-db-host" value="<?php echo esc_attr( get_option( 'tmsc-db-host', '' ) ); ?>" class="regular-text code">
 			</p>
 			<p>
-				<label for="tmsc-ids-image-url"><?php esc_html_e( 'IDS Image URL: ', 'tmsc' );?></label>
-				<input type="text" id="tmsc-ids-image-url" name="tmsc-ids-image-url" value="<?php echo esc_url( get_option( 'tmsc-ids-image-url', 'http://ids.si.edu/ids/deliveryService' ) ); ?>" class="regular-text code">
+				<label for="tmsc-db-name"><?php esc_html_e( 'Database Name: ', 'tmsc' );?></label>
+				<input type="text" id="tmsc-db-name" name="tmsc-db-name" value="<?php echo esc_attr( get_option( 'tmsc-db-name', '' ) ); ?>" class="regular-text code">
 			</p>
 			<p>
-				<label for="tmsc-full-sync"><?php esc_html_e( 'Full Sync: ', 'tmsc' );?></label>
-				<input type="checkbox" id="tmsc-full-sync" name="tmsc-full-sync" value="true">
+				<label for="tmsc-db-user"><?php esc_html_e( 'Database User: ', 'tmsc' );?></label>
+				<input type="text" id="tmsc-db-user" name="tmsc-db-user" value="<?php echo esc_attr( get_option( 'tmsc-db-user', '' ) ); ?>" class="regular-text code">
+			</p>
+			<p>
+				<label for="tmsc-db-password"><?php esc_html_e( 'Database Password: ', 'tmsc' );?></label>
+				<input type="password" id="tmsc-db-password" name="tmsc-db-password" value="<?php echo esc_attr( get_option( 'tmsc-db-password', '' ) ); ?>" class="regular-text code">
+			</p>
+			<p>
+				<label for="tmsc-image-url"><?php esc_html_e( 'Image Delivery System URL: ', 'tmsc' );?></label>
+				<input type="text" id="tmsc-image-url" name="tmsc-image-url" value="<?php echo esc_url( get_option( 'tmsc-ids-image-url', 'http://ids.si.edu/ids/deliveryService' ) ); ?>" class="regular-text code">
 			</p>
 			<p>
 				<input type="submit" name="tmsc-sync-button" id="tmsc-sync-button" class="button button-primary" value="<?php esc_attr_e( 'Sync Objects', 'tpg' ); ?>">
 			</p>
 			<p>
 				<?php wp_nonce_field( 'tmsc_object_sync', 'tmsc_nonce' ); ?>
-				<input type="hidden" name="action" value="sync_tmsc_objects"/>
+				<input type="hidden" name="action" value="sync_objects"/>
 				<?php $last_update = get_option( 'tmsc-last-sync-date' ); ?>
 				<input type="hidden" name="tmsc-last-updated-value" id="tmsc-last-updated-value" value="<?php echo esc_attr( $last_update ); ?>"/>
 				<div class="text-muted">

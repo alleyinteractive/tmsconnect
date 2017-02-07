@@ -1,0 +1,2 @@
+# Database Processors
+This folder contains the database sytems processors for connecting to a museum system. Originally buit for Freer & Sacklers TMS MySQL Database, this code can be adapted to any museum system by creating the corresponding system classes found in the systems subdirectory.
