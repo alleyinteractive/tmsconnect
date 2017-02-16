@@ -1,6 +1,6 @@
 <?php
 namespace TMSC\Database\Systems\Freer_Sackler;
-abstract class Freer_Sackler_Processor extends \TMSC\Database\MySQL_Processor {
+class Freer_Sackler_Processor extends \TMSC\Database\MySQL_Processor {
 	/**
 	 * Holds the URL of the current site being migrated
 	 * @var string
@@ -11,11 +11,8 @@ abstract class Freer_Sackler_Processor extends \TMSC\Database\MySQL_Processor {
 	 * Constructor
 	 * @param string $url
 	 */
-	public function __construct( $url ) {
+	public function __construct() {
 		parent::__construct();
-
-		// Set the URL of the site
-		$this->url = $url;
 
 		// Set the batch query to get the next result set, required by MySQLProcessor
 		$this->set_batch_query( 'SELECT * FROM XXX' );

@@ -9,6 +9,8 @@ class TMSC {
 	// The default zones we load objects into
 	public $default_zones = array();
 
+	public $processors = array();
+
 	/**
 	 * Constructor
 	 *
@@ -67,6 +69,18 @@ class TMSC {
 			}
 		}
 		add_action( 'fm_submenu_tmsc_guide_terms', array( $this, 'sync_init' ) );
+	}
+
+	/**
+	 * Keep track of our custom DB system processors.
+	 * @param string. $name. Namespaced class name.
+	 * @return void.
+	 */
+	public function register_processor( $name = '' ) {
+		if ( ! empty( $name ) ) {
+			self::$instance->processors[ $name ] = array( $name );
+		}
+		return self::$instance->processors;
 	}
 
 	/**
@@ -132,5 +146,207 @@ class TMSC {
 			),
 		) );
 		$fm->activate_submenu_page();
+	}
+
+	/**
+	 * Migrate a batch of objects.
+	 *
+	 */
+	public function migrate( $args = array(), $assc_args = array() ) {
+		if ( ! defined( 'WP_IMPORTING' ) ) {
+			define( 'WP_IMPORTING', true );
+		}
+
+		$dry = ( ! empty( $assc_args['dry'] ) );
+		$cursor = ( ! empty( $assc_args['start'] ) ) ? $assc_args['start'] : false;
+		$batch_size = ( ! empty( $assc_args['batch'] ) ) ? $assc_args['batch'] : false;
+
+		$short_name = array_shift( $args );
+		$processor = self::$instance->get_processor( $short_name );
+		$processor->set_dry_run( $dry );
+
+		/*
+		self::$instance->set_processor_opts( $processor, $assc_args );
+
+		if ( $batch_size ) {
+			$processor->set_batch_size( $batch_size );
+		}
+		*/
+		/*
+		if ( $cursor ) {
+			$old_cursor = $processor->get_cursor();
+			$cursor = array_merge( $processor->get_starting_cursor(), $processor->parse_cursor( $cursor ) );
+			$processor->set_cursor( $cursor );
+		}
+
+		if ( ! $processor->is_finished() ) {
+			$processor->run();
+		}
+
+		if ( $cursor ) {
+			$processor->set_cursor( $old_cursor );
+		}*/
+	}
+
+	/**
+	 * Export information for one item. This subcommand is incomplete.
+	 */
+	public function describe( $args = array(), $assc_args = array() ) {
+		$short_name = array_shift( $args );
+		$processor = self::$instance->get_processor( $short_name );
+	}
+
+	/**
+	 * Migrate all objects.
+	 */
+	public function migrate_all( $args = array(), $assc_args = array() ) {
+		if ( ! defined( 'WP_IMPORTING' ) ) {
+			define( 'WP_IMPORTING', true );
+		}
+
+		$dry = ! empty( $assc_args['dry'] );
+		foreach ( self::$instance->processors( $args ) as $processor ) {
+			self::$instance->set_processor_opts( $processor, $assc_args );
+			while ( ! $processor->is_finished() ) {
+				$processor->run();
+				tmsc_stop_the_insanity();
+			}
+		}
+	}
+
+	/**
+	 * Apply a function to all post_meta matching the given key and update the
+	 * meta value with the return value of the function.
+	 */
+	public function filter_post_meta( $args = array() ) {
+		global $wpdb;
+		$meta_key = array_shift( $args );
+		$function = array_shift( $args );
+		if ( is_callable( $function ) ) {
+			$ids = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT post_id, meta_value from {$wpdb->postmeta} WHERE meta_key = %s",
+					$meta_key
+				)
+			);
+			foreach ( $ids as $meta ) {
+				$new_value = call_user_func_array( $function, array( $meta->post_id, $meta_key, $meta->meta_value ) );
+				update_post_meta( $meta->post_id, $meta_key, $new_value, $meta->meta_value );
+			}
+		}
+	}
+
+	/**
+	 * Reset the processor's or processors' cursor(s) to the starting point.
+	 *
+	 */
+	public function rewind( $args = array() ) {
+		foreach ( self::$instance->processors( $args ) as $processor ) {
+			$processor->rewind();
+		}
+	}
+
+	/**
+	 * Clean this site of all AMT-migrated content and rewind the
+	 * processor's/processors' cursor(s). Sometimes you just need to start
+	 * fresh.
+	 */
+	public function clean( $args = array() ) {
+		global $_wp_using_ext_object_cache;
+
+		foreach ( self::$instance->processors( $args ) as $processor ) {
+			$processor->clean();
+		}
+
+		// Flush all transients
+		if ( $_wp_using_ext_object_cache ) {
+			// WP_CLI::run_command( array( 'cache', 'flush' ) );
+		} else {
+			// WP_CLI::run_command( array( 'transient', 'delete' ), array( 'all' => true ) );
+		}
+	}
+
+	/**
+	 * Empty TMSC's cache. This is primarily used for caching attachments.
+	 *
+	 */
+	public function cache_clean() {
+		tnsc_cache_clean();
+	}
+
+	/**
+	 * Show a list of processors.
+	 *
+	 */
+	public function list_processors( $args = array(), $assoc_args = array() ) {
+		$processors = self::$instance->register_processor();
+		$keys = array( 'Name', 'Class', 'Description' );
+		foreach ( $processors as &$processor ) {
+			$processor = array_combine( $keys, $processor );
+		}
+
+		$formatter = new \WP_CLI\Formatter( $assoc_args, $keys );
+		$formatter->display_items( $processors );
+	}
+
+	/**
+	 * Update term counts for the site.
+	 *
+	 * TMSC disables term counts throughout the migration process to improve
+	 * performance. This command must be run after a migration to ensure that
+	 * all term functions work properly.
+	 *
+	 */
+	public function update_term_count() {
+		tmsc_update_term_count();
+	}
+
+	/**
+	 * Helper function to load the referenced processor
+	 */
+	private function get_processor( $processor ) {
+		$message = __( 'Error: Cannot get DB Processor', 'tmsc' );
+		if ( empty( $processor ) ) {
+			self::$instance->set_sync_status( $message );
+			exit;
+		}
+
+		$processors = self::$instance->register_processor( $processor );
+
+		if ( empty( $processors[ $processor ] ) ) {
+			self::$instance->set_sync_status( $message );
+			exit;
+		}
+
+		$class = $processors[ $processor ][0];
+
+		if ( ! class_exists( $class ) ) {
+			self::$instance->set_sync_status( $message );
+			exit;
+		}
+
+		return new $class;
+	}
+
+	/**
+	 * Helper function to get an array of processors from passed arguments
+	 */
+	private function processors( $args ) {
+		if ( count( $args ) !== 0 && count( $args ) === 1 && 'all' === $args[0] ) {
+			$args = array_keys( self::$instance->register_processor() );
+		}
+
+		$ret = array();
+		foreach ( $args as $arg ) {
+			$ret[] = self::$instance->get_processor( $arg );
+		}
+		return $ret;
+	}
+
+	private function set_processor_opts( $processor, $assc_args ) {
+		// Let the processor decide what to do with each arg
+		foreach ( $assc_args as $condition => $value ) {
+			$processor->add_condition( $condition, $value );
+		}
 	}
 }

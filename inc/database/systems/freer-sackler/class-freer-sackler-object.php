@@ -10,7 +10,7 @@ class Freer_Sackler_Object extends \TMSC\Database\TMSC_Object {
 	/**
 	 * Constructor
 	 * @param stdClass $content
-	 * @param \TMSC\Database\MySQL\Joomla\JoomlaPostProcessor $processor
+	 * @param \TMSC\Database\Systems\Freer_Sackler $processor
 	 */
 	public function __construct( $content, $processor ) {
 		$this->raw = $content;

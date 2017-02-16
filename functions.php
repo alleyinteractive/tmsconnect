@@ -12,16 +12,18 @@ function tmsc_stop_the_insanity() {
 	$wpdb->queries = array(); // or define( 'WP_IMPORTING', true );
 	$wp_actions = array();
 
-	if ( !is_object( $wp_object_cache ) )
+	if ( ! is_object( $wp_object_cache ) ) {
 		return;
+	}
 
 	$wp_object_cache->group_ops = array();
 	$wp_object_cache->stats = array();
 	$wp_object_cache->memcache_debug = array();
 	$wp_object_cache->cache = array();
 
-	if( is_callable( $wp_object_cache, '__remoteset' ) )
+	if( is_callable( $wp_object_cache, '__remoteset' ) ) {
 		$wp_object_cache->__remoteset(); // important
+	}
 }
 
 /**
@@ -50,18 +52,10 @@ function tmsc_get_mapping( $type, $term, $find_dest = false ) {
 }
 
 /**
- * Register a custom processor with AMT
+ * Register a custom processor with TMSC
  */
 function tmsc_register_processor( $classname = null ) {
-	static $classes;
-	if ( !$classes ) {
-		$classes = array();
-	}
-	if ( !$classname ) {
-		return $classes;
-	}
-
-	$classes[ $classname::NAME ] = array( $classname::NAME, $classname, $classname::DESCRIPTION );
+	return \TMSC\TMSC::instance()->register_processor( $classname );
 }
 
 /*

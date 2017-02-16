@@ -24,7 +24,7 @@
 				<input type="text" id="tmsc-image-url" name="tmsc-image-url" value="<?php echo esc_url( get_option( 'tmsc-ids-image-url', 'http://ids.si.edu/ids/deliveryService' ) ); ?>" class="regular-text code">
 			</p>
 			<p>
-				<input type="submit" name="tmsc-sync-button" id="tmsc-sync-button" class="button button-primary" value="<?php esc_attr_e( 'Sync Objects', 'tpg' ); ?>">
+				<input type="submit" name="tmsc-sync-button" id="tmsc-sync-button" class="button button-primary" value="<?php esc_attr_e( 'Sync Objects', 'tmsc' ); ?>">
 			</p>
 			<p>
 				<?php wp_nonce_field( 'tmsc_object_sync', 'tmsc_nonce' ); ?>

@@ -37,11 +37,11 @@ class Object_Sync {
 	}
 
 	public function __clone() {
-		wp_die( "Please don't __clone TMSC_2016_Cards_Sync" );
+		wp_die( "Please don't __clone \TMSC\Object_Sync" );
 	}
 
 	public function __wakeup() {
-		wp_die( "Please don't __wakeup TMSC_2016_Cards_Sync" );
+		wp_die( "Please don't __wakeup \TMSC\Object_Sync" );
 	}
 
 	public static function instance() {
@@ -71,6 +71,7 @@ class Object_Sync {
 			// Our Admin Area Menu
 			add_action( 'admin_menu', array( self::$instance, 'add_menu_pages' ) );
 			add_action( 'wp_ajax_sync_objects', array( self::$instance, 'sync_objects' ) );
+			add_action( 'wp_ajax_get_option_value', array( self::$instance, 'ajax_get_option_value' ) );
 		}
 	}
 
@@ -119,12 +120,39 @@ class Object_Sync {
 				update_option( 'tmsc-image-url', $url, false );
 				self::$image_url = $url;
 			}
-
-			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
+			/**
+			 * Uncomment the schedule event function and comment the object sync function to enable asynchronous sync.
+			 */
+			self::$instance->object_sync();
+			// wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 			echo 1;
 		} else {
 			echo 0;
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'tmsc' ) );
+		}
+		exit();
+	}
+
+	/**
+	 * A generic ajax responder that spits back a option value or returns a boolean if a comparison value is passed.
+	 */
+	public function ajax_get_option_value() {
+		check_ajax_referer( 'wp_admin_js_script', 'nonce' );
+		if ( ! empty( $_POST['option_key'] ) ) {
+			// If an old value is passed, return success only if it is different from the current value.
+			// This can be used for asynchrounous checks.
+			$current_value = get_option( sanitize_key( $_POST['option_key'] ) );
+			if ( ! empty( $_POST['old_value'] ) ) {
+				if ( $_POST['old_value'] !== $current_value && __( 'Syncing TMS Objects', 'tmsc' ) !== $current_value ) {
+					wp_send_json( array( 'success' => true, 'data' => esc_js( $current_value ) ) );
+				} else {
+					wp_send_json_error( $current_value );
+				}
+			} else {
+				wp_send_json_error( $current_value );
+			}
+		} else {
+			wp_send_json_error();
 		}
 		exit();
 	}
@@ -150,6 +178,7 @@ class Object_Sync {
 	/**
 	 * Add in any cron events that need to be fired every 30 mins here.
 	 * @param array. $args. An array of args to pass to this event scheduler hook.
+	 * @return void.
 	 */
 	public function cron_events( $args = array() ) {
 		// Make sure sync is not currently running
@@ -159,214 +188,29 @@ class Object_Sync {
 		}
 	}
 
+	/**
+	 * Set the sync status value
+	 * @param string. $message.
+	 * @return boolean.
+	 */
+	public function set_sync_status( $message ) {
+		wp_cache_delete( 'tmsc-last-sync-date', 'options' );
+		return update_option( 'tmsc-last-sync-date', $message, false );
+	}
+
 	// Connect to the feed and update our post types with the latest data.
 	public function object_sync() {
 
 		$message = __( 'Syncing TMS Objects', 'tmsc' );
-		// update_option( 'tmsc-last-sync-date', $message, false );
+		self::$instance->set_sync_status( $message );
 
-		$this->migrate( array( 'Freer_Sackler_Processor' ), array( 'dry' => true, 'start' => 0, 'batch' => true ) );
+		// If customizing this plugin, set your custom processor here.
+		\TMSC\TMSC::instance()->migrate( array( '\TMSC\Database\Systems\Freer_Sackler\Freer_Sackler_Processor' ), array( 'dry' => true, 'start' => 0, 'batch' => true ) );
 
 		$message = date( 'Y-m-d H:i:s' );
+
 		// Set sync status and clear our message cache.
-		update_option( 'tmsc-last-sync-date', $message, false );
-		wp_cache_delete( 'tmsc-last-sync-date', 'options' );
-	}
-
-	/**
-	 * Migrate a batch of objects.
-	 *
-	 */
-	public function migrate( $args = array(), $assc_args = array() ) {
-		if ( ! defined( 'WP_IMPORTING' ) ) {
-			define( 'WP_IMPORTING', true );
-		}
-
-		$dry = !empty( $assc_args['dry'] );
-		$cursor = !empty( $assc_args['start'] ) ? $assc_args['start'] : false;
-		$batch_size = !empty( $assc_args['batch'] ) ? $assc_args['batch'] : false;
-
-		$short_name = array_shift( $args );
-		$processor = $this->get_processor( $short_name );
-		$processor->set_dry_run( $dry );
-
-		$this->set_processor_opts( $processor, $assc_args );
-
-		if ( $batch_size ) {
-			$processor->set_batch_size( $batch_size );
-		}
-
-		if ( $cursor ) {
-			$old_cursor = $processor->get_cursor();
-			$cursor = array_merge( $processor->get_starting_cursor(), $processor->parse_cursor( $cursor ) );
-			$processor->set_cursor( $cursor );
-		}
-
-		if ( ! $processor->is_finished() ) {
-			$processor->run();
-		}
-
-		if ( $cursor ) {
-			$processor->set_cursor( $old_cursor );
-		}
-	}
-
-	/**
-	 * Export information for one item. This subcommand is incomplete.
-	 */
-	public function describe( $args = array(), $assc_args = array() ) {
-		$short_name = array_shift( $args );
-		$processor = $this->get_processor( $short_name );
-	}
-
-	/**
-	 * Migrate all objects.
-	 */
-	public function migrate_all( $args = array(), $assc_args = array() ) {
-		if ( ! defined( 'WP_IMPORTING' ) ) {
-			define( 'WP_IMPORTING', true );
-		}
-
-		$dry = !empty( $assc_args['dry'] );
-		foreach ( $this->processors( $args ) as $processor ) {
-			$this->set_processor_opts( $processor, $assc_args );
-			while ( !$processor->is_finished() ) {
-				$processor->run();
-				tmsc_stop_the_insanity();
-			}
-		}
-	}
-
-	/**
-	 * Apply a function to all post_meta matching the given key and update the
-	 * meta value with the return value of the function.
-	 */
-	public function filter_post_meta( $args = array() ) {
-		global $wpdb;
-		$meta_key = array_shift( $args );
-		$function = array_shift( $args );
-		if ( is_callable( $function ) ) {
-			$ids = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT post_id, meta_value from {$wpdb->postmeta} WHERE meta_key = %s",
-					$meta_key
-				)
-			);
-			foreach ( $ids as $meta ) {
-				$new_value = call_user_func_array( $function, array( $meta->post_id, $meta_key, $meta->meta_value ) );
-				update_post_meta( $meta->post_id, $meta_key, $new_value, $meta->meta_value );
-			}
-		}
-	}
-
-	/**
-	 * Reset the processor's or processors' cursor(s) to the starting point.
-	 *
-	 */
-	public function rewind( $args = array() ) {
-		foreach ( $this->processors( $args ) as $processor ) {
-			$processor->rewind();
-		}
-	}
-
-	/**
-	 * Clean this site of all AMT-migrated content and rewind the
-	 * processor's/processors' cursor(s). Sometimes you just need to start
-	 * fresh.
-	 */
-	public function clean( $args = array() ) {
-		global $_wp_using_ext_object_cache;
-
-		foreach ( $this->processors( $args ) as $processor ) {
-			$processor->clean();
-		}
-
-		// Flush all transients
-		if ( $_wp_using_ext_object_cache ) {
-			// WP_CLI::run_command( array( 'cache', 'flush' ) );
-		} else {
-			// WP_CLI::run_command( array( 'transient', 'delete' ), array( 'all' => true ) );
-		}
-	}
-
-	/**
-	 * Empty TMSC's cache. This is primarily used for caching attachments.
-	 *
-	 */
-	public function cache_clean() {
-		tnsc_cache_clean();
-	}
-
-	/**
-	 * Show a list of processors.
-	 *
-	 */
-	public function list_processors( $args = array(), $assoc_args = array() ) {
-		$processors = tmsc_register_processor();
-		$keys = array( 'Name', 'Class', 'Description' );
-		foreach ( $processors as &$processor ) {
-			$processor = array_combine( $keys, $processor );
-		}
-
-		$formatter = new \WP_CLI\Formatter( $assoc_args, $keys );
-		$formatter->display_items( $processors );
-	}
-
-	/**
-	 * Update term counts for the site.
-	 *
-	 * TMSC disables term counts throughout the migration process to improve
-	 * performance. This command must be run after a migration to ensure that
-	 * all term functions work properly.
-	 *
-	 */
-	public function update_term_count() {
-		tmsc_update_term_count();
-	}
-
-	/**
-	 * Helper function to load the referenced processor
-	 */
-	private function get_processor( $processor ) {
-		if ( empty( $processor ) ) {
-			exit;
-		}
-
-		$processors = tmsc_register_processor();
-
-		if ( empty( $processors[ $processor ] ) ) {
-			exit;
-		}
-
-		$class = $processors[ $processor ][1];
-
-		if ( ! class_exists( $class ) ) {
-			exit;
-		}
-
-		return new $class;
-	}
-
-	/**
-	 * Helper function to get an array of processors from passed arguments
-	 */
-	private function processors( $args ) {
-		if ( count( $args ) !== 0 && count( $args ) === 1 && 'all' === $args[0] ) {
-			$args = array_keys( tmsc_register_processor() );
-		}
-
-		$ret = array();
-		foreach ( $args as $arg ) {
-			$ret[] = $this->get_processor( $arg );
-		}
-		return $ret;
-	}
-
-	private function set_processor_opts( $processor, $assc_args ) {
-		// Let the processor decide what to do with each arg
-		foreach ( $assc_args as $condition => $value ) {
-			$processor->add_condition( $condition, $value );
-		}
+		self::$instance->set_sync_status( $message );
 	}
 }
 

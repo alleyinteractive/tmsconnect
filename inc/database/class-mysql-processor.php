@@ -64,7 +64,6 @@ abstract class MySQL_Processor extends \TMSC\Database\Database_Processor {
 		// Build the DSN string
 		$dsn = "mysql:host={$this->host};dbname={$this->dbname}";
 
-		tmsc_notice( "Getting MySQL database connection $dsn" );
 		$connection = new \PDO( $dsn, $this->username, $this->password, array(
 			\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
 		) );
@@ -132,17 +131,12 @@ abstract class MySQL_Processor extends \TMSC\Database\Database_Processor {
 		// Execute the query and store the results
 		$query = $this->query( $this->batch_query_key, $params );
 		$this->data = $query->fetchAll();
-		tmsc_notice( "Data size: " . count( $this->data ) );
 		$query->closeCursor();
 
 		// If no data was found, we're finished
 		if ( empty( $this->data ) ) {
-			tmsc_notice( 'No rows were found' );
 			$this->finish();
-		} else {
-			tmsc_notice( 'Processing rows ' . $this->cursor . ' to ' . $this->cursor + $this->batch_size );
 		}
-
 	}
 
 	/**
@@ -171,7 +165,7 @@ abstract class MySQL_Processor extends \TMSC\Database\Database_Processor {
 	 */
 	protected function after_migrate_object( $dry = false ) {
 		$this->cursor++;
-		if ( !$dry ) {
+		if ( ! $dry ) {
 			$this->save_cursor();
 		}
 	}

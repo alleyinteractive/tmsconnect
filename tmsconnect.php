@@ -22,7 +22,6 @@ function tmsc_init() {
 	// Custom Post Types
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-tms-object.php' );
-	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-collection.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-exhibition.php' );
 
 	// Custom Taxonomies
@@ -119,7 +118,6 @@ function tmsc_get_baseurl() {
 function tmsc_enqueue_assets() {
 	wp_enqueue_script( 'tmsc-admin-sync', tmsc_get_baseurl() . '/js/tmsc-admin-sync.js', array( 'jquery' ), '0.1' ,true );
 	wp_localize_script( 'tmsc-admin-sync', 'tmscAdminData', array( 'wp_admin_nonce' => wp_create_nonce( 'wp_admin_js_script' ), 'wp_ajax_url' => esc_url_raw( admin_url( 'admin-ajax.php' ) ) ) );
-
 }
 
 /**

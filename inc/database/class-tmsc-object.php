@@ -155,7 +155,7 @@ abstract class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Delete the post
 	 */
 	public function delete() {
-		if ( !empty( $this->object->ID ) ) {
+		if ( ! empty( $this->object->ID ) ) {
 			wp_delete_post( $this->object->ID, true );
 		}
 	}

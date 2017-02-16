@@ -26,7 +26,7 @@ abstract class Migrateable {
 	protected $url;
 
 	/**
-	 * The rocessor used for this migrateable
+	 * The processor used for this migrateable
 	 * @var Processor
 	 */
 	protected $processor = null;
