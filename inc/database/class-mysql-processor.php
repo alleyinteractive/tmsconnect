@@ -62,7 +62,9 @@ abstract class MySQL_Processor extends \TMSC\Database\Database_Processor {
 		}
 
 		// Build the DSN string
-		$dsn = "mysql:host={$this->host};dbname={$this->dbname}";
+		list( $host, $port ) = explode( ':', $this->host );
+		$port = ( empty( $port ) ) ? '3306' : $port;
+		$dsn = "mysql:host={$host};port={$port};dbname={$this->dbname};";
 
 		$connection = new \PDO( $dsn, $this->username, $this->password, array(
 			\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',

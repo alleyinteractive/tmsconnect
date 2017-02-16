@@ -120,7 +120,7 @@ abstract class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return string
 	 */
 	public function save_final_object_status() {
-		\AMT\Util\Map::get( 'legacy_post_ids' )->map( $this->get_legacy_id(), $this->object->ID );
+		\TMSC\Util\Map::get( 'legacy_post_ids' )->map( $this->get_legacy_id(), $this->object->ID );
 		$this->object->post_status = $this->get_post_status();
 		wp_update_post( $this->object );
 	}
@@ -506,7 +506,7 @@ abstract class TMSC_Object extends \TMSC\Database\Migrateable {
 
 	/**
 	 * Set featured image by remote URL
-	 * @return \AMT\Attachment
+	 * @return \TMSC\Attachment
 	 */
 	public function set_featured_image_by_url( $url, $title = '', $caption = '', $description = '' ) {
 		$attachment = $this->create_attachment( $url, $title, $caption, $description );
@@ -519,7 +519,7 @@ abstract class TMSC_Object extends \TMSC\Database\Migrateable {
 
 	/**
 	 * Create an attachment
-	 * @return \AMT\Attachment
+	 * @return \TMSC\Attachment
 	 */
 	public function create_attachment( $url, $title, $caption, $description = '', $name = '', $bits = null ) {
 		$settings = $this->get_image_settings();
@@ -698,7 +698,7 @@ HTML;
 				'large' => 640,
 			),
 			'remove_params_from_url' => false,
-			'attachment_class' => '\\AMT\\Attachment',
+			'attachment_class' => '\\TMSC\\Attachment',
 			'preserve_image_classes' => false,
 			'preserve_alt_text' => false,
 			'title_src' => '',
@@ -759,9 +759,9 @@ HTML;
 		$post_id = wp_insert_post( $post );
 
 		// Add this post ID to the map so we don't create multiple stubs
-		\AMT\Util\Map::get( 'legacy_post_ids' )->map( $legacy_id, $post_id );
+		\TMSC\Util\Map::get( 'legacy_post_ids' )->map( $legacy_id, $post_id );
 
-		// Mark this stub with minimal postmeta so AMT can grab it later, or delete it using the current processor
+		// Mark this stub with minimal postmeta so TMSC can grab it later, or delete it using the current processor
 		update_post_meta( $post_id, 'tmsc_source', (string) $this->processor );
 		update_post_meta( $post_id, 'tmsc_legacy_id', $legacy_id );
 		update_post_meta( $post_id, 'tmsc_stub', '1' );

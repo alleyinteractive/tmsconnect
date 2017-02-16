@@ -247,7 +247,7 @@ class TMSC {
 	}
 
 	/**
-	 * Clean this site of all AMT-migrated content and rewind the
+	 * Clean this site of all TMSC-migrated content and rewind the
 	 * processor's/processors' cursor(s). Sometimes you just need to start
 	 * fresh.
 	 */
