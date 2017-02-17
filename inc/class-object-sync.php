@@ -204,8 +204,8 @@ class Object_Sync {
 		$message = __( 'Syncing TMS Objects', 'tmsc' );
 		self::$instance->set_sync_status( $message );
 
-		// If customizing this plugin, set your custom processor here.
-		\TMSC\TMSC::instance()->migrate( array( '\TMSC\Database\Systems\Freer_Sackler\Freer_Sackler_Processor' ), array( 'dry' => true, 'start' => 0, 'batch' => true ) );
+		// Migrate our objects and taxonomies.
+		\TMSC\TMSC::instance()->migrate( array( '\\TMSC\\Database\\Systems\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '_Object_Processor' ), array( 'dry' => true, 'start' => 0, 'batch' => true ) );
 
 		$message = date( 'Y-m-d H:i:s' );
 

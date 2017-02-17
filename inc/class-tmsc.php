@@ -126,19 +126,24 @@ class TMSC {
 	 *
 	 */
 	public function sync_init() {
-		$fm = new Fieldmanager_Group( array(
+		$fm = new \Fieldmanager_Group( array(
 			'name' => 'tmsc_guide_terms',
 			'children' => array(
-				'term' => new Fieldmanager_Group( array(
+				'term' => new \Fieldmanager_Group( array(
 					'description' => __( 'Use the CN number of the guide terms that should serve as parent taxonomies', 'tmsc' ),
 					'collapsible' => true,
 					'label' => __( 'Guide Terms', 'tmsc' ),
 					'children' => array(
-						'data' => new Fieldmanager_Group( array(
+						'data' => new \Fieldmanager_Group( array(
 							'limit' => 0,
 							'add_more_label' => __( 'Add another guide term', 'tmsc' ),
 							'children' => array(
-								'CN' => new Fieldmanager_Textfield( __( 'Guide Term CN', 'tmsc' ) ),
+								'taxonomy_map' => new \Fieldmanager_Select( __( 'Map to Taxonomy', 'tmsc' ), array(
+									'datasource' => new \Fieldmanager_Datasource( array(
+										'options' => get_taxonomies(),
+									) ),
+								) ),
+								'CN' => new \Fieldmanager_Textfield( __( 'Guide Term CN', 'tmsc' ) ),
 							),
 						) ),
 					),

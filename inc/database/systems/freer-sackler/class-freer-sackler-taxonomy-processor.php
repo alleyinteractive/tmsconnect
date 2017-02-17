@@ -1,6 +1,6 @@
 <?php
 namespace TMSC\Database\Systems\Freer_Sackler;
-class Freer_Sackler_Processor extends \TMSC\Database\MySQL_Processor {
+class Freer_Sackler_Taxonomy_Processor extends \TMSC\Database\MySQL_Processor {
 	/**
 	 * Holds the URL of the current site being migrated
 	 * @var string

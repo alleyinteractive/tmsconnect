@@ -8,7 +8,7 @@
     }
   ],
   "limit": 0,
-  "label": "TMS Object Name",
+  "label": { "__": "TMS Object Name" },
   "add_more_label": { "__": "Add another object" },
   "type": "autocomplete",
   "datasource": {

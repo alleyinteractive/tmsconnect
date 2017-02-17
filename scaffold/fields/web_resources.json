@@ -1,0 +1,22 @@
+{
+  "name": "web_resources",
+  "contexts": [
+    {
+      "type": "post",
+      "post_types": [ "tms_object" ],
+      "title": { "__": "Web Resources" }
+    }
+  ],
+  "limit": 0,
+  "add_more_label": { "__": "Add another resource" },
+  "children": {
+    "title": {
+      "label": { "__": "Title" },
+      "type": "textfield"
+    },
+    "url": {
+      "label": { "__": "Web Resource" },
+      "type": "textfield"
+    }
+  }
+}

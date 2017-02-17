@@ -19,6 +19,14 @@ require_once( TMSCONNECT_PATH . '/inc/class-tmsc.php' );
 require_once( TMSCONNECT_PATH . '/inc/class-plugin-dependency.php' );
 
 function tmsc_init() {
+
+	// For custom systems, you can either change the slugs here or hook in via plugins_loaded filter hooks below.
+	$file_prefix = apply_filters( 'tmsc_system_file_build_prefix', 'freer-sackler' );
+	$class_prefix = apply_filters( 'tmsc_system_class_build_prefix', 'Freer_Sackler' );
+
+	define( 'TMSC_SYSTEM_BUILD_FILE_PREFIX', $file_prefix );
+	define( 'TMSC_SYSTEM_BUILD_CLASS_PREFIX', $class_prefix );
+
 	// Custom Post Types
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-tms-object.php' );
@@ -26,16 +34,15 @@ function tmsc_init() {
 
 	// Custom Taxonomies
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy.php' );
-	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-catalog.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-classification.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-collection.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-constituent.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-exhibition.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-geography.php' );
-	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-period.php' );
-	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-location.php' );
+	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-keywords.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-maker.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-material.php' );
+	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-period.php' );
 
 	// TMSC Sync Class
 	require_once( TMSCONNECT_PATH . '/inc/class-object-sync.php' );
@@ -52,11 +59,16 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/database/class-database-processor.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-mysql-processor.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-object.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-taxonomy.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-data-map.php' );
 
 	// The system this plugin is active for. Built with Freer_Sackler.
-	// Comment this line and add in your own system for any customizations.
-	require_once( TMSCONNECT_PATH . '/inc/database/systems/freer-sackler/class-freer-sackler-object.php' );
-	require_once( TMSCONNECT_PATH . '/inc/database/systems/freer-sackler/class-freer-sackler-processor.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-object.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-object-processor.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-taxonomy.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-taxonomy-processor.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-data-map.php' );
+
 	add_action( 'admin_enqueue_scripts', 'tmsc_enqueue_assets' );
 }
 add_action( 'plugins_loaded', 'tmsc_init' );
