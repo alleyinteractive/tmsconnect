@@ -18,6 +18,19 @@ define( 'TMSCONNECT_PATH', dirname( __FILE__ ) );
 require_once( TMSCONNECT_PATH . '/inc/class-tmsc.php' );
 require_once( TMSCONNECT_PATH . '/inc/class-plugin-dependency.php' );
 
+/**
+ * Return an array of all the processors of the current system.
+ * Each processor requires a it's own class, a data-map class and a processor class.
+ * (e.g.) "class-${file_prefix}-${processor}.php", "class-${file_prefix}-${processor}-data-map.php", "class-${file_prefix}-${processor}-processor.php"
+ * @return array.
+ */
+function tmsc_get_system_processors() {
+	return apply_filters( 'tmsc_get_system_processors', array( 'taxonomy' => 'Taxonomy' ) );
+}
+
+/**
+ * Include require code and define system specific global constants.
+ */
 function tmsc_init() {
 
 	// For custom systems, you can either change the slugs here or hook in via plugins_loaded filter hooks below.
@@ -58,16 +71,17 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/database/class-migrateable.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-database-processor.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-mysql-processor.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-processor.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-object.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-taxonomy.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-data-map.php' );
 
 	// The system this plugin is active for. Built with Freer_Sackler.
-	require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-object.php' );
-	require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-object-processor.php' );
-	require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-taxonomy.php' );
-	require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-taxonomy-processor.php' );
-	require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-data-map.php' );
+	foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
+		require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-' . $processor_slug . '.php' );
+		require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-' . $processor_slug . '-processor.php' );
+		require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-' . $processor_slug . '-data-map.php' );
+	}
 
 	add_action( 'admin_enqueue_scripts', 'tmsc_enqueue_assets' );
 }

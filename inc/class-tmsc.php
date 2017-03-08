@@ -72,18 +72,6 @@ class TMSC {
 	}
 
 	/**
-	 * Keep track of our custom DB system processors.
-	 * @param string. $name. Namespaced class name.
-	 * @return void.
-	 */
-	public function register_processor( $name = '' ) {
-		if ( ! empty( $name ) ) {
-			self::$instance->processors[ $name ] = array( $name );
-		}
-		return self::$instance->processors;
-	}
-
-	/**
 	 * Add the Zoninator taxonomy to the custom post types that require it.
 	 * The function calls below just return false if either the taxonomy or post type doesn't exist.
 	 *
@@ -154,6 +142,26 @@ class TMSC {
 	}
 
 	/**
+	 * Keep track of our custom DB system processors.
+	 * @param string. $name. Namespaced class name.
+	 * @return void.
+	 */
+	public function register_processor( $name = '' ) {
+		if ( empty( $name ) || 'all' === $name ) {
+			foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
+				if ( empty( self::$instance->processors[ $processor_class_slug ] ) ) {
+					self::$instance->processors[ $processor_class_slug ] = '\\TMSC\\Database\\Systems\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '_' . $processor_class_slug . '_Processor';
+				}
+			}
+		} else {
+			if ( empty( self::$instance->processors[ $name ] ) ) {
+				self::$instance->processors[ $name ] = '\\TMSC\\Database\\Systems\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '_' . $name . '_Processor';
+			}
+		}
+		return self::$instance->processors;
+	}
+
+	/**
 	 * Migrate a batch of objects.
 	 *
 	 */
@@ -212,6 +220,7 @@ class TMSC {
 		$dry = ! empty( $assc_args['dry'] );
 		foreach ( self::$instance->processors( $args ) as $processor ) {
 			self::$instance->set_processor_opts( $processor, $assc_args );
+
 			while ( ! $processor->is_finished() ) {
 				$processor->run();
 				tmsc_stop_the_insanity();
@@ -263,12 +272,7 @@ class TMSC {
 			$processor->clean();
 		}
 
-		// Flush all transients
-		if ( $_wp_using_ext_object_cache ) {
-			// WP_CLI::run_command( array( 'cache', 'flush' ) );
-		} else {
-			// WP_CLI::run_command( array( 'transient', 'delete' ), array( 'all' => true ) );
-		}
+		// TODO: Flush all transients
 	}
 
 	/**
@@ -276,22 +280,7 @@ class TMSC {
 	 *
 	 */
 	public function cache_clean() {
-		tnsc_cache_clean();
-	}
-
-	/**
-	 * Show a list of processors.
-	 *
-	 */
-	public function list_processors( $args = array(), $assoc_args = array() ) {
-		$processors = self::$instance->register_processor();
-		$keys = array( 'Name', 'Class', 'Description' );
-		foreach ( $processors as &$processor ) {
-			$processor = array_combine( $keys, $processor );
-		}
-
-		$formatter = new \WP_CLI\Formatter( $assoc_args, $keys );
-		$formatter->display_items( $processors );
+		tmsc_cache_clean();
 	}
 
 	/**
@@ -309,28 +298,29 @@ class TMSC {
 	/**
 	 * Helper function to load the referenced processor
 	 */
-	private function get_processor( $processor ) {
+	public function get_processor( $processor ) {
+
 		$message = __( 'Error: Cannot get DB Processor', 'tmsc' );
 		if ( empty( $processor ) ) {
-			self::$instance->set_sync_status( $message );
+			tmsc_set_sync_status( $message );
 			exit;
 		}
 
 		$processors = self::$instance->register_processor( $processor );
 
 		if ( empty( $processors[ $processor ] ) ) {
-			self::$instance->set_sync_status( $message );
+			tmsc_set_sync_status( $message );
 			exit;
 		}
 
-		$class = $processors[ $processor ][0];
+		$class = $processors[ $processor ];
 
 		if ( ! class_exists( $class ) ) {
-			self::$instance->set_sync_status( $message );
+			tmsc_set_sync_status( $message );
 			exit;
 		}
 
-		return new $class;
+		return new $class( $processor );
 	}
 
 	/**

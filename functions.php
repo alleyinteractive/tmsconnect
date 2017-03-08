@@ -2,6 +2,15 @@
 /**
  * Shared functions for TMSConnect
  */
+/**
+ * Set the sync status value
+ * @param string. $message.
+ * @return boolean.
+ */
+function tmsc_set_sync_status( $message ) {
+	wp_cache_delete( 'tmsc-last-sync-date', 'options' );
+	return update_option( 'tmsc-last-sync-date', $message, false );
+}
 
 /**
  * Stop the insanity; clean up memory.

@@ -188,29 +188,22 @@ class Object_Sync {
 		}
 	}
 
-	/**
-	 * Set the sync status value
-	 * @param string. $message.
-	 * @return boolean.
-	 */
-	public function set_sync_status( $message ) {
-		wp_cache_delete( 'tmsc-last-sync-date', 'options' );
-		return update_option( 'tmsc-last-sync-date', $message, false );
-	}
-
 	// Connect to the feed and update our post types with the latest data.
 	public function object_sync() {
 
 		$message = __( 'Syncing TMS Objects', 'tmsc' );
-		self::$instance->set_sync_status( $message );
-
+		tmsc_set_sync_status( $message );
+		// Register an instantiate processors
+		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
+			\TMSC\TMSC::instance()->get_processor( $processor_class_slug );
+		}
 		// Migrate our objects and taxonomies.
-		\TMSC\TMSC::instance()->migrate( array( '\\TMSC\\Database\\Systems\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '_Object_Processor' ), array( 'dry' => true, 'start' => 0, 'batch' => true ) );
+		\TMSC\TMSC::instance()->migrate_all( array( 'all' ), array( 'dry' => true, 'start' => 0, 'batch' => true ) );
 
 		$message = date( 'Y-m-d H:i:s' );
 
 		// Set sync status and clear our message cache.
-		self::$instance->set_sync_status( $message );
+		tmsc_set_sync_status( $message );
 	}
 }
 

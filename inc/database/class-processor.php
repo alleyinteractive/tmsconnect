@@ -6,6 +6,17 @@ namespace TMSC\Database;
  * Base class for the tool which gets the next piece of content.
  */
 abstract class Processor {
+	/**
+	 * The type of processor.
+	 * @var string.
+	 */
+	public $processor_type = '';
+
+	/**
+	 * The data map of this processor.
+	 * @var data map object.
+	 */
+	public $data_map = null;
 
 	private $stop_processing = false;
 
@@ -22,6 +33,14 @@ abstract class Processor {
 	protected $mapping_only = false;
 
 	protected $dry_run = false;
+
+	/**
+	 * Constructor
+	 */
+	public function __construct( $type ) {
+		$this->processor_type = $type;
+		$this->get_data_map();
+	}
 
 	public function __toString() {
 		return static::NAME;
@@ -126,13 +145,21 @@ abstract class Processor {
 	abstract protected function before_migrate_object( $dry = false );
 
 	/**
+	 * Get the current processor data map.
+	 */
+	public function get_data_map() {
+		$class = '\\TMSC\\Database\\Systems\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '_' . $this->processor_type . '_Data_Map';
+		$this->data_map = new $class( $this->processor_type );
+	}
+
+	/**
 	 * Run the import
 	 */
 	public function run() {
 
 		wp_defer_term_counting( true );
 
-		if ( ! defined( 'static::NAME' ) ) {
+		if ( empty( $this->processor_type ) ) {
 			throw new \Exception( 'NAME must be defined as a const in the top-level processor class.' );
 		}
 
@@ -228,14 +255,14 @@ abstract class Processor {
 	 * Get migration option
 	 */
 	protected function set_option( $k, $v ) {
-		update_option( 'tmsc_' . static::NAME . '_' . $k, $v );
+		update_option( 'tmsc_' . $this->processor_type . '_' . $k, $v );
 	}
 
 	/**
 	 * Set migration option
 	 */
 	protected function get_option( $k ) {
-		return get_option( 'tmsc_' . static::NAME . '_' . $k );
+		return get_option( 'tmsc_' . $this->processor_type . '_' . $k );
 	}
 
 	/**
