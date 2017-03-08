@@ -2,6 +2,11 @@
 namespace TMSC\Database\Systems\Freer_Sackler;
 class Freer_Sackler_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	/**
+	 * The type of processor.
+	 */
+	public $processor_type = 'Object';
+
+	/**
 	 * Holds the URL of the current site being migrated
 	 * @var string
 	 */
@@ -9,35 +14,29 @@ class Freer_Sackler_Object_Processor extends \TMSC\Database\TMSC_Processor {
 
 	/**
 	 * Constructor
-	 * @param string $url
+	 * @param string $type
 	 */
 	public function __construct( $type ) {
 		parent::__construct( $type );
-
-		// Set the batch query to get the next result set, required by MySQLProcessor
-		$this->set_batch_query( 'SELECT * FROM XXX' );
-
-		// Set additional queries to use to get taxonomy terms
-		$this->prepare( 'content_categories', 'SELECT * FROM XXX where id=:id' );
 	}
 
 	/**
-	 * Clean crashed posts
+	 * Generate our batch query.
 	 */
-	protected function before_run( $params = array() ) {
-		tmsc_clean_crashed_posts();
-		parent::before_run( $params );
+	public function get_batch_query_stmt() {
+		$stmt = 'SELECT *
+			FROM AllWebmedia
+			WHERE CuratorApproved = 0
+			AND PrimaryDisplay=1';
+
+		return $stmt;
 	}
 
 	/**
-	 * Load the next migrateable object
-	 * @param array $params
+	 * Add in additional queries for the migration.
 	 */
-	public function load_migrateable() {
-		if ( ! empty( $this->data ) ) {
-			$this->migrateable = new \TMSC\Database\Systems\Freer_Sackler\Freer_Sackler_Object( array_shift( $this->data ), $this );
-		} else {
-			$this->migrateable = null;
-		}
+	public function prepare_additional_queries() {
+
 	}
+
 }

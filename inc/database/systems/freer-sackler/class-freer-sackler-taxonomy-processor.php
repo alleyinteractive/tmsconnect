@@ -31,17 +31,17 @@ class Freer_Sackler_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 		$guide_terms_stmt = "'" . implode( "','", $cns ) . "'";
 
 		$stmt = "SELECT DISTINCT
-    		Terms.TermID,
-    		Terms.Term,
-    		TermMaster.CN,
-   			TermMaster.GuideTerm,
-   			TermMaster.Children,
-   			TermMaster.NodeDepth,
-   			Terms.TermTypeID,
-   			TermTypes.TermType
+			Terms.TermID,
+			Terms.Term,
+			TermMaster.CN,
+			TermMaster.GuideTerm,
+			TermMaster.Children,
+			TermMaster.NodeDepth,
+			Terms.TermTypeID,
+			TermTypes.TermType
 			FROM Terms
-    		INNER JOIN TermMaster on Terms.TermMasterID = TermMaster.TermMasterID
-   			INNER JOIN TermTypes on Terms.TermTypeID = TermTypes.TermTypeID
+			INNER JOIN TermMaster on Terms.TermMasterID = TermMaster.TermMasterID
+			INNER JOIN TermTypes on Terms.TermTypeID = TermTypes.TermTypeID
 			WHERE TermMaster.CN IN ( $guide_terms_stmt )
 			AND Children = 1
 			AND (TermMaster.GuideTerm = 1)
