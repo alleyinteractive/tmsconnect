@@ -6,8 +6,8 @@
  */
 /*
 Plugin Name: TMS Connect
-Plugin URI: http://github.com/alleyinteractive/freersackler
-Description: Connect & Search Freer & Sackler TMS
+Plugin URI: http://github.com/alleyinteractive/tmsconnect
+Description: Connect & Search TMS
 Author: Alley Interactive
 Version: 0.1
 Author URI: http://www.alleyinteractive.com/
@@ -34,31 +34,39 @@ function tmsc_get_system_processors() {
 function tmsc_init() {
 
 	// For custom systems, you can either change the slugs here or hook in via plugins_loaded filter hooks below.
-	$file_prefix = apply_filters( 'tmsc_system_file_build_prefix', 'freer-sackler' );
-	$class_prefix = apply_filters( 'tmsc_system_class_build_prefix', 'Freer_Sackler' );
+	$system_path = apply_filters( 'tmsc_system_path', TMSCONNECT_PATH . '/inc/database/processors/' );
+	$file_prefix = apply_filters( 'tmsc_system_file_build_prefix', 'tmsconnect' );
+	$class_prefix = apply_filters( 'tmsc_system_class_build_prefix', 'tmsconnect' );
 
+	// Freer & Sackler has TMS behind an inaccesible firewall, so this system was built for a MySQL db dump of the MSSQL SRV DB from TMS.
+	$db_type = apply_filters( 'tmsc_system_db_type', 'mysql' );
+
+	define( 'TMSC_SYSTEM_PATH', $system_path );
 	define( 'TMSC_SYSTEM_BUILD_FILE_PREFIX', $file_prefix );
 	define( 'TMSC_SYSTEM_BUILD_CLASS_PREFIX', $class_prefix );
+	define( 'TMSC_SYSTEM_DB_TYPE', $db_type );
 
 	// Custom Post Types
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-tms-object.php' );
+	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-event.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-exhibition.php' );
 
 	// Custom Taxonomies
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-classification.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-collection.php' );
-	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-constituent.php' );
-	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-exhibition.php' );
+	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-constituents.php' );
+	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-exhibitions.php' );
+	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-exhibition-types.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-geography.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-keywords.php' );
-	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-maker.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-material.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-period.php' );
+	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-sites.php' );
 
 	// TMSC Sync Class
-	require_once( TMSCONNECT_PATH . '/inc/class-object-sync.php' );
+	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-sync.php' );
 
 	// Metabox FM Fields
 	require_once( TMSCONNECT_PATH . '/inc/fields.php' );
@@ -70,17 +78,14 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/database/class-processor.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-migrateable.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-database-processor.php' );
-	require_once( TMSCONNECT_PATH . '/inc/database/class-mysql-processor.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/class-' . TMSC_SYSTEM_DB_TYPE . '-processor.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-processor.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-object.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-taxonomy.php' );
-	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-data-map.php' );
 
 	// The system this plugin is active for. Built with Freer_Sackler.
 	foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
-		require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-' . $processor_slug . '.php' );
-		require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-' . $processor_slug . '-processor.php' );
-		require_once( TMSCONNECT_PATH . '/inc/database/systems/' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-' . $processor_slug . '-data-map.php' );
+		require_once( trailingslashit( TMSC_SYSTEM_PATH ) . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-' . $processor_slug . '-processor.php' );
 	}
 
 	add_action( 'admin_enqueue_scripts', 'tmsc_enqueue_assets' );

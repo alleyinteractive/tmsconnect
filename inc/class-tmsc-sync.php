@@ -7,7 +7,7 @@ namespace TMSC;
  * Can also be fired manually via the admin ui.
  *
  */
-class Object_Sync {
+class TMSC_Sync {
 	private static $instance;
 
 	/**
@@ -37,16 +37,16 @@ class Object_Sync {
 	}
 
 	public function __clone() {
-		wp_die( "Please don't __clone \TMSC\Object_Sync" );
+		wp_die( "Please don't __clone \TMSC\TMSC_Sync" );
 	}
 
 	public function __wakeup() {
-		wp_die( "Please don't __wakeup \TMSC\Object_Sync" );
+		wp_die( "Please don't __wakeup \TMSC\TMSC_Sync" );
 	}
 
 	public static function instance() {
 		if ( ! isset( self::$instance ) ) {
-			self::$instance = new \TMSC\Object_Sync;
+			self::$instance = new \TMSC\TMSC_Sync;
 			self::$instance->setup();
 		}
 		return self::$instance;
@@ -86,7 +86,7 @@ class Object_Sync {
 	 * Render our admin sync template part
 	 */
 	public function render_object_sync_submenu_page() {
-		load_template( TMSCONNECT_PATH . '/templates/object-sync-admin.php' );
+		load_template( TMSCONNECT_PATH . '/templates/tmsc-sync-admin.php' );
 	}
 
 	/**
@@ -198,7 +198,7 @@ class Object_Sync {
 			\TMSC\TMSC::instance()->get_processor( $processor_class_slug );
 		}
 		// Migrate our objects and taxonomies.
-		\TMSC\TMSC::instance()->migrate_all( array( 'all' ), array( 'dry' => true, 'start' => 0, 'batch' => true ) );
+		\TMSC\TMSC::instance()->migrate( array( 'all' ), array( 'start' => 0 ) );
 
 		$message = date( 'Y-m-d H:i:s' );
 
@@ -207,7 +207,7 @@ class Object_Sync {
 	}
 }
 
-function tmsc_object_sync() {
-	return \TMSC\Object_Sync::instance();
+function tmsc_sync() {
+	return \TMSC\TMSC_Sync::instance();
 }
-tmsc_object_sync();
+tmsc_sync();

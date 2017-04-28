@@ -194,10 +194,17 @@ abstract class Migrateable {
 
 	/**
 	 * Set processor
-	 * @param \TMSC\Processor $processor
+	 * @param $processor
 	 */
-	public function set_processor( \TMSC\Processor $processor ) {
+	public function set_processor( $processor ) {
 		$this->processor = $processor;
 	}
 
+	/**
+	 * Set our raw data.
+	 * @param $raw
+	 */
+	public function set_data( $raw ) {
+		$this->raw = $raw;
+	}
 }

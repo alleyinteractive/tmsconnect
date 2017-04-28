@@ -3,9 +3,9 @@
 namespace TMSC\Database;
 
 /**
- * Base class for any generically imported taxonomy
+ * Base class for any imported post
  */
-class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
+abstract class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 
 	/**
 	 * Terms for the current taxonomy.
@@ -29,32 +29,10 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 	}
 
 	/**
-	 * Get legacy CN
-	 * @return string
-	 */
-	public function get_legacy_CN(){
-		if ( ! empty( $this->raw->CN ) ) {
-			return $this->raw->CN;
-		}
-	}
-
-	/**
-	 * Get legacy ID
-	 * @return int
-	 */
-	public function get_legacy_id() {
-		if ( ! empty( $this->raw->TermID ) ) {
-			return $this->raw->TermID;
-		}
-	}
-
-	/**
 	 * Get terms
 	 * @return associative array, like array( 'category' => array( 'News', 'Sports' ), 'post_tag' => array( 'Football', 'Jets' ) )
 	 */
-	public function get_terms() {
-
-	}
+	abstract public function get_terms();
 
 	/**
 	 * Get term slug
@@ -121,16 +99,14 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 	 * Load an existing taxonomy if it exists.
 	 */
 	public function load_existing_term() {
-		// Check for existing post by legacy ID
+		// Check for existing post by legacy GUID
 		$legacy_id = $this->get_legacy_id();
-		if ( ! empty( $legacy_id ) ) {
-			$args = array(
-				'taxonomy' => $this->raw->taxonomy,
-				'hide_empty' => false,
-				'meta_key' => 'tmsc_legacy_id',
-			);
-			$existing_terms = get_terms( $args );
-			if ( ! empty( $existing_term ) ) {
+
+		// It's possible the object could have been previously loaded in a before_save
+		// function to validate a migration conditon, so make sure it wasn't set.
+		if ( ! empty( $legacy_id ) && empty( $this->object->ID ) ) {
+			$existing_post_id = tmsc_taxonomy_by_legacy_id( $legacy_id );
+			if ( $existing_post_id ) {
 				$this->object = get_post( $existing_post_id );
 			}
 		}

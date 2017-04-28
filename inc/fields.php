@@ -165,3 +165,17 @@ function tmsc_fm_web_resources() {
 }
 add_action( 'fm_post_tms_object', 'tmsc_fm_web_resources' );
 /* end fm:web_resources */
+
+/* begin fm:insurance */
+/**
+ * `insurance` Fieldmanager fields.
+ */
+function tmsc_fm_insurance() {
+	$fm = new Fieldmanager_Textfield( array(
+		'name' => 'insurance',
+		'label' => __( 'Insurance', 'tmsc' ),
+	) );
+	$fm->add_meta_box( __( 'Insurance', 'tmsc' ), array( 'tms_object' ), 'normal' );
+}
+add_action( 'fm_post_tms_object', 'tmsc_fm_insurance' );
+/* end fm:insurance */

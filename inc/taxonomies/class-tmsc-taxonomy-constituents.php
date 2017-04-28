@@ -3,14 +3,14 @@
 /**
  * Taxonomy for Constituents.
  */
-class Tmsc_Taxonomy_Constituent extends Tmsc_Taxonomy {
+class Tmsc_Taxonomy_Constituents extends Tmsc_Taxonomy {
 
 	/**
 	 * Name of the taxonomy.
 	 *
 	 * @var string
 	 */
-	public $name = 'constituent';
+	public $name = 'constituents';
 
 	/**
 	 * Object types for this taxonomy
@@ -36,21 +36,22 @@ class Tmsc_Taxonomy_Constituent extends Tmsc_Taxonomy {
 		register_taxonomy( $this->name, $this->object_types, array(
 			'labels' => array(
 				'name'                  => __( 'Constituents', 'tmsc' ),
-				'singular_name'         => __( 'Constituent', 'tmsc' ),
+				'singular_name'         => __( 'Constituents', 'tmsc' ),
 				'search_items'          => __( 'Search Constituents', 'tmsc' ),
 				'popular_items'         => __( 'Popular Constituents', 'tmsc' ),
 				'all_items'             => __( 'All Constituents', 'tmsc' ),
-				'parent_item'           => __( 'Parent Constituent', 'tmsc' ),
-				'parent_item_colon'     => __( 'Parent Constituent', 'tmsc' ),
-				'edit_item'             => __( 'Edit Constituent', 'tmsc' ),
-				'view_item'             => __( 'View Constituent', 'tmsc' ),
-				'update_item'           => __( 'Update Constituent', 'tmsc' ),
-				'add_new_item'          => __( 'Add New Constituent', 'tmsc' ),
-				'new_item_name'         => __( 'New Constituent Name', 'tmsc' ),
+				'parent_item'           => __( 'Parent Constituents', 'tmsc' ),
+				'parent_item_colon'     => __( 'Parent Constituents', 'tmsc' ),
+				'edit_item'             => __( 'Edit Constituents', 'tmsc' ),
+				'view_item'             => __( 'View Constituents', 'tmsc' ),
+				'update_item'           => __( 'Update Constituents', 'tmsc' ),
+				'add_new_item'          => __( 'Add New Constituents', 'tmsc' ),
+				'new_item_name'         => __( 'New Constituents Name', 'tmsc' ),
 				'add_or_remove_items'   => __( 'Add or remove Constituents', 'tmsc' ),
 				'choose_from_most_used' => __( 'Choose from most used Constituents', 'tmsc' ),
 				'menu_name'             => __( 'Constituents', 'tmsc' ),
 			),
+			'hierarchical' => true,
 			'rewrite' => array(
 				'with_front' => false,
 			),
@@ -58,4 +59,4 @@ class Tmsc_Taxonomy_Constituent extends Tmsc_Taxonomy {
 	}
 }
 
-$taxonomy_constituent = new Tmsc_Taxonomy_Constituent();
+$taxonomy_constituents = new Tmsc_Taxonomy_Constituents();

@@ -150,55 +150,15 @@ class TMSC {
 		if ( empty( $name ) || 'all' === $name ) {
 			foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
 				if ( empty( self::$instance->processors[ $processor_class_slug ] ) ) {
-					self::$instance->processors[ $processor_class_slug ] = '\\TMSC\\Database\\Systems\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '_' . $processor_class_slug . '_Processor';
+					self::$instance->processors[ $processor_class_slug ] = '\\TMSC\\Database\\Processors\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '_' . $processor_class_slug . '_Processor';
 				}
 			}
 		} else {
 			if ( empty( self::$instance->processors[ $name ] ) ) {
-				self::$instance->processors[ $name ] = '\\TMSC\\Database\\Systems\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '_' . $name . '_Processor';
+				self::$instance->processors[ $name ] = '\\TMSC\\Database\\Processors\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '\\' . TMSC_SYSTEM_BUILD_CLASS_PREFIX . '_' . $name . '_Processor';
 			}
 		}
 		return self::$instance->processors;
-	}
-
-	/**
-	 * Migrate a batch of objects.
-	 *
-	 */
-	public function migrate( $args = array(), $assc_args = array() ) {
-		if ( ! defined( 'WP_IMPORTING' ) ) {
-			define( 'WP_IMPORTING', true );
-		}
-
-		$dry = ( ! empty( $assc_args['dry'] ) );
-		$cursor = ( ! empty( $assc_args['start'] ) ) ? $assc_args['start'] : false;
-		$batch_size = ( ! empty( $assc_args['batch'] ) ) ? $assc_args['batch'] : false;
-
-		$short_name = array_shift( $args );
-		$processor = self::$instance->get_processor( $short_name );
-		$processor->set_dry_run( $dry );
-
-		/*
-		self::$instance->set_processor_opts( $processor, $assc_args );
-
-		if ( $batch_size ) {
-			$processor->set_batch_size( $batch_size );
-		}
-		*/
-		/*
-		if ( $cursor ) {
-			$old_cursor = $processor->get_cursor();
-			$cursor = array_merge( $processor->get_starting_cursor(), $processor->parse_cursor( $cursor ) );
-			$processor->set_cursor( $cursor );
-		}
-
-		if ( ! $processor->is_finished() ) {
-			$processor->run();
-		}
-
-		if ( $cursor ) {
-			$processor->set_cursor( $old_cursor );
-		}*/
 	}
 
 	/**
@@ -210,21 +170,15 @@ class TMSC {
 	}
 
 	/**
-	 * Migrate all objects.
+	 * Migrate all objects objects.
 	 */
-	public function migrate_all( $args = array(), $assc_args = array() ) {
+	public function migrate( $args = array(), $assc_args = array() ) {
 		if ( ! defined( 'WP_IMPORTING' ) ) {
 			define( 'WP_IMPORTING', true );
 		}
-
-		$dry = ! empty( $assc_args['dry'] );
 		foreach ( self::$instance->processors( $args ) as $processor ) {
-			self::$instance->set_processor_opts( $processor, $assc_args );
-
-			while ( ! $processor->is_finished() ) {
-				$processor->run();
-				tmsc_stop_the_insanity();
-			}
+			$processor->run();
+			tmsc_stop_the_insanity();
 		}
 	}
 
@@ -336,12 +290,5 @@ class TMSC {
 			$ret[] = self::$instance->get_processor( $arg );
 		}
 		return $ret;
-	}
-
-	private function set_processor_opts( $processor, $assc_args ) {
-		// Let the processor decide what to do with each arg
-		foreach ( $assc_args as $condition => $value ) {
-			$processor->add_condition( $condition, $value );
-		}
 	}
 }

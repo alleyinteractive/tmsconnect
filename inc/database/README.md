@@ -1,2 +1,2 @@
 # Database Processors
-This folder contains the database sytems processors for connecting to a museum system. Originally buit for Freer & Sacklers TMS MySQL Database, this code can be adapted to any museum system by creating the corresponding system classes found in the systems subdirectory.
+This folder contains the database sytems processors for connecting to a museum system. The generic tmsconnect system found in the processor directory was originally buit for Freer & Sacklers TMS system exported to a MySQL Database. This code can be adapted to any museum system by creating the corresponding processor classes. You can declare the processor subdirectory to read the class files from using the `tmsc_system_path` filter hook.
