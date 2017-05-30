@@ -33,8 +33,6 @@ abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
 	 * Get the next batch of migratables.
 	 */
 	protected function before_run( $params = array() ) {
-		tmsc_clean_crashed_posts();
-
 		$stmt = $this->get_object_query_stmt();
 		// Set the object query to get the next result set, required by System_Processor
 		$this->set_object_query( $stmt );

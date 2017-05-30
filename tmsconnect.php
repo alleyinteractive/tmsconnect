@@ -21,11 +21,15 @@ require_once( TMSCONNECT_PATH . '/inc/class-plugin-dependency.php' );
 /**
  * Return an array of all the processors of the current system.
  * Each processor requires a it's own class, a data-map class and a processor class.
- * (e.g.) "class-${file_prefix}-${processor}.php", "class-${file_prefix}-${processor}-data-map.php", "class-${file_prefix}-${processor}-processor.php"
+ * (e.g.) "class-${file_prefix}-${processor}.php", "class-${file_prefix}-${processor}-processor.php"
  * @return array.
  */
 function tmsc_get_system_processors() {
-	return apply_filters( 'tmsc_get_system_processors', array( 'taxonomy' => 'Taxonomy' ) );
+	$processors = array(
+		'taxonomy' => __( 'Taxonomy', 'tmsc' ),
+		'object' => __( 'Object', 'tmsc' ),
+	);
+	return apply_filters( 'tmsc_get_system_processors', $processors );
 }
 
 /**
@@ -96,6 +100,7 @@ function tmsc_dependency() {
 	$tmsc_dependencies = array(
 		new \TMSC\Plugin_Dependency( 'TMS Connect', 'Fieldmanager', 'https://github.com/alleyinteractive/wordpress-fieldmanager' ),
 		new \TMSC\Plugin_Dependency( 'TMS Connect', 'Zone Manager (Zoninator)', 'https://github.com/Automattic/zoninator' ),
+		new \TMSC\Plugin_Dependency( 'TMS Connect', 'Fieldmanager Zones', 'https://github.com/alleyinteractive/fm-zones' ),
 	);
 	foreach ( $tmsc_dependencies as $tmsc_dependency ) {
 		if ( ! $tmsc_dependency->verify() ) {

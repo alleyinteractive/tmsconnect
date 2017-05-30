@@ -65,7 +65,7 @@ class TMSC {
 		// Add in our sync options page
 		if ( function_exists( 'fm_register_submenu_page' ) ) {
 			if ( current_user_can( 'manage_options' ) ) {
-				fm_register_submenu_page( 'tmsc_guide_terms', 'edit.php?post_type=tms_object', __( 'Sync Guide Terms', 'tmsc' ) );
+				fm_register_submenu_page( 'tmsc_guide_terms', 'edit.php?post_type=tms_object', __( 'Set Guide Terms', 'tmsc' ) );
 			}
 		}
 		add_action( 'fm_submenu_tmsc_guide_terms', array( $this, 'sync_init' ) );
@@ -118,7 +118,7 @@ class TMSC {
 			'name' => 'tmsc_guide_terms',
 			'children' => array(
 				'term' => new \Fieldmanager_Group( array(
-					'description' => __( 'Use the CN number of the guide terms that should serve as parent taxonomies', 'tmsc' ),
+					'description' => __( 'Use the CN number of the guide terms that should serve as parent taxonomies.', 'tmsc' ),
 					'collapsible' => true,
 					'label' => __( 'Guide Terms', 'tmsc' ),
 					'children' => array(
@@ -128,7 +128,10 @@ class TMSC {
 							'children' => array(
 								'taxonomy_map' => new \Fieldmanager_Select( __( 'Map to Taxonomy', 'tmsc' ), array(
 									'datasource' => new \Fieldmanager_Datasource( array(
-										'options' => get_taxonomies(),
+										'options' => get_taxonomies( array(
+											'_builtin' => false,
+											'object_type' => array( 'tms_object' ),
+										) ),
 									) ),
 								) ),
 								'CN' => new \Fieldmanager_Textfield( __( 'Guide Term CN', 'tmsc' ) ),
@@ -230,23 +233,43 @@ class TMSC {
 	}
 
 	/**
-	 * Empty TMSC's cache. This is primarily used for caching attachments.
-	 *
-	 */
-	public function cache_clean() {
-		tmsc_cache_clean();
-	}
-
-	/**
 	 * Update term counts for the site.
 	 *
-	 * TMSC disables term counts throughout the migration process to improve
+	 * TMSConnect disables term counts throughout the migration process to improve
 	 * performance. This command must be run after a migration to ensure that
 	 * all term functions work properly.
-	 *
+	 * @return void
 	 */
 	public function update_term_count() {
-		tmsc_update_term_count();
+		// Note the start time and keep track of how many fields have been converted for script output
+		$timestamp_start = microtime( true );
+
+		// Get all taxonomies
+		$taxonomies = get_taxonomies();
+		foreach ( $taxonomies as $taxonomy ) {
+			// Get all terms for the taxonomy
+			// Use special handling for the 'author' taxonomy due to Co-Authors Plus custom post count function
+			if ( 'author' === $taxonomy && function_exists( 'coauthors' ) ) {
+				$args = array(
+					'hide_empty' => 0,
+				);
+				$terms = get_terms( $taxonomy, $args );
+				$tt_ids = array();
+				foreach ( $terms as $term ) {
+					$tt_ids[] = $term->term_taxonomy_id;
+				}
+				$terms = $tt_ids;
+			} else {
+				$args = array(
+					'hide_empty' => 0,
+					'fields' => 'ids',
+				);
+				$terms = get_terms( $taxonomy, $args );
+			}
+			if ( is_array( $terms ) && ! empty( $terms ) ) {
+				wp_update_term_count_now( $terms, $taxonomy );
+			}
+		}
 	}
 
 	/**

@@ -51,6 +51,7 @@ class Tmsc_Taxonomy_Sites extends Tmsc_Taxonomy {
 				'choose_from_most_used' => __( 'Choose from most used Sites', 'tmsc' ),
 				'menu_name'             => __( 'Sites', 'tmsc' ),
 			),
+			'hierarchical' => true,
 			'rewrite' => array(
 				'with_front' => false,
 			),

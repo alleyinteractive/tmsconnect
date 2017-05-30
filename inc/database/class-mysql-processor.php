@@ -38,5 +38,23 @@ abstract class MySQL_Processor extends \TMSC\Database\Database_Processor {
 		$connection->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
 		return $connection;
 	}
+
+	/**
+	 * Allow for bulk stmt execution.
+	 */
+	public function disable_autocommit() {
+		// Let's bulk insert.
+		global $wpdb;
+		$wpdb->query( 'SET autocommit = 0;' );
+	}
+
+	/**
+	 * Commit all items in stmt queue.
+	 */
+	public function commit() {
+		global $wpdb;
+		$wpdb->query( 'COMMIT;' );
+		$wpdb->query( 'SET autocommit = 1;' );
+	}
 }
 class_alias( '\TMSC\Database\MySQL_Processor', '\TMSC\Database\System_Processor' );

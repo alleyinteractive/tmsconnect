@@ -20,22 +20,17 @@ abstract class Migrateable {
 	protected $raw = null;
 
 	/**
-	 * URL of the site being migrated. Useful for many functions, such as legacy URL.
-	 * @var string
-	 */
-	protected $url;
-
-	/**
 	 * The processor used for this migrateable
 	 * @var Processor
 	 */
 	protected $processor = null;
 
 	/**
-	 * Queue of meta key/value pairs to save for the current object
+	 * Queue of statements that can be executed in bulk.
+	 * This will be update statements and any other calls where return values are not needed.
 	 * @var array
 	 */
-	private $meta_queue = array();
+	private $stmt_queue = array();
 
 	/**
 	 * Array of attachment migrateables created during save process
@@ -50,46 +45,59 @@ abstract class Migrateable {
 	public $name;
 
 	/**
-	 * The type of migrateable object. Must be set by all implementing classes.
-	 * @var string
+	 * The WP type of migrateable object. Must be set by all implementing classes.
+	 * @var string $type (term, post).
 	 */
 	public $type;
+
+	/**
+	 * ID mapping for migratable type.
+	 * @var array.
+	 */
+	public $id = array(
+		'term' => 'term_id',
+		'post' => 'ID',
+	);
 
 	/**
 	 * Constructor. Set the current object to an empty class and define the type.
 	 */
 	public function __construct( $type ) {
 		$this->type = $type;
-		$this->object = new \stdClass;
+		$this->object = null;
 	}
 
 	/**
-	 * Get legacy URL
-	 * @return string
-	 */
-	abstract public function get_legacy_url();
-
-	/**
-	 * Get legacy ID - must be GUID
+	 * Get legacy ID
 	 * @return string
 	 */
 	abstract public function get_legacy_id();
 
 	/**
-	 * This is a hook that gets fired before the post is saved. Return true if the current post should be skipped.
-	 * @return boolean true if this post should be skipped
+	 * Get legacy CN
+	 * @return string
+	 */
+	public function get_legacy_cn() {
+		if ( ! empty( $this->raw->CN ) ) {
+			return $this->raw->CN;
+		}
+	}
+
+	/**
+	 * This is a function that gets fired before the object is saved.
+	 * @return void
 	 */
 	protected function before_save() {
 		// nothing.
 	}
 
 	/**
-	 * This is a hook that gets fired after the post is saved, if it's saved successfully.
-	 * This is the place to set post_meta
+	 * This is a function that gets fired after the object is saved, if it's saved successfully.
+	 * This is the place to set processor meta data
 	 * @return void
 	 */
 	protected function after_save() {
-		// nothing.
+		$this->set_last_updated_hash();
 	}
 
 	/**
@@ -100,19 +108,28 @@ abstract class Migrateable {
 	}
 
 	/**
-	 * Get the current URL of the object
+	 * Checks a hash of the raw data against the stored object.
+	 * @return boolean
 	 */
-	abstract public function get_url();
+	public function requires_update() {
+		if ( ! empty( $this->object )  ) {
+			$last_updated = $this->get_last_updated_hash();
+			if ( ! empty( $last_updated ) && ! empty( $this->raw ) && tmsc_hash_data( $this->raw ) === $last_updated ) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	/**
-	 * Update the object (used in after_save usually)
+	 * Get the hash value of the last time this migrateable was updated.
 	 */
-	abstract public function update();
+	abstract public function get_last_updated_hash();
 
 	/**
-	 * Delete the object
+	 * Set a md5 hash of the raw data.
 	 */
-	abstract public function delete();
+	abstract public function set_last_updated_hash();
 
 	/**
 	 * Save this object
@@ -120,27 +137,13 @@ abstract class Migrateable {
 	abstract public function save();
 
 	/**
-	 * Get the save override
-	 * @return boolean
-	 */
-	public function save_override( &$post ) {
-		return false;
-	}
-
-	/**
-	 * Save the final object status
-	 * @return string
-	 */
-	public function save_final_object_status() {}
-
-	/**
 	 * Proxy for the appropriate update meta function for this object
 	 */
 	public function update_meta( $k, $v, $prev_value = null ) {
 		$func = 'update_' . $this->type . '_meta';
 		if ( function_exists( $func ) ) {
-			$this->meta_queue[] = array( $func, $k, $v, $prev_value );
-			$this->flush_meta_queue();
+			$id = $this->id[ $this->type ];
+			$this->stmt_queue[] = array( $func, array( $this->object->{$id}, $k, $v, $prev_value ) );
 		}
 	}
 
@@ -150,8 +153,16 @@ abstract class Migrateable {
 	public function add_meta( $k, $v, $unique = false ) {
 		$func = 'add_' . $this->type . '_meta';
 		if ( function_exists( $func ) ) {
-			$this->meta_queue[] = array( $func, $k, $v, $unique );
-			$this->flush_meta_queue();
+			$id = $this->id[ $this->type ];
+			$this->stmt_queue[] = array( $func, array( $this->object->{$id}, $k, $v, $unique ) );
+		}
+	}
+
+	public function update() {
+		$func = 'wp_update' . $this->type;
+		if ( function_exists( $func ) ) {
+			$args = func_get_args();
+			$this->stmt_queue[] = array( $func, $args );
 		}
 	}
 
@@ -159,21 +170,30 @@ abstract class Migrateable {
 	 * Proxy for the appropriate get meta function for this object
 	 */
 	public function get_meta( $k, $single = true ) {
-		return get_metadata( $this->type, $this->object->ID, $k, $single );
+		$id = $this->id[ $this->type ];
+		return get_metadata( $this->type, $this->object->{$id}, $k, $single );
 	}
 
 	/**
-	 * Process any queued meta actions. Allows us to set meta keys before the post is saved.
+	 * Execute the meta data functions in the queue.
+	 * @return void
 	 */
-	protected function flush_meta_queue() {
-		if ( empty( $this->object->ID ) ) {
-			return;
+	public function flush_stmt_queue() {
+		error_log(
+			strtr(
+				print_r($this->stmt_queue, true),
+				array(
+					"\r\n"=>PHP_EOL,
+					"\r"=>PHP_EOL,
+					"\n"=>PHP_EOL,
+				)
+			)
+		);
+
+		foreach ( $this->stmt_queue as $function ) {
+			call_user_func_array( $function[0], $function[1] );
 		}
-		while ( $meta_entry = array_pop( $this->meta_queue ) ) {
-			$func = array_shift( $meta_entry );
-			array_unshift( $meta_entry, $this->object->ID );
-			call_user_func_array( $func, $meta_entry );
-		}
+		$this->stmt_queue = array();
 	}
 
 	/**
@@ -182,14 +202,6 @@ abstract class Migrateable {
 	 */
 	public function get_children() {
 		return $this->children;
-	}
-
-	/**
-	 * Check if this object is new based on if the ID is set
-	 * @return boolean
-	 */
-	public function is_new() {
-		return empty( $this->object->ID ) || '1' == $this->get_meta( 'tmsc_stub' );
 	}
 
 	/**
@@ -205,6 +217,7 @@ abstract class Migrateable {
 	 * @param $raw
 	 */
 	public function set_data( $raw ) {
+		$this->object = null;
 		$this->raw = $raw;
 	}
 }

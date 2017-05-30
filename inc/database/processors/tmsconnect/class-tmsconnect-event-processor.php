@@ -8,11 +8,6 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	public $processor_type = 'Taxonomy';
 
 	/**
-	 * Which migratable type the objects of this processor will be.
-	 */
-	public $migrateable_type = 'Taxonomy';
-
-	/**
 	 * The key used for the current object query
 	 * @var string
 	 */
@@ -58,20 +53,23 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 
 	/**
 	 * Generate our objects we are migrating.
-	 * Ensure that these objects are ordered by CN and return the columns.
 	 */
 	public function get_object_query_stmt() {
 		return "SELECT DISTINCT
 			Terms.TermID,
 			Terms.Term,
 			TermMaster.CN,
+			TermMaster.GuideTerm,
 			TermMaster.Children,
-			'{$this->current_tax->taxonomy}' as taxonomy
+			TermMaster.NodeDepth,
+			Terms.TermTypeID,
+			TermTypes.TermType,
+			'{$this->current_tax->slug}' as slug
 		FROM Terms
 		INNER JOIN TermMaster on Terms.TermMasterID = TermMaster.TermMasterID
 		INNER JOIN TermTypes on Terms.TermTypeID = TermTypes.TermTypeID
-		WHERE Terms.TermTypeID = 1
-		AND TermMaster.CN LIKE '{$this->current_tax->CN}.%'
+		WHERE TermMaster.CN LIKE
+		'{$this->current_tax->CN}.%'
 		ORDER BY TermMaster.CN";
 	}
 
@@ -98,7 +96,12 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 			$stmt = "SELECT DISTINCT
 				Terms.TermID,
 				Terms.Term,
-				TermMaster.CN
+				TermMaster.CN,
+				TermMaster.GuideTerm,
+				TermMaster.Children,
+				TermMaster.NodeDepth,
+				Terms.TermTypeID,
+				TermTypes.TermType
 				FROM Terms
 				INNER JOIN TermMaster on Terms.TermMasterID = TermMaster.TermMasterID
 				INNER JOIN TermTypes on Terms.TermTypeID = TermTypes.TermTypeID
@@ -109,10 +112,8 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 			$this->prepare( $this->object_query_key, $stmt );
 			$query = $this->query( $this->object_query_key );
 			$results = $query->fetchAll();
-
-			// Set the guide term as the top level taxonomy so that our results know the proper WP taxonomy.
 			foreach ( $results as $index => $result ) {
-				$results[ $index ]->taxonomy = $cns[ $result->CN ];
+				$results[ $index ]->slug = $cns[ $result->CN ];
 			}
 			return $results;
 		}

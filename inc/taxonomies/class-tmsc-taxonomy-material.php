@@ -51,6 +51,7 @@ class Tmsc_Taxonomy_Material extends Tmsc_Taxonomy {
 				'choose_from_most_used' => __( 'Choose from most used Materials', 'tmsc' ),
 				'menu_name'             => __( 'Materials', 'tmsc' ),
 			),
+			'hierarchical' => true,
 			'rewrite' => array(
 				'with_front' => false,
 			),

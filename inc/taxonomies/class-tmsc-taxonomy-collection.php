@@ -51,6 +51,7 @@ class Tmsc_Taxonomy_Collection extends Tmsc_Taxonomy {
 				'choose_from_most_used' => __( 'Choose from most used Collections', 'tmsc' ),
 				'menu_name'             => __( 'Collections', 'tmsc' ),
 			),
+			'hierarchical' => true,
 			'rewrite' => array(
 				'with_front' => false,
 			),

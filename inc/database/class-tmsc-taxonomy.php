@@ -8,18 +8,20 @@ namespace TMSC\Database;
 class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 
 	/**
-	 * Terms for the current taxonomy.
+	 * Parent Terms for the current taxonomy.
 	 * Implementations of get_terms can store here to avoid
 	 * having to re-query if other functions need this data.
 	 * @var array
+	 *
 	 */
-	protected $terms = null;
+	protected $parents = array();
 
 	/**
-	 * The type of migrateable taxonomy. Must be set by all implementing classes.
+	 * The type of migrateable taxonomy.
 	 * @var string
+	 *
 	 */
-	public $taxonomy = '';
+	public $taxonomy;
 
 	/**
 	 * Constructor. Set this as a term migrateable.
@@ -29,18 +31,9 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 	}
 
 	/**
-	 * Get legacy CN
-	 * @return string
-	 */
-	public function get_legacy_CN(){
-		if ( ! empty( $this->raw->CN ) ) {
-			return $this->raw->CN;
-		}
-	}
-
-	/**
 	 * Get legacy ID
 	 * @return int
+	 *
 	 */
 	public function get_legacy_id() {
 		if ( ! empty( $this->raw->TermID ) ) {
@@ -49,71 +42,15 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 	}
 
 	/**
-	 * Get terms
-	 * @return associative array, like array( 'category' => array( 'News', 'Sports' ), 'post_tag' => array( 'Football', 'Jets' ) )
+	 * Set our current taxonomy.
+	 * @return void
+	 *
 	 */
-	public function get_terms() {
-
-	}
-
-	/**
-	 * Get term slug
-	 * @return string post slug
-	 */
-	public function get_term_name() {}
-
-	/**
-	 * Get term parent
-	 * @return integer parent term id
-	 */
-	public function get_term_parent() {}
-
-	/**
-	 * Save the final post status
-	 * @return string
-	 */
-	public function save_final_object_status() {
-		\TMSC\Util\Map::get( 'legacy_post_ids' )->map( $this->get_legacy_id(), $this->object->ID );
-		$this->object->post_status = $this->get_post_status();
-		wp_update_post( $this->object );
-	}
-
-	/**
-	 * Get term object
-	 * @return WP_Term
-	 */
-	public function get_term() {
-		return $this->get_object();
-	}
-
-	/**
-	 * Get the post permalink
-	 * @return string
-	 */
-	public function get_url() {
-		if ( !empty( $this->object->ID ) ) {
-			return get_permalink( $this->object->ID );
-		}
-		return '';
-	}
-
-	/**
-	 * Update the term (used in after_save usually)
-	 */
-	public function update() {
-		$args = array(
-			'name' => $this->object->name,
-			'description' => $this->object->description,
-		);
-		wp_update_term( $this->object->term_id, $this->object->taxonomy, $args );
-	}
-
-	/**
-	 * Delete the term
-	 */
-	public function delete() {
-		if ( ! empty( $this->object->term_id ) ) {
-			wp_delete_term( $this->object->term_id, $this->object->taxonomy );
+	public function set_current_taxonomy() {
+		if ( ! empty( $this->raw->taxonomy ) ) {
+			$this->taxonomy = $this->raw->taxonomy;
+		} else {
+			$this->taxonomy = '';
 		}
 	}
 
@@ -121,18 +58,42 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 	 * Load an existing taxonomy if it exists.
 	 */
 	public function load_existing_term() {
+		$this->object = null;
 		// Check for existing post by legacy ID
 		$legacy_id = $this->get_legacy_id();
-		if ( ! empty( $legacy_id ) ) {
+		if ( ! empty( $legacy_id ) && ! empty( $this->taxonomy ) ) {
 			$args = array(
-				'taxonomy' => $this->raw->taxonomy,
+				'taxonomy' => $this->taxonomy,
 				'hide_empty' => false,
 				'meta_key' => 'tmsc_legacy_id',
 			);
 			$existing_terms = get_terms( $args );
 			if ( ! empty( $existing_term ) ) {
-				$this->object = get_post( $existing_post_id );
+				$this->object = reset( $existing_terms );
+				if ( ! empty( $this->raw->Children ) && ! empty( $this->raw->CN ) ) {
+					$this->parents[ $this->raw->CN ] = $this->object->term_id;
+				}
 			}
+		}
+	}
+
+	/**
+	 * Get the last updated data hash.
+	 * @return mixed string|false
+	 */
+	public function get_last_updated_hash() {
+		if ( ! empty( $this->object ) ) {
+			return $this->get_meta( 'tmsc_last_updated', true );
+		}
+		return false;
+	}
+
+	/**
+	 * Set the last updated data hash.
+	 */
+	public function set_last_updated_hash() {
+		if ( ! empty( $this->raw ) ) {
+			$this->update_meta( 'tmsc_last_updated', tmsc_hash_data( $this->raw ) );
 		}
 	}
 
@@ -144,196 +105,85 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 		if ( $this->before_save() ) {
 			return;
 		}
-
+		$this->set_current_taxonomy();
 		$this->load_existing_term();
 
-		$post = array(
-			'post_title' => $this->get_title(),
-			'post_status' => 'migrating',
-			'post_author' => $this->get_post_author(),
-			'post_date' => date( 'Y-m-d H:i:s', $this->get_pubdate() ),
-			'post_date_gmt' => get_gmt_from_date( date( 'Y-m-d H:i:s', $this->get_pubdate() ) ),
-			'post_type' => $this->get_post_type(),
-			'post_content' => $this->get_body(),
-			'post_excerpt' => $this->get_excerpt(),
-			'post_parent' => $this->get_post_parent(),
-			'post_name' => $this->get_post_name(),
-			'comment_status' => $this->get_comment_status(),
-		);
+		if ( $this->requires_update() ) {
+			$this->object = $this->save_term();
 
-		if ( ! $this->save_override( $post ) ) {
-			if ( ! empty( $this->object->ID ) ) {
-				$post['ID'] = $this->object->ID;
-			} elseif ( 'attachment' == $this->get_post_type() ) {
-				throw new \Exception( 'You should subclass Attachment, not Migrateable.' );
-			}
-
-			$post_id = wp_insert_post( $post );
-			// Load the new post
-			$this->object = get_post( $post_id );
-		} elseif ( 'attachment' != $this->get_post_type() ) {
-			// We skip this notice on attachments since they're always skipped
-		}
-
-		if ( empty( $this->object->ID ) ) {
-			return false;
-		}
-
-		delete_post_meta( $this->object->ID, 'tmsc_stub' );
-
-		$this->save_terms( $this->get_terms() );
-
-		$this->flush_meta_queue();
-
-		$this->after_save();
-
-		return true;
-	}
-
-	/**
-	 * Only save mappings for this post
-	 * @return boolean true if successfully saved
-	 */
-	public function mapping_only_save() {
-
-		// check for existing post by legacy GUID
-		$legacy_id = $this->get_legacy_id();
-		if ( ! empty( $legacy_id ) ) {
-			$existing_post = tmsc_post_by_legacy_id( $legacy_id );
-			if ( $existing_post  ) {
-				$this->object = $existing_post;
-			}
-		}
-
-		if ( empty( $this->object->ID ) ) {
-			return false;
-		}
-
-		$this->save_terms( $this->get_terms() );
-
-		// if you don't use CAP, you're own your own with authors.
-		if ( function_exists( 'coauthors' ) ) {
-			$this->save_authors( $this->get_authors() );
-		}
-
-		$this->flush_meta_queue();
-
-		return true;
-	}
-
-	/**
-	 * Save terms
-	 * @see get_terms()
-	 * @param array $term_struct
-	 */
-	public function save_terms( $term_struct, $do_map = true ) {
-		foreach ( $term_struct as $tax => $terms ) {
-			foreach ( $terms as $i => $term ) {
-				$mappings = tmsc_get_mapping( $tax, $term );
-				if ( !empty( $mappings ) ) {
-					unset( $term_struct[$tax][$i] ); // prepare for overwrite
-					foreach ( $mappings as $mapping ) {
-						if ( $mapping['action'] == 'remove' ) {
-							unset( $term_struct[$tax][$i] ); // make sure it's gone
-							break;
-						}
-						if ( empty( $term_struct[ $mapping['dest_type'] ] ) ) {
-							$term_struct[ $mapping['dest_type'] ] = array();
-						}
-						$term_struct[ $mapping['dest_type'] ][] = $mapping['dest'];
-					}
+			if ( empty( $this->object->term_id ) ) {
+				return false;
+			} else {
+				if ( ! empty( $this->raw->Children ) && ! empty( $this->raw->CN ) ) {
+					$this->parents[ $this->raw->CN ] = $this->object->term_id;
 				}
 			}
+
+			$this->after_save();
+
+			return true;
 		}
-		foreach ( $term_struct as $tax => $terms ) {
-			$term_ids = array();
-			foreach ( $terms as $term ) {
-				$tid = (int) static::get_or_create_term_by_name( $term, $tax );
-				if ( $tid ) $term_ids[] = $tid;
-			}
-			wp_set_object_terms( $this->object->ID, $term_ids, $tax );
-		}
+		return false;
 	}
 
 	/**
-	 * Helper to create a taxonomy term
-	 * @param string $name
-	 * @param string $taxonomy
-	 * @param array $args
-	 * @return int term id
+	 * Save term
+	 * @return WP_Term Object
 	 */
-	public static function get_or_create_term_by_name( $name, $taxonomy, $args = array() ) {
-		$term = get_term_by( 'name', $name, $taxonomy );
-		if ( is_object( $term ) && is_numeric( $term->term_id ) ) {
-			return $term->term_id;
-		}
-		$inserted_term = wp_insert_term( $name, $taxonomy, $args );
-		if ( is_wp_error( $inserted_term ) ) {
-			if ( ! empty( $inserted_term->error_data[ 'term_exists' ] ) ) {
-				return $inserted_term->error_data[ 'term_exists' ];
-			}
-			return false;
-		}
-		return $inserted_term['term_id'];
-	}
+	public function save_term() {
 
-	/**
-	 * Wraps HTML snippets in the appropriate code and doctype.
-	 *
-	 * @param string $html The HTML fragment to wrap.
-	 *
-	 * @access protected
-	 * @return string The HTML fragment as a full HTML5 document.
-	 */
-	protected function wrap_html_snippet( $html ) {
-		return <<<HTML
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="UTF-8">
-	</head>
-	<body>{$html}</body>
-</html>
-HTML;
-	}
-
-	/**
-	 * Create a stub post with a legacy ID that can be migrated fully later
-	 * @param string $type, post type
-	 * @param int|string $legacy_id
-	 * @param string $title, generated from ID
-	 * @param array $extra, any other post properties to set
-	 * @return post object
-	 */
-	function get_or_create_stub_post( $type, $legacy_id, $title = '', $extra = array() ) {
-		$post = tmsc_post_by_legacy_id( $legacy_id );
-		if ( ! empty( $post ) ) {
-			return $post;
-		}
-
-		$title = $title ? $title : $type . ' stub ' . $legacy_id;
-
-		$post = array(
-			'post_title' => $title,
-			'post_status' => 'publish',
-			'post_date' => date( 'Y-m-d H:i:s', $this->get_pubdate() ),
-			'post_date_gmt' => get_gmt_from_date( date( 'Y-m-d H:i:s', $this->get_pubdate() ) ),
-			'post_type' => $type,
+		$args = array(
+			'parent' => $this->get_term_parent(),
 		);
 
-		tmsc_notice( sprintf( 'Saving stub of type %s and title %s', $type, $title ) );
+		if ( ! empty( $this->object->term_id ) ) {
+			$term_id = $this->object->term_id;
+			// Pass this the parameters of wp_update_term.
+			// This will stash it in the stmt queue for bulk processing.
+			$this->update( $this->object->term_id, $this->taxonomy, $args );
+		} else {
+			// Since we require a return value, we call the WP insert stmt here directly.
+			$return = wp_insert_term( $this->raw->Term, $this->taxonomy, $args );
+			if ( is_wp_error( $return ) ) {
+				// This should not really fire once data has been properly loaded.
+				// Adding it in to rewrite incorrect data during testing phase.
+				if ( ! empty( $return->error_data['term_exists'] ) ) {
+					$term_id = $return->error_data['term_exists'];
+					$this->update( $term_id, $this->taxonomy, $args );
+				} else {
+					return false;
+				}
+			} else {
+				$term_id = $return['term_id'];
+			}
+		}
 
-		$post = array_merge( $post, $extra );
-		$post_id = wp_insert_post( $post );
-
-		// Add this post ID to the map so we don't create multiple stubs
-		\TMSC\Util\Map::get( 'legacy_post_ids' )->map( $legacy_id, $post_id );
-
-		// Mark this stub with minimal postmeta so TMSC can grab it later, or delete it using the current processor
-		update_post_meta( $post_id, 'tmsc_source', (string) $this->processor );
-		update_post_meta( $post_id, 'tmsc_legacy_id', $legacy_id );
-		update_post_meta( $post_id, 'tmsc_stub', '1' );
-		return get_post( $post_id );
+		// Return a pseudo term object
+		return (object) array( 'taxonomy' => $this->taxonomy, 'term_id' => $term_id );
 	}
 
+	/**
+	 * Get the parent CN and term ID
+	 * @return int
+	 */
+	public function get_term_parent() {
+		$parent_cn = $this->get_parent_cn();
+		if ( array_key_exists( $parent_cn, $this->parents ) ) {
+			return $this->parents[ $parent_cn ];
+		}
+		return 0;
+	}
+
+	/**
+	 * Get the parent CN of the current object.
+	 * @return string
+	 */
+	public function get_parent_cn() {
+		if ( ! empty( $this->raw->CN ) ) {
+			$array_cn = explode( '.',  $this->raw->CN );
+			array_pop( $array_cn );
+			return implode( '.', $array_cn );
+		}
+		return '';
+	}
 }

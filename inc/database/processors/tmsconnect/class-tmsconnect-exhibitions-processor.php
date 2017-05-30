@@ -53,6 +53,7 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 
 	/**
 	 * Generate our objects we are migrating.
+	 * Always order by CN or else you won't be able to properly detect parent terms.
 	 */
 	public function get_object_query_stmt() {
 		return "SELECT DISTINCT
@@ -75,6 +76,7 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 
 	/**
 	 * Get the taxonomies that we will be migrating.
+	 * Always order by CN or else you won't be able to properly detect parent terms.
 	 */
 	public function get_migratable_taxonomies() {
 		$guide_terms = get_option( 'tmsc_guide_terms', array() );

@@ -24,6 +24,13 @@ abstract class Processor {
 	 */
 	protected $data = array();
 
+	/**
+	 * The current migratable
+	 * @var array
+	 */
+	public $migratable;
+
+
 	private $stop_processing = false;
 
 	/**
@@ -63,16 +70,10 @@ abstract class Processor {
 	 */
 	public function mark_object_as_processed( $saved_migrateable ) {
 		$object = $saved_migrateable->get_object();
-		if ( ! empty( $object->ID ) ) {
-			$saved_migrateable->update_meta( 'tmsc_legacy_CN', $saved_migrateable->get_legacy_CN() );
+		if ( ! empty( $object ) ) {
+			$saved_migrateable->update_meta( 'tmsc_legacy_CN', $saved_migrateable->get_legacy_cn() );
 			$saved_migrateable->update_meta( 'tmsc_legacy_id', $saved_migrateable->get_legacy_id() );
 			$saved_migrateable->update_meta( 'tmsc_migration_time', time() );
-			$saved_migrateable->save_final_object_status();
-		}
-
-		// same for children
-		foreach ( $saved_migrateable->get_children() as $child ) {
-			$this->mark_object_as_processed( $child );
 		}
 	}
 
@@ -80,7 +81,6 @@ abstract class Processor {
 	 * Set all pointers back to the start.
 	 */
 	public function rewind() {
-		$this->set_option( 'done', false );
 	}
 
 	/**
@@ -100,8 +100,11 @@ abstract class Processor {
 	 */
 	public function run() {
 		wp_defer_term_counting( true );
+		wp_defer_comment_counting( true );
+
 		$this->before_run();
 		$this->load_migrateable();
+
 		if ( ! empty( $this->migrateable ) ) {
 			$this->migrateable->set_processor( $this );
 
@@ -112,8 +115,15 @@ abstract class Processor {
 				$this->after_migrate_object();
 				$this->finish();
 			}
+			$this->disable_autocommit();
+			$this->migrateable->flush_stmt_queue();
+			$this->commit();
 		}
 		$this->after_run();
+
+		wp_defer_term_counting( false );
+		wp_defer_comment_counting( false );
+		wp_cache_flush();
 	}
 
 	/**
@@ -186,7 +196,6 @@ abstract class Processor {
 	 */
 	protected function finish() {
 		$this->halt();
-		$this->set_option( 'done', true );
 	}
 
 	/**
@@ -196,4 +205,14 @@ abstract class Processor {
 		$done = $this->get_option( 'done' );
 		return ! empty( $done );
 	}
+
+	/**
+	 * Allow for bulk stmt execution.
+	 */
+	abstract protected function disable_autocommit();
+
+	/**
+	 * Commit all items in stmt queue.
+	 */
+	abstract protected function commit();
 }

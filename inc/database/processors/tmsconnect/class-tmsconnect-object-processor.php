@@ -10,16 +10,15 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	public $processor_type = 'Object';
 
 	/**
+	 * Which migratable type the objects of this processor will be.
+	 */
+	public $migrateable_type = 'Object';
+
+	/**
 	 * The key used for the current object query
 	 * @var string
 	 */
 	public $object_query_key = 'tms_objects';
-
-	/**
-	 * Holds the URL of the current site being migrated
-	 * @var string
-	 */
-	public $url;
 
 	/**
 	 * Constructor
@@ -47,5 +46,4 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	public function prepare_additional_queries() {
 
 	}
-
 }

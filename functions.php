@@ -13,6 +13,17 @@ function tmsc_set_sync_status( $message ) {
 }
 
 /**
+ * Create a unique string for a data field.
+ * This allows us to quickly check if data has been changed on sync.
+ * @param mixed $data. Can be any data type.
+ * @return string
+ */
+function tmsc_hash_data( $data ) {
+	$serialize = function_exists( 'igbinary_serialize' ) ? 'igbinary_serialize' : 'serialize';
+	return md5( $serialize( $data ) );
+}
+
+/**
  * Stop the insanity; clean up memory.
  */
 function tmsc_stop_the_insanity() {
@@ -33,92 +44,4 @@ function tmsc_stop_the_insanity() {
 	if ( is_callable( $wp_object_cache, '__remoteset' ) ) {
 		$wp_object_cache->__remoteset(); // important
 	}
-}
-
-/**
- * Converts a "dirty" URL that might have GET params or width/height attributes
- * to a clean GUID.
- */
-function tmsc_strip_url_params( $url ) {
-	if ( false !== ( $pos = strpos( $url, '?' ) ) ) {
-		return substr( $url, 0, $pos );
-	}
-	return $url;
-}
-
-function tmsc_clean_crashed_posts() {
-	$posts = get_posts( array(
-		'posts_per_page' => -1,
-		'post_status' => 'migrating',
-	) );
-	foreach ( $posts as $post ) {
-		wp_delete_post( $post->ID, true );
-	}
-}
-
-function tmsc_get_mapping( $type, $term, $find_dest = false ) {
-	return \TMSC\Util\MappingFile::get_mapping( $type, $term, $find_dest );
-}
-
-/**
- * Register a custom processor with TMSC
- */
-function tmsc_register_processor( $classname = null ) {
-	return \TMSC\TMSC::instance()->register_processor( $classname );
-}
-
-function tmsc_update_term_count() {
-	// Note the start time and keep track of how many fields have been converted for script output
-	$timestamp_start = microtime( true );
-
-	echo "Starting update of term counts for all taxonomies\n";
-
-	// Get all taxonomies
-	$taxonomies = get_taxonomies();
-	foreach ( $taxonomies as $taxonomy ) {
-		// Get all terms for the taxonomy
-		// Use special handling for the 'author' taxonomy due to Co-Authors Plus custom post count function
-		if ( 'author' === $taxonomy && function_exists( 'coauthors' ) ) {
-			$args = array(
-				'hide_empty' => 0,
-			);
-			$terms = get_terms( $taxonomy, $args );
-			$tt_ids = array();
-			foreach ( $terms as $term ) {
-				$tt_ids[] = $term->term_taxonomy_id;
-			}
-			$terms = $tt_ids;
-		} else {
-			$args = array(
-				'hide_empty' => 0,
-				'fields' => 'ids',
-			);
-			$terms = get_terms( $taxonomy, $args );
-		}
-		if ( is_array( $terms ) && ! empty( $terms ) ) {
-			wp_update_term_count_now( $terms, $taxonomy );
-		}
-	}
-}
-
-/**
- * Get a \WP_Term by its legacy ID.
- *
- * @param int $legacy_id
- * @return \WP_Term|null Null on failure.
- */
-function tmsc_term_id_by_legacy_id( $legacy_id ) {
-	$terms = get_terms( array(
-		'fields'     => 'ids',
-		'hide_empty' => false,
-		'meta_key'   => 'tmsc_legacy_id',
-		'meta_value' => $legacy_id,
-		'number'     => 1,
-	) );
-
-	if ( empty( $terms ) || ! is_array( $terms ) ) {
-		return null;
-	}
-
-	return array_shift( $terms );
 }
