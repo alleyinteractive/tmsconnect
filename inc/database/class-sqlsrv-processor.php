@@ -32,5 +32,20 @@ abstract class SQLSrv_Processor extends \TMSC\Database\Database_Processor {
 		$connection->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
 		return $connection;
 	}
+
+	/**
+	 * Allow for bulk stmt execution.
+	 */
+	public function disable_autocommit() {
+		// Let's bulk insert.
+		global $wpdb;
+	}
+
+	/**
+	 * Commit all items in stmt queue.
+	 */
+	public function commit() {
+		global $wpdb;
+	}
 }
 class_alias( '\TMSC\Database\SQLSrv_Processor', '\TMSC\Database\System_Processor' );

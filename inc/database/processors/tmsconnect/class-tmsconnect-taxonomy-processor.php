@@ -31,12 +31,6 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	public $current_tax;
 
 	/**
-	 * Holds the URL of the current site being migrated
-	 * @var string
-	 */
-	public $url;
-
-	/**
 	 * Constructor
 	 * @param string $type
 	 */

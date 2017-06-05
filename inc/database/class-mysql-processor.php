@@ -56,5 +56,34 @@ abstract class MySQL_Processor extends \TMSC\Database\Database_Processor {
 		$wpdb->query( 'COMMIT;' );
 		$wpdb->query( 'SET autocommit = 1;' );
 	}
+
+	/**
+	 *
+	 */
+	public function set_offset_sql( $stmt ) {
+		$query = strtoupper( $stmt );
+		if ( false === stripos( $query, 'ORDER BY' ) ) {
+			throw new \Exception( 'Please ensure the SQL statement inlcudes an ORDER BY clause.' );
+		} elseif ( false === stripos( $query, 'LIMIT' )
+			&& false === stripos( $query, 'PROCEDURE' )
+			&& false === stripos( $query, 'FOR UPDATE' )
+			&& false === stripos( $query, 'LOCK IN SHARE MODE' ) ) {
+			// Automatically add a LIMIT clause to standard queries.
+			$stmt .= ' LIMIT :offset, :size';
+		} elseif ( false === stripos( $query, 'LIMIT' )
+			&& ( false !== stripos( $query, 'PROCEDURE' )
+			&& false !== stripos( $query, 'FOR UPDATE' )
+			&& false !== stripos( $query, 'LOCK IN SHARE MODE' ) ) ) {
+			// A LIMIT clause can't be added automatically but is required.
+			// Throw an exception here.
+			throw new \Exception( "A LIMIT clause in the format 'LIMIT :offset, :size' must be specified manually for this custom query." );
+		} elseif ( false !== stripos( $query, 'LIMIT' )
+			&& false === stripos( $query, 'LIMIT :offset, :size' ) ) {
+			// A LIMIT clause was added but is incompatible.
+			throw new \Exception( "A LIMIT clause must be specified in the format 'LIMIT :offset, :size'." );
+		}
+
+		return $stmt;
+	}
 }
 class_alias( '\TMSC\Database\MySQL_Processor', '\TMSC\Database\System_Processor' );

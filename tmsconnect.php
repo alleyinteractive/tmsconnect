@@ -26,7 +26,7 @@ require_once( TMSCONNECT_PATH . '/inc/class-plugin-dependency.php' );
  */
 function tmsc_get_system_processors() {
 	$processors = array(
-		'taxonomy' => __( 'Taxonomy', 'tmsc' ),
+		// 'taxonomy' => __( 'Taxonomy', 'tmsc' ),
 		'object' => __( 'Object', 'tmsc' ),
 	);
 	return apply_filters( 'tmsc_get_system_processors', $processors );

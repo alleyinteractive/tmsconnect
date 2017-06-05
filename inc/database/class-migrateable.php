@@ -179,17 +179,6 @@ abstract class Migrateable {
 	 * @return void
 	 */
 	public function flush_stmt_queue() {
-		error_log(
-			strtr(
-				print_r($this->stmt_queue, true),
-				array(
-					"\r\n"=>PHP_EOL,
-					"\r"=>PHP_EOL,
-					"\n"=>PHP_EOL,
-				)
-			)
-		);
-
 		foreach ( $this->stmt_queue as $function ) {
 			call_user_func_array( $function[0], $function[1] );
 		}
