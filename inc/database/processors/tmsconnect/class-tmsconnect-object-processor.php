@@ -62,39 +62,28 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return void
 	 */
 	public function run() {
-		error_log(
-			strtr(
-				print_r('###RUNNINGE###', true),
-				array(
-					"\r\n"=>PHP_EOL,
-					"\r"=>PHP_EOL,
-					"\n"=>PHP_EOL,
-				)
-			)
-		);
-
 		while ( $this->offset < $this->total_objects ) {
 			$this->current_batch = $this->get_migratable_objects();
-			error_log(
-				strtr(
-					print_r($this->current_batch, true),
-					array(
-						"\r\n"=>PHP_EOL,
-						"\r"=>PHP_EOL,
-						"\n"=>PHP_EOL,
-				)
-				)
-			);
 			foreach ( $this->current_batch as $object ) {
 				$this->current_object = $object;
-				// parent::run();
+				parent::run();
 			}
 			$this->offset = $this->offset + $this->batch_size;
 		}
 	}
 
 	public function get_object_query_stmt() {
-
+		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", "SELECT DISTINCT Objects.ObjectID,
+				Objects.SortNumber,
+				Objects.ObjectName,
+				Objects.ObjectNumber,
+				Objects.CuratorApproved,
+				Objects.Dated,
+				Objects.Dimensions,
+				Objects.Medium,
+				Objects.CreditLine
+			FROM Objects
+			WHERE Objects.ObjectID = {$this->current_object->ObjectID}", $this );
 	}
 
 	/**
@@ -110,13 +99,14 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 
 		// DB systems use different syntax for offsets and limits.
 		$stmt = $this->set_offset_sql( $stmt );
+		$this->set_object_query( $stmt );
 		$this->prepare( $this->object_query_key, $stmt );
 		$params = array(
 			':offset' => $this->offset,
 			':size' => $this->batch_size,
 		);
 
-		$query = $this->query( $this->object_query_key );
+		$query = $this->query( $this->object_query_key, $params );
 		return $query->fetchAll();
 	}
 

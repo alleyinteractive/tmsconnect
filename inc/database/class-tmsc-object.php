@@ -5,7 +5,7 @@ namespace TMSC\Database;
 /**
  * Base class for any imported post
  */
-abstract class TMSC_Object extends \TMSC\Database\Migrateable {
+class TMSC_Object extends \TMSC\Database\Migrateable {
 
 	/**
 	 * Terms for the current post.
@@ -37,16 +37,47 @@ abstract class TMSC_Object extends \TMSC\Database\Migrateable {
 	}
 
 	/**
+	 * Get legacy ID
+	 * @return int
+	 *
+	 */
+	public function get_legacy_id() {
+		if ( ! empty( $this->raw->TermID ) ) {
+			return $this->raw->TermID;
+		}
+	}
+
+	/**
+	 * Get the last updated data hash.
+	 * @return mixed string|false
+	 */
+	public function get_last_updated_hash() {
+		if ( ! empty( $this->object ) ) {
+			return $this->get_meta( 'tmsc_last_updated', true );
+		}
+		return false;
+	}
+
+	/**
+	 * Set the last updated data hash.
+	 */
+	public function set_last_updated_hash() {
+		if ( ! empty( $this->raw ) ) {
+			$this->update_meta( 'tmsc_last_updated', tmsc_hash_data( $this->raw ) );
+		}
+	}
+
+	/**
 	 * Get excerpt
 	 * @return html
 	 */
-	abstract public function get_excerpt();
+	public function get_excerpt(){}
 
 	/**
 	 * Get title
 	 * @return string
 	 */
-	abstract public function get_title();
+	public function get_title(){}
 
 	/**
 	 * Get post author.
@@ -61,25 +92,25 @@ abstract class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Get guest authors.
 	 * @return array of names. Leave empty if Co-Authors Plus isn't used.
 	 */
-	abstract public function get_authors();
+	public function get_authors(){}
 
 	/**
 	 * Get terms
 	 * @return associative array, like array( 'category' => array( 'News', 'Sports' ), 'post_tag' => array( 'Football', 'Jets' ) )
 	 */
-	abstract public function get_terms();
+	public function get_terms(){}
 
 	/**
 	 * Get date of publication
 	 * @return int unix timestamp
 	 */
-	abstract public function get_pubdate();
+	public function get_pubdate(){}
 
 	/**
 	 * Get body
 	 * @return HTML
 	 */
-	abstract public function get_body();
+	public function get_body(){}
 
 	/**
 	 * Get post slug
@@ -163,7 +194,7 @@ abstract class TMSC_Object extends \TMSC\Database\Migrateable {
 	/**
 	 * Load an existing post if it exists.
 	 */
-	public function load_existing_post() {
+	public function load_existing_object() {
 		// Check for existing post by legacy GUID
 		$legacy_id = $this->get_legacy_id();
 
@@ -182,6 +213,29 @@ abstract class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return boolean true if successfully saved
 	 */
 	public function save() {
+		if ( $this->before_save() ) {
+			return;
+		}
+		$this->set_current_object();
+		$this->load_existing_object();
+
+		if ( $this->requires_update() ) {
+			$this->object = $this->save_post();
+
+			if ( empty( $this->object->ID ) ) {
+				return false;
+			} else {
+				if ( ! empty( $this->raw->Children ) && ! empty( $this->raw->CN ) ) {
+					$this->parents[ $this->raw->CN ] = $this->object->term_id;
+				}
+			}
+
+			$this->after_save();
+
+			return true;
+		}
+		return false;
+
 		if ( $this->before_save() ) {
 			return;
 		}

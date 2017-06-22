@@ -55,7 +55,7 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	 * Ensure that these objects are ordered by CN and return the columns.
 	 */
 	public function get_object_query_stmt() {
-		return "SELECT DISTINCT
+		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", "SELECT DISTINCT
 			Terms.TermID,
 			Terms.Term,
 			TermMaster.CN,
@@ -66,7 +66,7 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 		INNER JOIN TermTypes on Terms.TermTypeID = TermTypes.TermTypeID
 		WHERE Terms.TermTypeID = 1
 		AND TermMaster.CN LIKE '{$this->current_tax->CN}.%'
-		ORDER BY TermMaster.CN";
+		ORDER BY TermMaster.CN", $this );
 	}
 
 	/**
