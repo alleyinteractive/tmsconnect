@@ -62,14 +62,9 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 		// Check for existing post by legacy ID
 		$legacy_id = $this->get_legacy_id();
 		if ( ! empty( $legacy_id ) && ! empty( $this->taxonomy ) ) {
-			$args = array(
-				'taxonomy' => $this->taxonomy,
-				'hide_empty' => false,
-				'meta_key' => 'tmsc_legacy_id',
-			);
-			$existing_terms = get_terms( $args );
+			$existing_term = tmsc_get_term_by_legacy_id( $legacy_id, $this->taxonomy )
 			if ( ! empty( $existing_term ) ) {
-				$this->object = reset( $existing_terms );
+				$this->object = $existing_term;
 				if ( ! empty( $this->raw->Children ) && ! empty( $this->raw->CN ) ) {
 					$this->parents[ $this->raw->CN ] = $this->object->term_id;
 				}

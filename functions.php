@@ -45,3 +45,39 @@ function tmsc_stop_the_insanity() {
 		$wp_object_cache->__remoteset(); // important
 	}
 }
+
+/**
+ * Return the post object of a legacy TMS object ID
+ * @param string $legacy_id of TMS object.
+ * @return object
+ */
+function tmsc_get_object_by_legacy_id( $legacy_id ) {
+	$args = array(
+		'post_type' => 'tms_object',
+		'meta_key' => 'tmsc_legacy_id',
+		'meta_value_num' => $legacy_id,
+		'suppress_filters' => false,
+	);
+	return reset( get_posts( $args ) );
+
+}
+
+/**
+ * Get terms with a legeacy CN for a given taxonomy
+ * @param string $legacy_id CN of TMS term.
+ * @param string $taxonomy
+ * @return object
+ */
+function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy ) {
+	$args = array(
+		'taxonomy' => $taxonomy,
+		'meta_key' => 'tmsc_legacy_id',
+		'meta_value' => $legacy_id,
+		'hide_empty' => false,
+	);
+	$terms = get_terms( $args );
+	if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
+		return reset( $terms );
+	}
+	return;
+}
