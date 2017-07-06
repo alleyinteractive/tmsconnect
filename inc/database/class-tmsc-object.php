@@ -33,7 +33,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Constructor. Set this as a post migrateable.
 	 */
 	public function __construct() {
-		parent::__construct( 'post' );
+		parent::__construct( $this->type );
 	}
 
 	/**
@@ -71,13 +71,18 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Get excerpt
 	 * @return html
 	 */
-	public function get_excerpt(){}
+	public function get_excerpt(){
+		return apply_filters( 'tmsc_set_object_excerpt', '', $this->raw );
+	}
 
 	/**
 	 * Get title
 	 * @return string
 	 */
-	public function get_title(){}
+	public function get_title(){
+		$title = ( empty( $this->raw->Title ) ) ? $this->raw->RawTitle : $this->raw->Title;
+		return apply_filters( 'tmsc_set_object_title', $title, $this->raw );
+	}
 
 	/**
 	 * Get post author.
@@ -85,14 +90,8 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 */
 	public function get_post_author() {
 		// Use the admin user by default
-		return 1;
+		return apply_filters( 'tmsc_set_object_author', 1, $this->raw );
 	}
-
-	/**
-	 * Get guest authors.
-	 * @return array of names. Leave empty if Co-Authors Plus isn't used.
-	 */
-	public function get_authors(){}
 
 	/**
 	 * Get terms
@@ -104,25 +103,33 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Get date of publication
 	 * @return int unix timestamp
 	 */
-	public function get_pubdate(){}
+	public function get_pubdate(){
+		return apply_filters( 'tmsc_set_object_author', time(), $this->raw );
+	}
 
 	/**
 	 * Get body
 	 * @return HTML
 	 */
-	public function get_body(){}
+	public function get_body(){
+		return apply_filters( 'tmsc_set_object_body', '', $this->raw );
+	}
 
 	/**
 	 * Get post slug
 	 * @return string post slug
 	 */
-	public function get_post_name() {}
+	public function get_post_name() {
+		return sanitize_title_with_dashes( $this->get_title() );
+	}
 
 	/**
 	 * Get post parent
 	 * @return integer parent post id
 	 */
-	public function get_post_parent() {}
+	public function get_post_parent() {
+		return 0;
+	}
 
 	/**
 	 * Get post type
@@ -145,7 +152,6 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return string
 	 */
 	public function save_final_object_status() {
-		\TMSC\Util\Map::get( 'legacy_post_ids' )->map( $this->get_legacy_id(), $this->object->ID );
 		$this->object->post_status = $this->get_post_status();
 		$this->update( $this->object );
 	}
@@ -196,24 +202,23 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return boolean true if successfully saved
 	 */
 	public function save() {
-		if ( $this->before_save() ) {
-			return;
-		}
+		$this->before_save();
 
 		$this->load_existing_object();
-
 		if ( $this->requires_update() ) {
+
 			$this->object = $this->save_post();
 
 			if ( empty( $this->object->ID ) ) {
 				return false;
 			}
 
+			// Update queue with post meta.
+			$this->save_meta_data();
+
 			// Save term relationships
 
 			// Save Media Attachments
-
-			// Update all post meta with queue flush.
 
 			// Update status.
 
@@ -229,26 +234,48 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return WP_Object Object
 	 */
 	public function save_post() {
-		
+		$date = date( 'Y-m-d H:i:s', $this->get_pubdate() );
 		$post = array(
 			'ID' => empty( $this->object->ID ) ? 0 : $this->object->ID,
 			'post_title' => $this->get_title(),
 			'post_status' => 'migrating',
 			'post_author' => $this->get_post_author(),
-			'post_date' => date( 'Y-m-d H:i:s', $this->get_pubdate() ),
-			'post_date_gmt' => get_gmt_from_date( date( 'Y-m-d H:i:s', $this->get_pubdate() ) ),
+			'post_date' => $date,
+			'post_date_gmt' => get_gmt_from_date( $date ),
 			'post_type' => $this->get_post_type(),
 			'post_content' => $this->get_body(),
 			'post_excerpt' => $this->get_excerpt(),
-			'post_parent' => $this->get_post_parent(),
 			'post_name' => $this->get_post_name(),
 			'comment_status' => 'closed',
 		);
+
 		$post_id = wp_insert_post( $post );
 		if ( ! empty( $post_id ) ) {
 			return get_post( $post_id );
 		}
 		return false;
+	}
+
+	/**
+	 * Save post meta data
+	 * @return void
+	 */
+	public function save_meta_data() {
+		if ( ! empty( $this->object->ID ) ) {
+			// Get our meta data mapping and iterate through it.
+			foreach ( $this->get_meta_keys() as $key => $db_field ) {
+				$this->update_meta( $key, $this->raw->$db_field );
+			}
+		}
+		return;
+	}
+
+	/**
+	 * Map our raw data keys to our meta keys
+	 * @return array. An array of post meta keys and corresponding db fields in our raw data.
+	 */
+	public function get_meta_keys() {
+		return apply_filters( 'tmsc_object_meta_keys', array() );
 	}
 
 

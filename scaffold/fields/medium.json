@@ -3,7 +3,7 @@
     {
       "type": "post",
       "post_types": [ "tms_object" ],
-      "title": { "__": "Insurance" },
+      "title": { "__": "Medium" },
       "context": "normal"
     }
   ],

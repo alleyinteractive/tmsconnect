@@ -24,10 +24,16 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 	public $taxonomy;
 
 	/**
+	 * The type of migrateable object. Must be set by all implementing classes.
+	 * @var string
+	 */
+	public $type = 'term';
+
+	/**
 	 * Constructor. Set this as a term migrateable.
 	 */
 	public function __construct() {
-		parent::__construct( 'term' );
+		parent::__construct( $this->type );
 	}
 
 	/**
@@ -62,7 +68,7 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 		// Check for existing post by legacy ID
 		$legacy_id = $this->get_legacy_id();
 		if ( ! empty( $legacy_id ) && ! empty( $this->taxonomy ) ) {
-			$existing_term = tmsc_get_term_by_legacy_id( $legacy_id, $this->taxonomy )
+			$existing_term = tmsc_get_term_by_legacy_id( $legacy_id, $this->taxonomy );
 			if ( ! empty( $existing_term ) ) {
 				$this->object = $existing_term;
 				if ( ! empty( $this->raw->Children ) && ! empty( $this->raw->CN ) ) {

@@ -73,17 +73,7 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	}
 
 	public function get_object_query_stmt() {
-		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", "SELECT DISTINCT Objects.ObjectID,
-				Objects.SortNumber,
-				Objects.ObjectName,
-				Objects.ObjectNumber,
-				Objects.CuratorApproved,
-				Objects.Dated,
-				Objects.Dimensions,
-				Objects.Medium,
-				Objects.CreditLine
-			FROM Objects
-			WHERE Objects.ObjectID = {$this->current_object->ObjectID}", $this );
+		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->current_object );
 	}
 
 	/**
@@ -91,11 +81,7 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	 * Ensure that these objects are ordered by ObjectID and return the columns.
 	 */
 	public function get_migratable_objects() {
-		$stmt = 'SELECT ObjectID, Title, Rank, MediaMasterID, RenditionNumber, FileName
-			FROM AllWebMedia
-			WHERE CuratorApproved = 0
-			AND PrimaryDisplay=1
-			ORDER BY ObjectID';
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_batch_stmt_query", '' );
 
 		// DB systems use different syntax for offsets and limits.
 		$stmt = $this->set_offset_sql( $stmt );
@@ -114,12 +100,9 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	 * Get the total number of TMS objects that we will be migrating.
 	 */
 	public function get_num_objects() {
-		$stmt = 'SELECT count(ObjectID) as total
-			FROM AllWebMedia
-			WHERE CuratorApproved = 0
-			AND PrimaryDisplay=1';
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_count_stmt_query", '' );
 		$this->prepare( $this->object_query_key, $stmt );
-		$query = $this->query( $this->object_query_key );
+		$query = $this->query( $this->object_query_key, array() );
 		$results = $query->fetchAll();
 
 		return reset( $results )->total;

@@ -22,6 +22,9 @@ class TMSC {
 		/* Don't do anything, needs to be initialized via instance() method */
 	}
 
+	/**
+	 * Instatiate our instance.
+	 */
 	public static function instance() {
 		if ( ! isset( self::$instance ) ) {
 			self::$instance = new \TMSC\TMSC();
@@ -30,6 +33,9 @@ class TMSC {
 		return self::$instance;
 	}
 
+	/**
+	 * Setup TMSC.
+	 */
 	public function setup() {
 		/**
 		 * Our Default Zones
@@ -165,14 +171,6 @@ class TMSC {
 	}
 
 	/**
-	 * Export information for one item. This subcommand is incomplete.
-	 */
-	public function describe( $args = array(), $assc_args = array() ) {
-		$short_name = array_shift( $args );
-		$processor = self::$instance->get_processor( $short_name );
-	}
-
-	/**
 	 * Migrate all objects objects.
 	 */
 	public function migrate( $args = array(), $assc_args = array() ) {
@@ -204,16 +202,6 @@ class TMSC {
 				$new_value = call_user_func_array( $function, array( $meta->post_id, $meta_key, $meta->meta_value ) );
 				update_post_meta( $meta->post_id, $meta_key, $new_value, $meta->meta_value );
 			}
-		}
-	}
-
-	/**
-	 * Reset the processor's or processors' cursor(s) to the starting point.
-	 *
-	 */
-	public function rewind( $args = array() ) {
-		foreach ( self::$instance->processors( $args ) as $processor ) {
-			$processor->rewind();
 		}
 	}
 

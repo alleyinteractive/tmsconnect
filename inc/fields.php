@@ -166,16 +166,22 @@ function tmsc_fm_web_resources() {
 add_action( 'fm_post_tms_object', 'tmsc_fm_web_resources' );
 /* end fm:web_resources */
 
-/* begin fm:insurance */
+
+
+
+/* begin fm:medium */
 /**
- * `insurance` Fieldmanager fields.
+ * `medium` Fieldmanager fields.
  */
-function tmsc_fm_insurance() {
+function tmsc_fm_medium() {
 	$fm = new Fieldmanager_Textfield( array(
-		'name' => 'insurance',
-		'label' => __( 'Insurance', 'tmsc' ),
+		'name' => 'medium',
+		'label' => __( 'Medium', 'tmsc' ),
 	) );
-	$fm->add_meta_box( __( 'Insurance', 'tmsc' ), array( 'tms_object' ), 'normal' );
+	$fm->add_meta_box( __( 'Medium', 'tmsc' ), array( 'tms_object' ), 'normal' );
 }
-add_action( 'fm_post_tms_object', 'tmsc_fm_insurance' );
-/* end fm:insurance */
+add_action( 'fm_post_tms_object', 'tmsc_fm_medium' );
+/* end fm:medium */
+
+
+

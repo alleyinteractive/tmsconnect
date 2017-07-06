@@ -54,7 +54,7 @@ abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
 	public function load_migrateable() {
 		if ( ! empty( $this->data ) ) {
 			$class = '\\TMSC\\Database\\TMSC_' . $this->migrateable_type;
-			$this->migrateable = new $class( array_shift( $this->data ), $this );
+			$this->migrateable = new $class();
 		} else {
 			$this->migrateable = null;
 		}

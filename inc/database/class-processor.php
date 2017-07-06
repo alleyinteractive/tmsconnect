@@ -78,12 +78,6 @@ abstract class Processor {
 	}
 
 	/**
-	 * Set all pointers back to the start.
-	 */
-	public function rewind() {
-	}
-
-	/**
 	 * Get next Migrateable object
 	 */
 	abstract public function load_migrateable();
@@ -104,7 +98,6 @@ abstract class Processor {
 
 		$this->before_run();
 		$this->load_migrateable();
-
 		if ( ! empty( $this->migrateable ) ) {
 			$this->migrateable->set_processor( $this );
 
@@ -149,7 +142,6 @@ abstract class Processor {
 			$wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE post_id = $id" );
 			$this->after_delete( $id );
 		}
-		$this->rewind();
 	}
 
 	public function parse_cursor( $cursor_str ) {

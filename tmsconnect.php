@@ -20,13 +20,13 @@ require_once( TMSCONNECT_PATH . '/inc/class-plugin-dependency.php' );
 
 /**
  * Return an array of all the processors of the current system.
- * Each processor requires a it's own class, a data-map class and a processor class.
+ * Each processor requires a it's own migratable class and a processor class.
  * (e.g.) "class-${file_prefix}-${processor}.php", "class-${file_prefix}-${processor}-processor.php"
  * @return array.
  */
 function tmsc_get_system_processors() {
 	$processors = array(
-		// 'taxonomy' => __( 'Taxonomy', 'tmsc' ),
+		'taxonomy' => __( 'Taxonomy', 'tmsc' ),
 		'object' => __( 'Object', 'tmsc' ),
 	);
 	return apply_filters( 'tmsc_get_system_processors', $processors );
@@ -53,7 +53,6 @@ function tmsc_init() {
 	// Custom Post Types
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-tms-object.php' );
-	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-event.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-exhibition.php' );
 
 	// Custom Taxonomies
@@ -87,7 +86,7 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-object.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-taxonomy.php' );
 
-	// The system this plugin is active for. Built with Freer_Sackler.
+	// The system this plugin is active for. Built with Freer_Sackler using mySQL.
 	foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
 		require_once( trailingslashit( TMSC_SYSTEM_PATH ) . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-' . $processor_slug . '-processor.php' );
 	}
@@ -96,6 +95,9 @@ function tmsc_init() {
 }
 add_action( 'plugins_loaded', 'tmsc_init' );
 
+/**
+ * Ensure plugins are installed before activation.
+ */
 function tmsc_dependency() {
 	$tmsc_dependencies = array(
 		new \TMSC\Plugin_Dependency( 'TMS Connect', 'Fieldmanager', 'https://github.com/alleyinteractive/wordpress-fieldmanager' ),

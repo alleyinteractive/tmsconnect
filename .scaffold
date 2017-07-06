@@ -1,13 +1,13 @@
 {
   "version": "0.4.1",
-  "cpt:tms_object": "63e676e0c0be1fd7c1778fd58a36a398",
+  "cpt:tms_object": "ee98d277dfb979d32b80d5d8908787b9",
   "tax:classification": "c4cc783ddbcabb8b9d85cb472ead84f7",
   "tax:period": "25b0bf92641bc0496ac72a1f3bc99a78",
   "tax:collection": "43ee054f2786be0dc977ed72f8d14b18",
   "tax:material": "3e7a2db7a2e1bbd616de04a1c6d4c565",
   "tax:geography": "66ae21c0aff153cb215de8947aea41b6",
   "fm:related_objects": "1319726b3fc6e52f0c68db9fdb412cd6",
-  "cpt:exhibition": "c42bf681c4caf375536260862add2a3d",
+  "cpt:exhibition": "ada5ad245e914ca3b4c4b176a4cdd72d",
   "fm:accession_number": "851e54fdb917d80c5df3208f22014a2c",
   "fm:movement": "e6740dab7efbf7dfa8224c5da21259fc",
   "fm:provenance": "c9afbd42b95676eeb1359235b1679650",
@@ -20,9 +20,8 @@
   "tax:keywords": "1a26c32535b1e3970d8341c34a4614da",
   "fm:web_resources": "3acd5ac0aa82d3cb2c569ce66c685af4",
   "tax:exhibitions": "25fed7ac5ba175c754cb3e69a51630d4",
-  "cpt:event": "5b224a40bdb1fe1b4b68abbd2674de41",
   "tax:sites": "d68bbe7f7b6263eb4998ebec89106a1b",
   "tax:constituents": "304b1de444c5112b0dc5c27c76b3c905",
   "tax:exhibition-types": "e6242226d6e713281f088a30b60b7475",
-  "fm:insurance": "10d503433c733efcd78485fafe6569ff"
+  "fm:medium": "bc2ae451d43e43d6485e635e56c782f6"
 }

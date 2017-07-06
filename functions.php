@@ -58,7 +58,8 @@ function tmsc_get_object_by_legacy_id( $legacy_id ) {
 		'meta_value_num' => $legacy_id,
 		'suppress_filters' => false,
 	);
-	return reset( get_posts( $args ) );
+	$posts = get_posts( $args );
+	return reset( $posts );
 
 }
 
