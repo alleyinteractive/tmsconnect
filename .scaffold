@@ -23,5 +23,6 @@
   "tax:sites": "d68bbe7f7b6263eb4998ebec89106a1b",
   "tax:constituents": "304b1de444c5112b0dc5c27c76b3c905",
   "tax:exhibition-types": "e6242226d6e713281f088a30b60b7475",
-  "fm:medium": "bc2ae451d43e43d6485e635e56c782f6"
+  "fm:medium": "bc2ae451d43e43d6485e635e56c782f6",
+  "fm:object_name": "d6fccdcc73bb8851f4234c80b7d131ed"
 }

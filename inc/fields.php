@@ -185,3 +185,17 @@ add_action( 'fm_post_tms_object', 'tmsc_fm_medium' );
 
 
 
+
+/* begin fm:object_name */
+/**
+ * `object_name` Fieldmanager fields.
+ */
+function tmsc_fm_object_name() {
+	$fm = new Fieldmanager_Textfield( array(
+		'name' => 'object_name',
+		'label' => __( 'Object Name', 'tmsc' ),
+	) );
+	$fm->add_meta_box( __( 'Object Name', 'tmsc' ), array( 'tms_object' ), 'normal' );
+}
+add_action( 'fm_post_tms_object', 'tmsc_fm_object_name' );
+/* end fm:object_name */

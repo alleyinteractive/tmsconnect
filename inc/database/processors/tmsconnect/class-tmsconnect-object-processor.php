@@ -5,11 +5,6 @@
 namespace TMSC\Database\Processors\TMSConnect;
 class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	/**
-	 * The type of processor.
-	 */
-	public $processor_type = 'Object';
-
-	/**
 	 * Which migratable type the objects of this processor will be.
 	 */
 	public $migrateable_type = 'Object';
@@ -55,6 +50,8 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 		parent::__construct( $type );
 		$this->batch_size = apply_filters( 'tmsc_object_sync_batch_size', 500 );
 		$this->total_objects = $this->get_num_objects();
+		// TODO: DELETE THIS AFTER TESTING
+		$this->total_objects = 200;
 	}
 
 	/**
@@ -85,26 +82,73 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 
 		// DB systems use different syntax for offsets and limits.
 		$stmt = $this->set_offset_sql( $stmt );
-		$this->set_object_query( $stmt );
-		$this->prepare( $this->object_query_key, $stmt );
 		$params = array(
 			':offset' => $this->offset,
 			':size' => $this->batch_size,
 		);
-
-		$query = $this->query( $this->object_query_key, $params );
-		return $query->fetchAll();
+		return $this->fetch_results( $stmt, $this->object_query_key, $params );
 	}
 
 	/**
 	 * Get the total number of TMS objects that we will be migrating.
 	 */
 	public function get_num_objects() {
+		$query_key = $this->object_query_key . '_count';
 		$stmt = apply_filters( "tmsc_{$this->processor_type}_count_stmt_query", '' );
-		$this->prepare( $this->object_query_key, $stmt );
-		$query = $this->query( $this->object_query_key, array() );
-		$results = $query->fetchAll();
-
+		$results = $this->fetch_results( $stmt, $query_key );
 		return reset( $results )->total;
+	}
+
+	/**
+	 * Get the related WP terms of a given TMS Object ID.
+	 * @param int $object_id. TMS raw Object ID.
+	 * @return array. An associate array of taxonmies and it's term ids. array( 'taxonomy-slug' => array( 1, 2... ) ).
+	 */
+	public function get_related_terms( $object_id ) {
+		$query_key = $this->object_query_key . '_terms';
+		$terms = array();
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_related_terms_stmt_query", '', $object_id );
+		if ( ! empty( $stmt ) ) {
+			$results = $this->fetch_results( $stmt, $query_key );
+
+			$terms = array();
+			if ( ! empty( $results ) ) {
+				foreach ( $results as $row ) {
+					$term = tmsc_get_term_by_legacy_id( $row->TermID );
+					if ( ! empty( $term ) && ! is_wp_error( $term ) ) {
+						$terms[ $term->taxonomy ][] = $term->term_id;
+					}
+				}
+			}
+		}
+		return $terms;
+	}
+
+	/**
+	 * Get the related WP terms of a given TMS Object ID.
+	 * @param int $object_id. TMS raw Object ID.
+	 * @return array. An associate array of taxonmies and it's term ids. array( 'taxonomy-slug' => array( 1, 2... ) ).
+	 */
+	public function get_related_objects( $object_id ) {
+		$query_key = $this->object_query_key . '_related_objects';
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_related_objects_stmt_query", '', $object_id );
+		if ( ! empty( $stmt ) ) {
+			return $this->fetch_results( $stmt, $query_key );
+		}
+		return array();
+	}
+
+	/**
+	 * Get the related WP terms of a given TMS Object ID.
+	 * @param int $object_id. TMS raw Object ID.
+	 * @return array. An associate array of taxonmies and it's term ids. array( 'taxonomy-slug' => array( 1, 2... ) ).
+	 */
+	public function get_object_attachments( $object_id ) {
+		$query_key = $this->object_query_key . '_attachments';
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_attachments_stmt_query", '', $object_id );
+		if ( ! empty( $stmt ) ) {
+			return $this->fetch_results( $stmt, $query_key );
+		}
+		return array();
 	}
 }

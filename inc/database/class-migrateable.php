@@ -33,7 +33,7 @@ abstract class Migrateable {
 	private $stmt_queue = array();
 
 	/**
-	 * Array of attachment migrateables created during save process
+	 * Array of additional migrateables created during save process
 	 * @var array
 	 */
 	protected $children = array();
@@ -81,6 +81,7 @@ abstract class Migrateable {
 		if ( ! empty( $this->raw->CN ) ) {
 			return $this->raw->CN;
 		}
+		return false;
 	}
 
 	/**
@@ -97,6 +98,7 @@ abstract class Migrateable {
 	 * @return void
 	 */
 	protected function after_save() {
+		$this->migrate_children();
 		$this->set_last_updated_hash();
 	}
 
@@ -122,19 +124,41 @@ abstract class Migrateable {
 	}
 
 	/**
-	 * Get the hash value of the last time this migrateable was updated.
+	 * Get the last updated data hash.
+	 * @return mixed string|false
 	 */
-	abstract public function get_last_updated_hash();
+	public function get_last_updated_hash() {
+		if ( ! empty( $this->object ) ) {
+			return $this->get_meta( 'tmsc_last_updated', true );
+		}
+		return false;
+	}
 
 	/**
-	 * Set a md5 hash of the raw data.
+	 *  Set a md5 hash of the raw data.
 	 */
-	abstract public function set_last_updated_hash();
+	public function set_last_updated_hash() {
+		if ( ! empty( $this->raw ) ) {
+			$this->update_meta( 'tmsc_last_updated', tmsc_hash_data( $this->raw ) );
+		}
+	}
+
+	/**
+	 * Save this object
+	 */
+	abstract public function load_existing();
 
 	/**
 	 * Save this object
 	 */
 	abstract public function save();
+
+	/**
+	 * Save children migratables
+	 */
+	public function migrate_children(){
+		return true;
+	}
 
 	/**
 	 * Proxy for the appropriate update meta function for this object

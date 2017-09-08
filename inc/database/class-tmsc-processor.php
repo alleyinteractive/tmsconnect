@@ -18,15 +18,17 @@ abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
 	 * Set the main query used to obtain each listing of migrated items
 	 * @param string $query
 	 */
-	public function set_object_query( $query ) {
+	public function set_object_query( $query, $key = null ) {
+		$key = ( empty( $key ) ) ? $this->object_query_key : $key;
+
 		// If the batch query was previously set, remove it.
 		// Subclasses should be able to override this.
-		if ( isset( $this->queries[ $this->object_query_key ] ) ) {
-			unset( $this->queries[ $this->object_query_key ] );
+		if ( isset( $this->queries[ $key ] ) ) {
+			unset( $this->queries[ $key ] );
 		}
 
 		// Prepare and store this query
-		$this->prepare( $this->object_query_key, $query );
+		$this->prepare( $key, $query );
 	}
 
 	/**

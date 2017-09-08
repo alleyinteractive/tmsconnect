@@ -3,313 +3,308 @@
 namespace TMSC\Database;
 
 /**
- * Base class for any imported post
+ * Base class for any post attachment
  */
-abstract class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
+class TMSC_Media extends \TMSC\Database\Migrateable {
 
 	/**
-	 * Terms for the current taxonomy.
-	 * Implementations of get_terms can store here to avoid
-	 * having to re-query if other functions need this data.
-	 * @var array
-	 */
-	protected $terms = null;
-
-	/**
-	 * The type of migrateable taxonomy. Must be set by all implementing classes.
+	 * The type of migrateable object. Must be set by all implementing classes.
 	 * @var string
 	 */
-	public $taxonomy = '';
+	public $type = 'post';
 
 	/**
-	 * Constructor. Set this as a term migrateable.
+	 * Constructor. Set this as a post migrateable.
 	 */
 	public function __construct() {
-		parent::__construct( 'term' );
+		parent::__construct( $this->type );
 	}
 
 	/**
-	 * Get terms
-	 * @return associative array, like array( 'category' => array( 'News', 'Sports' ), 'post_tag' => array( 'Football', 'Jets' ) )
+	 * Get legacy ID
+	 * @return int
+	 *
 	 */
-	abstract public function get_terms();
+	public function get_legacy_id() {
+		if ( ! empty( $this->raw->MediaMasterID ) ) {
+			return $this->raw->MediaMasterID;
+		}
+	}
 
 	/**
-	 * Get term slug
+	 * Get the last updated data hash.
+	 * @return mixed string|false
+	 */
+	public function get_last_updated_hash() {
+		if ( ! empty( $this->object ) ) {
+			return $this->get_meta( 'tmsc_last_updated', true );
+		}
+		return false;
+	}
+
+	/**
+	 * Set the last updated data hash.
+	 */
+	public function set_last_updated_hash() {
+		if ( ! empty( $this->raw ) ) {
+			$this->update_meta( 'tmsc_last_updated', tmsc_hash_data( $this->raw ) );
+		}
+	}
+
+	/**
+	 * Get title
+	 * @return string
+	 */
+	public function get_title(){
+		$title = ( empty( $this->raw->Title ) ) ? $this->raw->RawTitle : $this->raw->Title;
+		return apply_filters( 'tmsc_set_object_title', $title, $this->raw );
+	}
+
+	/**
+	 * Get date of publication
+	 * @return int unix timestamp
+	 */
+	public function get_pubdate(){
+		return apply_filters( 'tmsc_set_object_pubdate', time(), $this->raw );
+	}
+
+	/**
+	 * Get body
+	 * @return HTML
+	 */
+	public function get_body(){
+		return apply_filters( 'tmsc_set_object_body', '', $this->raw );
+	}
+
+	/**
+	 * Get post slug
 	 * @return string post slug
 	 */
-	public function get_term_name() {}
+	public function get_post_name() {
+		return sanitize_title_with_dashes( $this->get_title() );
+	}
 
 	/**
-	 * Get term parent
-	 * @return integer parent term id
+	 * Get post parent
+	 * @return integer parent post id
 	 */
-	public function get_term_parent() {}
+	public function get_post_parent() {
+		return ( empty( $this->post_parent ) ) ? 0 : $this->post_parent;
+	}
+
+	/**
+	 * Get post type
+	 * @return string
+	 */
+	public function get_post_type() {
+		return 'attachment';
+	}
+
+	/**
+	 * Get post status
+	 * @return string
+	 */
+	public function get_post_status() {
+		return 'inherit';
+	}
 
 	/**
 	 * Save the final post status
 	 * @return string
 	 */
 	public function save_final_object_status() {
-		\TMSC\Util\Map::get( 'legacy_post_ids' )->map( $this->get_legacy_id(), $this->object->ID );
 		$this->object->post_status = $this->get_post_status();
-		wp_update_post( $this->object );
+		$this->update( $this->object );
 	}
 
 	/**
-	 * Get term object
-	 * @return WP_Term
+	 * Get post object
+	 * @return WP_Post
 	 */
-	public function get_term() {
+	public function get_post() {
 		return $this->get_object();
 	}
 
 	/**
-	 * Get the post permalink
-	 * @return string
-	 */
-	public function get_url() {
-		if ( !empty( $this->object->ID ) ) {
-			return get_permalink( $this->object->ID );
-		}
-		return '';
-	}
-
-	/**
-	 * Update the term (used in after_save usually)
+	 * Update the post (used in after_save usually)
 	 */
 	public function update() {
-		$args = array(
-			'name' => $this->object->name,
-			'description' => $this->object->description,
-		);
-		wp_update_term( $this->object->term_id, $this->object->taxonomy, $args );
+		wp_update_post( $this->object );
 	}
 
 	/**
-	 * Delete the term
+	 * Load an existing post if it exists.
 	 */
-	public function delete() {
-		if ( ! empty( $this->object->term_id ) ) {
-			wp_delete_term( $this->object->term_id, $this->object->taxonomy );
-		}
-	}
-
-	/**
-	 * Load an existing taxonomy if it exists.
-	 */
-	public function load_existing_term() {
-		// Check for existing post by legacy GUID
-		$legacy_id = $this->get_legacy_id();
-
-		// It's possible the object could have been previously loaded in a before_save
-		// function to validate a migration conditon, so make sure it wasn't set.
-		if ( ! empty( $legacy_id ) && empty( $this->object->ID ) ) {
-			$existing_post_id = tmsc_taxonomy_by_legacy_id( $legacy_id );
-			if ( $existing_post_id ) {
-				$this->object = get_post( $existing_post_id );
-			}
-		}
-	}
-
-	/**
-	 * Save this term
-	 * @return boolean true if successfully saved
-	 */
-	public function save() {
-		if ( $this->before_save() ) {
-			return;
-		}
-
-		$this->load_existing_term();
-
-		$post = array(
-			'post_title' => $this->get_title(),
-			'post_status' => 'migrating',
-			'post_author' => $this->get_post_author(),
-			'post_date' => date( 'Y-m-d H:i:s', $this->get_pubdate() ),
-			'post_date_gmt' => get_gmt_from_date( date( 'Y-m-d H:i:s', $this->get_pubdate() ) ),
-			'post_type' => $this->get_post_type(),
-			'post_content' => $this->get_body(),
-			'post_excerpt' => $this->get_excerpt(),
-			'post_parent' => $this->get_post_parent(),
-			'post_name' => $this->get_post_name(),
-			'comment_status' => $this->get_comment_status(),
-		);
-
-		if ( ! $this->save_override( $post ) ) {
-			if ( ! empty( $this->object->ID ) ) {
-				$post['ID'] = $this->object->ID;
-			} elseif ( 'attachment' == $this->get_post_type() ) {
-				throw new \Exception( 'You should subclass Attachment, not Migrateable.' );
-			}
-
-			$post_id = wp_insert_post( $post );
-			// Load the new post
-			$this->object = get_post( $post_id );
-		} elseif ( 'attachment' != $this->get_post_type() ) {
-			// We skip this notice on attachments since they're always skipped
-		}
-
-		if ( empty( $this->object->ID ) ) {
-			return false;
-		}
-
-		delete_post_meta( $this->object->ID, 'tmsc_stub' );
-
-		$this->save_terms( $this->get_terms() );
-
-		$this->flush_meta_queue();
-
-		$this->after_save();
-
-		return true;
-	}
-
-	/**
-	 * Only save mappings for this post
-	 * @return boolean true if successfully saved
-	 */
-	public function mapping_only_save() {
-
-		// check for existing post by legacy GUID
+	public function load_existing() {
+		$this->object = null;
+		// Check for existing post by legacy ID
 		$legacy_id = $this->get_legacy_id();
 		if ( ! empty( $legacy_id ) ) {
-			$existing_post = tmsc_post_by_legacy_id( $legacy_id );
-			if ( $existing_post  ) {
+			$existing_post = tmsc_get_object_by_legacy_id( $legacy_id );
+			if ( ! empty( $existing_post ) ) {
 				$this->object = $existing_post;
 			}
 		}
-
-		if ( empty( $this->object->ID ) ) {
-			return false;
-		}
-
-		$this->save_terms( $this->get_terms() );
-
-		// if you don't use CAP, you're own your own with authors.
-		if ( function_exists( 'coauthors' ) ) {
-			$this->save_authors( $this->get_authors() );
-		}
-
-		$this->flush_meta_queue();
-
-		return true;
 	}
 
 	/**
-	 * Save terms
-	 * @see get_terms()
-	 * @param array $term_struct
+	 * Save this post
+	 * @return boolean true if successfully saved
 	 */
-	public function save_terms( $term_struct, $do_map = true ) {
-		foreach ( $term_struct as $tax => $terms ) {
-			foreach ( $terms as $i => $term ) {
-				$mappings = tmsc_get_mapping( $tax, $term );
-				if ( !empty( $mappings ) ) {
-					unset( $term_struct[$tax][$i] ); // prepare for overwrite
-					foreach ( $mappings as $mapping ) {
-						if ( $mapping['action'] == 'remove' ) {
-							unset( $term_struct[$tax][$i] ); // make sure it's gone
-							break;
-						}
-						if ( empty( $term_struct[ $mapping['dest_type'] ] ) ) {
-							$term_struct[ $mapping['dest_type'] ] = array();
-						}
-						$term_struct[ $mapping['dest_type'] ][] = $mapping['dest'];
-					}
-				}
+	public function save() {
+		$this->before_save();
+
+		$this->load_existing();
+		if ( $this->requires_update() ) {
+
+			$this->object = $this->save_post();
+
+			if ( empty( $this->object->ID ) ) {
+				return false;
 			}
+
+			// Update queue with post meta.
+			$this->save_meta_data();
+
+			// Save term relationships
+			$this->save_term_relationships();
+
+			// Save related_objects
+			$this->save_related_objects();
+
+			// Save Media Attachments
+			$this->save_media_attachments();
+
+			// Update status.
+			$this->after_save();
+
+			return true;
 		}
-		foreach ( $term_struct as $tax => $terms ) {
-			$term_ids = array();
-			foreach ( $terms as $term ) {
-				$tid = (int) static::get_or_create_term_by_name( $term, $tax );
-				if ( $tid ) $term_ids[] = $tid;
-			}
-			wp_set_object_terms( $this->object->ID, $term_ids, $tax );
-		}
+		return false;
 	}
 
 	/**
-	 * Helper to create a taxonomy term
-	 * @param string $name
-	 * @param string $taxonomy
-	 * @param array $args
-	 * @return int term id
+	 * Save post
+	 * @return WP_Object Object
 	 */
-	public static function get_or_create_term_by_name( $name, $taxonomy, $args = array() ) {
-		$term = get_term_by( 'name', $name, $taxonomy );
-		if ( is_object( $term ) && is_numeric( $term->term_id ) ) {
-			return $term->term_id;
-		}
-		$inserted_term = wp_insert_term( $name, $taxonomy, $args );
-		if ( is_wp_error( $inserted_term ) ) {
-			if ( ! empty( $inserted_term->error_data[ 'term_exists' ] ) ) {
-				return $inserted_term->error_data[ 'term_exists' ];
-			}
-			return false;
-		}
-		return $inserted_term['term_id'];
-	}
-
-	/**
-	 * Wraps HTML snippets in the appropriate code and doctype.
-	 *
-	 * @param string $html The HTML fragment to wrap.
-	 *
-	 * @access protected
-	 * @return string The HTML fragment as a full HTML5 document.
-	 */
-	protected function wrap_html_snippet( $html ) {
-		return <<<HTML
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="UTF-8">
-	</head>
-	<body>{$html}</body>
-</html>
-HTML;
-	}
-
-	/**
-	 * Create a stub post with a legacy ID that can be migrated fully later
-	 * @param string $type, post type
-	 * @param int|string $legacy_id
-	 * @param string $title, generated from ID
-	 * @param array $extra, any other post properties to set
-	 * @return post object
-	 */
-	function get_or_create_stub_post( $type, $legacy_id, $title = '', $extra = array() ) {
-		$post = tmsc_post_by_legacy_id( $legacy_id );
-		if ( ! empty( $post ) ) {
-			return $post;
-		}
-
-		$title = $title ? $title : $type . ' stub ' . $legacy_id;
-
+	public function save_post() {
+		$date = date( 'Y-m-d H:i:s', $this->get_pubdate() );
 		$post = array(
-			'post_title' => $title,
-			'post_status' => 'publish',
-			'post_date' => date( 'Y-m-d H:i:s', $this->get_pubdate() ),
-			'post_date_gmt' => get_gmt_from_date( date( 'Y-m-d H:i:s', $this->get_pubdate() ) ),
-			'post_type' => $type,
+			'ID' => empty( $this->object->ID ) ? 0 : $this->object->ID,
+			'post_title' => $this->get_title(),
+			'post_status' => 'migrating',
+			'post_author' => $this->get_post_author(),
+			'post_date' => $date,
+			'post_date_gmt' => get_gmt_from_date( $date ),
+			'post_type' => $this->get_post_type(),
+			'post_content' => $this->get_body(),
+			'post_excerpt' => $this->get_excerpt(),
+			'post_name' => $this->get_post_name(),
+			'comment_status' => 'closed',
 		);
 
-		tmsc_notice( sprintf( 'Saving stub of type %s and title %s', $type, $title ) );
-
-		$post = array_merge( $post, $extra );
 		$post_id = wp_insert_post( $post );
-
-		// Add this post ID to the map so we don't create multiple stubs
-		\TMSC\Util\Map::get( 'legacy_post_ids' )->map( $legacy_id, $post_id );
-
-		// Mark this stub with minimal postmeta so TMSC can grab it later, or delete it using the current processor
-		update_post_meta( $post_id, 'tmsc_source', (string) $this->processor );
-		update_post_meta( $post_id, 'tmsc_legacy_id', $legacy_id );
-		update_post_meta( $post_id, 'tmsc_stub', '1' );
-		return get_post( $post_id );
+		if ( ! empty( $post_id ) ) {
+			return get_post( $post_id );
+		}
+		return false;
 	}
 
+	/**
+	 * Save post meta data
+	 * @return void
+	 */
+	public function save_meta_data() {
+		if ( ! empty( $this->object->ID ) ) {
+			// Get our meta data mapping and iterate through it.
+			foreach ( $this->get_meta_keys() as $key => $db_field ) {
+				$this->update_meta( $key, $this->raw->$db_field );
+			}
+		}
+		return;
+	}
+
+	/**
+	 * Map our raw data keys to our meta keys
+	 * @return array. An array of post meta keys and corresponding db fields in our raw data.
+	 */
+	public function get_meta_keys() {
+		return apply_filters( 'tmsc_object_meta_keys', array() );
+	}
+
+	/**
+	 * Save object terms
+	 * @return void
+	 */
+	public function save_term_relationships() {
+		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ObjectID ) ) {
+			$terms = $this->processor->get_related_terms( $this->raw->ObjectID );
+			error_log(
+				strtr(
+					print_r( $terms, true),
+					array(
+						"\r\n"=>PHP_EOL,
+						"\r"=>PHP_EOL,
+						"\n"=>PHP_EOL,
+					)
+				)
+			);
+
+			foreach ( $terms as $taxonomy => $term_ids ) {
+				wp_set_object_terms( $this->object->ID, $term_ids, $taxonomy );
+			}
+		}
+	}
+
+	/**
+	 * Save related objects.
+	 */
+	public function save_related_objects() {
+
+	}
+
+	/**
+	 * Save media attachments.
+	 */
+	public function save_media_attachments() {
+		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ObjectID ) ) {
+			$attachments = $this->processor->get_object_attachments( $this->raw->ObjectID );
+			foreach ( $attachments as $attachment_raw_data ) {
+				$this->add_attachment( $attachment_raw_data, $this->object->ID );
+			}
+		}
+	}
+
+
+	/**
+	 * Create or update an attachment
+	 * @return object. WP_Attachment
+	 */
+	public function add_attachment( $data, $object_id ) {
+
+		// $filename should be the path to a file in the upload directory.
+		$filename = '/path/to/uploads/2013/03/filename.jpg';
+
+		// The ID of the post this attachment is for.
+		$parent_post_id = 37;
+
+		// Check the type of file. We'll use this as the 'post_mime_type'.
+		$filetype = wp_check_filetype( basename( $filename ), null );
+
+		// Get the path to the upload directory.
+		$wp_upload_dir = wp_upload_dir();
+
+		// Prepare an array of post data for the attachment.
+		$attachment = array(
+			'guid'           => $wp_upload_dir['url'] . '/' . basename( $filename ),
+			'post_mime_type' => $filetype['type'],
+			'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $filename ) ),
+			'post_content'   => '',
+			'post_status'    => 'inherit',
+		);
+
+		// Insert the attachment.
+		$attach_id = wp_insert_attachment( $attachment, $filename, $parent_post_id );
+
+	}
 }

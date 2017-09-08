@@ -53,7 +53,7 @@ abstract class Processor {
 	 * Constructor
 	 */
 	public function __construct( $type ) {
-		$this->processor_type = $type;
+		$this->processor_type = strtolower( $type );
 	}
 
 	/**
@@ -71,7 +71,9 @@ abstract class Processor {
 	public function mark_object_as_processed( $saved_migrateable ) {
 		$object = $saved_migrateable->get_object();
 		if ( ! empty( $object ) ) {
-			$saved_migrateable->update_meta( 'tmsc_legacy_CN', $saved_migrateable->get_legacy_cn() );
+			if ( ! empty( $saved_migrateable->get_legacy_cn() ) ) {
+				$saved_migrateable->update_meta( 'tmsc_legacy_CN', $saved_migrateable->get_legacy_cn() );
+			}
 			$saved_migrateable->update_meta( 'tmsc_legacy_id', $saved_migrateable->get_legacy_id() );
 			$saved_migrateable->update_meta( 'tmsc_migration_time', time() );
 		}

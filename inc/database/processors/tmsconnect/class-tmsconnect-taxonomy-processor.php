@@ -1,12 +1,6 @@
 <?php
 namespace TMSC\Database\Processors\TMSConnect;
 class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
-
-	/**
-	 * The type of processor.
-	 */
-	public $processor_type = 'Taxonomy';
-
 	/**
 	 * Which migratable type the objects of this processor will be.
 	 */

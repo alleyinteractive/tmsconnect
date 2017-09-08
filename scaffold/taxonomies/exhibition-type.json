@@ -1,4 +1,4 @@
 {
-	"object_types": ["event"],
+	"object_types": ["exhibition"],
 	"rewrite": {"with_front": false}
 }

@@ -8,22 +8,6 @@ namespace TMSC\Database;
 class TMSC_Object extends \TMSC\Database\Migrateable {
 
 	/**
-	 * Terms for the current post.
-	 * Implementations of get_terms can store here to avoid
-	 * having to re-query if other functions need this data.
-	 * @var array
-	 */
-	protected $terms = null;
-
-	/**
-	 * Authors for the current post.
-	 * Implementations of get_authors can store here to avoid
-	 * having to re-query if other functions need this data.
-	 * @var array
-	 */
-	protected $authors = null;
-
-	/**
 	 * The type of migrateable object. Must be set by all implementing classes.
 	 * @var string
 	 */
@@ -94,17 +78,11 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	}
 
 	/**
-	 * Get terms
-	 * @return associative array, like array( 'category' => array( 'News', 'Sports' ), 'post_tag' => array( 'Football', 'Jets' ) )
-	 */
-	public function get_terms(){}
-
-	/**
 	 * Get date of publication
 	 * @return int unix timestamp
 	 */
 	public function get_pubdate(){
-		return apply_filters( 'tmsc_set_object_author', time(), $this->raw );
+		return apply_filters( 'tmsc_set_object_pubdate', time(), $this->raw );
 	}
 
 	/**
@@ -165,17 +143,6 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	}
 
 	/**
-	 * Get the post permalink
-	 * @return string
-	 */
-	public function get_url() {
-		if ( !empty( $this->object->ID ) ) {
-			return get_permalink( $this->object->ID );
-		}
-		return '';
-	}
-
-	/**
 	 * Update the post (used in after_save usually)
 	 */
 	public function update() {
@@ -185,7 +152,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	/**
 	 * Load an existing post if it exists.
 	 */
-	public function load_existing_object() {
+	public function load_existing() {
 		$this->object = null;
 		// Check for existing post by legacy ID
 		$legacy_id = $this->get_legacy_id();
@@ -204,7 +171,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	public function save() {
 		$this->before_save();
 
-		$this->load_existing_object();
+		$this->load_existing();
 		if ( $this->requires_update() ) {
 
 			$this->object = $this->save_post();
@@ -217,11 +184,15 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 			$this->save_meta_data();
 
 			// Save term relationships
+			$this->save_term_relationships();
+
+			// Save related_objects
+			$this->save_related_objects();
 
 			// Save Media Attachments
+			$this->save_media_attachments();
 
 			// Update status.
-
 			$this->after_save();
 
 			return true;
@@ -278,129 +249,52 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 		return apply_filters( 'tmsc_object_meta_keys', array() );
 	}
 
-
 	/**
-	 * Save terms
-	 * @see get_terms()
-	 * @param array $term_struct
+	 * Save object terms
+	 * @return void
 	 */
-	public function save_terms( $term_struct, $do_map = true ) {
-		foreach ( $term_struct as $tax => $terms ) {
-			foreach ( $terms as $i => $term ) {
-				$mappings = tmsc_get_mapping( $tax, $term );
-				if ( !empty( $mappings ) ) {
-					unset( $term_struct[$tax][$i] ); // prepare for overwrite
-					foreach ( $mappings as $mapping ) {
-						if ( $mapping['action'] == 'remove' ) {
-							unset( $term_struct[$tax][$i] ); // make sure it's gone
-							break;
-						}
-						if ( empty( $term_struct[ $mapping['dest_type'] ] ) ) {
-							$term_struct[ $mapping['dest_type'] ] = array();
-						}
-						$term_struct[ $mapping['dest_type'] ][] = $mapping['dest'];
-					}
-				}
+	public function save_term_relationships() {
+		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ObjectID ) ) {
+			$terms = $this->processor->get_related_terms( $this->raw->ObjectID );
+			foreach ( $terms as $taxonomy => $term_ids ) {
+				wp_set_object_terms( $this->object->ID, $term_ids, $taxonomy );
 			}
 		}
-		foreach ( $term_struct as $tax => $terms ) {
-			$term_ids = array();
-			foreach ( $terms as $term ) {
-				$tid = (int) static::get_or_create_term_by_name( $term, $tax );
-				if ( $tid ) $term_ids[] = $tid;
-			}
-			wp_set_object_terms( $this->object->ID, $term_ids, $tax );
+	}
+
+	/**
+	 * Save related objects.
+	 */
+	public function save_related_objects() {
+		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ObjectID ) ) {
+			// Store with migratable type as key.
+			$this->children['Object'] = $this->processor->get_related_objects( $this->raw->ObjectID );
 		}
 	}
 
 	/**
-	 * Set featured image by remote URL
-	 * @return \TMSC\Attachment
+	 * Save media attachments.
 	 */
-	public function set_featured_image_by_url( $url, $title = '', $caption = '', $description = '' ) {
-		$attachment = $this->create_attachment( $url, $title, $caption, $description );
-		$attachment_id = $attachment->get_post()->ID;
-		if ( ! empty( $attachment_id ) ) {
-			$this->update_meta( '_thumbnail_id', $attachment_id );
+	public function save_media_attachments() {
+		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ObjectID ) ) {
+			// Store with migratable type as key.
+			$this->children['Media'] = $this->processor->get_object_attachments( $this->raw->ObjectID );
 		}
-		return $attachment;
 	}
 
 	/**
-	 * Create an attachment
-	 * @return \TMSC\Attachment
+	 * Save children migratables
+	 * This migratable expects objects and media as children.
 	 */
-	public function create_attachment( $url, $title, $caption, $description = '', $name = '', $bits = null ) {
-		$settings = $this->get_image_settings();
-		$attachment = new $settings['attachment_class']( $url, $title, $caption, $description, $this, $name, $bits );
-		$attachment->save();
-		$this->children[] = $attachment;
-		return $attachment;
-	}
-
-	/**
-	 * Gets image settings
-	 * @return mixed
-	 */
-	public function get_image_setting( $option ) {
-		$settings = $this->get_image_settings();
-		return $settings[ $option ];
-	}
-
-	/**
-	 * Rewrites image URLs. Good for making relative images absolute, etc.
-	 * @return string
-	 */
-	public function rewrite_image_src( $src ) {
-		return $src;
-	}
-
-	/**
-	 * Gets all image settings
-	 * @return array
-	 */
-	public function get_image_settings() {
-		return $this->modify_image_settings( array(
-			'make_first_image_featured' => false,
-			'featured_image_callback' => function( $attachment ) { },
-			'no_featured_image_callback' => function() { },
-			'strip_caption_shortcodes' => false,
-			'image_domains' => array(),
-			'sizes' => array(
-				'full' => 0,
-				'thumbnail' => 150,
-				'medium' => 300,
-				'large' => 640,
-			),
-			'remove_params_from_url' => false,
-			'attachment_class' => '\\TMSC\\Attachment',
-			'preserve_image_classes' => false,
-			'preserve_alt_text' => false,
-			'title_src' => '',
-			'caption_src' => '',
-		) );
-	}
-
-	/**
-	 * Determine if an image should be imported from the given domain
-	 * @return boolean
-	 */
-	public function image_is_from_allowed_domain( $src ) {
-		$src_domain = parse_url( $src, PHP_URL_HOST );
-		$domains = $this->get_image_setting( 'image_domains' );
-		foreach ( $domains as $domain_pattern ) {
-			if ( fnmatch( $domain_pattern, $src_domain ) ) {
-				return true;
-			}
+	public function migrate_children(){
+		foreach( $this->children as $migratable_type => $raw_data ) {
+			$class = '\\TMSC\\Database\\TMSC_' . $this->migrateable_type;
+			$child_migratable = new $class();
+			$child_processor = \TMSC\TMSC::instance()->get_processor( $migratable_type );
+			$child_processor->current_batch = $raw_data;
+			$child_migratable->set_processor( $child_processor );
 		}
-		return false;
-	}
 
-	/**
-	 * Modifies image settings
-	 * @return array
-	 */
-	public function modify_image_settings( $settings ) {
-		return $settings;
+		return true;
 	}
 }

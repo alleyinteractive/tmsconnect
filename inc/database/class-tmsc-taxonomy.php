@@ -63,7 +63,7 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 	/**
 	 * Load an existing taxonomy if it exists.
 	 */
-	public function load_existing_term() {
+	public function load_existing() {
 		$this->object = null;
 		// Check for existing post by legacy ID
 		$legacy_id = $this->get_legacy_id();
@@ -79,26 +79,6 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 	}
 
 	/**
-	 * Get the last updated data hash.
-	 * @return mixed string|false
-	 */
-	public function get_last_updated_hash() {
-		if ( ! empty( $this->object ) ) {
-			return $this->get_meta( 'tmsc_last_updated', true );
-		}
-		return false;
-	}
-
-	/**
-	 * Set the last updated data hash.
-	 */
-	public function set_last_updated_hash() {
-		if ( ! empty( $this->raw ) ) {
-			$this->update_meta( 'tmsc_last_updated', tmsc_hash_data( $this->raw ) );
-		}
-	}
-
-	/**
 	 * Save this term
 	 * @return boolean true if successfully saved
 	 */
@@ -107,7 +87,7 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 			return;
 		}
 		$this->set_current_taxonomy();
-		$this->load_existing_term();
+		$this->load_existing();
 
 		if ( $this->requires_update() ) {
 			$this->object = $this->save_term();

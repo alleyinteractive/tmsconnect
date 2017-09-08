@@ -26,7 +26,7 @@ require_once( TMSCONNECT_PATH . '/inc/class-plugin-dependency.php' );
  */
 function tmsc_get_system_processors() {
 	$processors = array(
-		'taxonomy' => __( 'Taxonomy', 'tmsc' ),
+		// 'taxonomy' => __( 'Taxonomy', 'tmsc' ),
 		'object' => __( 'Object', 'tmsc' ),
 	);
 	return apply_filters( 'tmsc_get_system_processors', $processors );
@@ -50,6 +50,9 @@ function tmsc_init() {
 	define( 'TMSC_SYSTEM_BUILD_CLASS_PREFIX', $class_prefix );
 	define( 'TMSC_SYSTEM_DB_TYPE', $db_type );
 
+	// Global functions
+	require_once( TMSCONNECT_PATH . '/functions.php' );
+
 	// Custom Post Types
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-tms-object.php' );
@@ -68,14 +71,15 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-period.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-sites.php' );
 
+	// Allow linked post/taxonomies.
+	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-linked-taxonomy-posts.php' );
+	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-custom-landing-page-types.php' );
+
 	// TMSC Sync Class
 	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-sync.php' );
 
 	// Metabox FM Fields
 	require_once( TMSCONNECT_PATH . '/inc/fields.php' );
-
-	// Global functions
-	require_once( TMSCONNECT_PATH . '/functions.php' );
 
 	// Our DB connectivity classes.
 	require_once( TMSCONNECT_PATH . '/inc/database/class-processor.php' );

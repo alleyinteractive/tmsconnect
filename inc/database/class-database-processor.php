@@ -90,6 +90,20 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 	}
 
 	/**
+	 * A helper function to fetch a custom set of results outside of the processors main migratables.
+	 * @param string $stmt. An sql statement.
+	 * @param string $query_key. The key uses in $this->queries
+	 * @param array $params. Params to pass to query.
+	 * @return array. An array of result row objects.
+	 */
+	public function fetch_results( $stmt, $query_key = null, $params = array() ) {
+		$query_key = ( empty( $query_key ) ) ? $this->object_query_key : $query_key;
+		$this->set_object_query( $stmt, $query_key );
+		$query = $this->query( $query_key, $params );
+		return $query->fetchAll();
+	}
+
+	/**
 	 * Hook that runs before migrating a post.
 	 * End this batch if no rows remain to process.
 	 * @param boolean $dry

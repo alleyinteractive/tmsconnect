@@ -2,6 +2,7 @@
 /**
  * Shared functions for TMSConnect
  */
+
 /**
  * Set the sync status value
  * @param string. $message.
@@ -69,7 +70,7 @@ function tmsc_get_object_by_legacy_id( $legacy_id ) {
  * @param string $taxonomy
  * @return object
  */
-function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy ) {
+function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy = '' ) {
 	$args = array(
 		'taxonomy' => $taxonomy,
 		'meta_key' => 'tmsc_legacy_id',
@@ -81,4 +82,47 @@ function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy ) {
 		return reset( $terms );
 	}
 	return;
+}
+
+/**
+ * Get attachment with a legeacy MediaMasterID
+ * @param int $legacy_id. MediaMasterID.
+ * @param string $taxonomy.
+ * @return object
+ */
+function tmsc_get_attachment_by_legacy_id( $legacy_id ) {
+	$args = array(
+		'post_type' => 'attachment',
+		'meta_key' => 'tmsc_legacy_id',
+		'meta_value_num' => $legacy_id,
+		'suppress_filters' => false,
+	);
+	$posts = get_posts( $args );
+	return reset( $posts );
+}
+
+/**
+ * Get the corresponding linked term for a post id.
+ * @param int $post_id.
+ * @return object. WP_Term Object.
+ */
+function tmsc_get_linked_term( $post_id ) {
+	return TMSC_Linked_Taxonomy_Posts::instance()->get_linked_term( $post_id );
+}
+
+/**
+ * Get the corresponding linked post for a term id.
+ * @param int $term_id.
+ * @return object. WP_Post Object.
+ */
+function tmsc_get_linked_post( $term_id ) {
+	return TMSC_Linked_Taxonomy_Posts::instance()->get_linked_post( $term_id );
+}
+
+/**
+ * Get the linked types.
+ * @return array. array( 'post_type_slug' => 'taxonomy_slug' ).
+ */
+function tmsc_get_linked_types() {
+	return TMSC_Linked_Taxonomy_Posts::instance()->linked_types;
 }
