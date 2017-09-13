@@ -32,7 +32,7 @@ class Tmsc_Post_Type_Constituent extends Tmsc_Post_Type {
 			),
 			'public' => true,
 			'has_archive' => true,
-			'menu_icon' => 'dashicons-format-gallery',
+			'menu_icon' => 'dashicons-groups',
 			'supports' => array( 'title', 'revisions', 'excerpt', 'editor' ),
 		) );
 	}

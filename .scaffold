@@ -24,7 +24,7 @@
   "tax:constituents": "304b1de444c5112b0dc5c27c76b3c905",
   "fm:medium": "bc2ae451d43e43d6485e635e56c782f6",
   "fm:object_name": "d6fccdcc73bb8851f4234c80b7d131ed",
-  "cpt:constituent": "a0bc6f1e4782b5ef57fe611c01aa8461",
-  "tax:exhibition-type": "b16ea6be78819cd68685f1ac08f43fc7",
-  "tax:constituent-type": "029f47e73b8e4a7a9cc5c0e52fdca548"
+  "cpt:constituent": "b79f460919c119f244e5e5785e9062c8",
+  "tax:exhibition-types": "61815416e05ed98e638a336d203160f2",
+  "tax:constituent-types": "14aad8c7c17f361b81b643f60d5bdab1"
 }

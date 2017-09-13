@@ -25,9 +25,13 @@ require_once( TMSCONNECT_PATH . '/inc/class-plugin-dependency.php' );
  * @return array.
  */
 function tmsc_get_system_processors() {
+	// Make sure this is processed in an order of dependency.
+	// ie. Objects will have relationships with constituents and taxonomies, so make sure those are created before objects are processed.
 	$processors = array(
 		// 'taxonomy' => __( 'Taxonomy', 'tmsc' ),
+		// 'constituent' => __( 'Constituent', 'tmsc' ),
 		'object' => __( 'Object', 'tmsc' ),
+		// 'exhibition' => __( 'Exhibition', 'tmsc' ),
 	);
 	return apply_filters( 'tmsc_get_system_processors', $processors );
 }
@@ -57,6 +61,7 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-tms-object.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-exhibition.php' );
+	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-constituent.php' );
 
 	// Custom Taxonomies
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy.php' );
@@ -81,6 +86,9 @@ function tmsc_init() {
 
 	// Metabox FM Fields
 	require_once( TMSCONNECT_PATH . '/inc/fields.php' );
+
+	// Nav customizations.
+	require_once( TMSCONNECT_PATH . '/inc/nav.php' );
 
 	// Our DB connectivity classes.
 	require_once( TMSCONNECT_PATH . '/inc/database/class-processor.php' );
@@ -160,6 +168,7 @@ function tmsc_get_baseurl() {
  */
 function tmsc_enqueue_assets() {
 	wp_enqueue_script( 'tmsc-admin-sync', tmsc_get_baseurl() . '/js/tmsc-admin-sync.js', array( 'jquery' ), '0.1' ,true );
+	wp_enqueue_script( 'tmsc-admin-custom-landings', tmsc_get_baseurl() . '/js/tmsc-admin-custom-landings.js', array( 'jquery' ), '0.1' ,true );
 	wp_localize_script( 'tmsc-admin-sync', 'tmscAdminData', array( 'wp_admin_nonce' => wp_create_nonce( 'wp_admin_js_script' ), 'wp_ajax_url' => esc_url_raw( admin_url( 'admin-ajax.php' ) ) ) );
 }
 

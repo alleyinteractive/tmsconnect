@@ -180,13 +180,11 @@ class TMSC_Linked_Taxonomy_Posts {
 					// No need to save anything.
 					return;
 				}
-
-				// Often the top level posts will act as a container for child posts and we won't need terms for these.
-				// Use the filter hook||config below to enable it for child posts.
-				if ( empty( $post->post_parent ) || apply_filters( 'tmsc_link_child_posts', tmsc_config( 'Linked_Taxonomy_Post_Config', array( 'link_children' ), false ), $post, $taxonomy ) ) {
-
-					// Don't save our initial auto draft.
-					if ( 'auto-draft' !== $post->post_status ) {
+				// Don't save our initial auto draft.
+				if ( 'auto-draft' !== $post->post_status ) {
+					// Often the top level posts will act as a container for child posts and we won't need terms for these.
+					// Use the filter hook||config below to enable it for child posts.
+					if ( empty( $post->post_parent ) || apply_filters( 'tmsc_link_child_posts', false, $post, $taxonomy ) ) {
 
 						// If filter hook above has been applied, then write a child term.
 						$parent_term = 0;
@@ -194,14 +192,6 @@ class TMSC_Linked_Taxonomy_Posts {
 							$parent_term = $this->parent_term->term_id;
 						}
 
-						// Child posts should never be linked to a top level term, so overwrite it if that is the case.
-						/*
-						if ( ! empty( $post->post_parent ) ) {
-							$this->parent_term = $this->get_linked_term( $post->post_parent );
-
-							$parent_term = $this->parent_term->term_id;
-						}
-						*/
 						$args = array(
 							'slug' => $post->post_name,
 							'parent' => ( ! empty( $parent_term ) ) ? $parent_term : 0,
@@ -214,6 +204,12 @@ class TMSC_Linked_Taxonomy_Posts {
 							update_post_meta( $post_id, $this->linked_taxonomy_meta_key, $taxonomy );
 							$term = get_term( $term['term_id'], $taxonomy );
 						}
+					} else {
+						$term = $this->get_linked_term( $post->post_parent );
+						// Set the meta data for the children.
+						update_term_meta( $term->term_id, $this->linked_term_meta_key, $post->post_parent );
+						update_post_meta( $post_id, $this->linked_post_meta_key, $term->term_id );
+						update_post_meta( $post_id, $this->linked_taxonomy_meta_key, $taxonomy );
 					}
 				}
 			}
@@ -301,18 +297,22 @@ class TMSC_Linked_Taxonomy_Posts {
 		$term = wp_cache_get( $key, $this->linked_cache_group );
 		if ( false === $term ) {
 			$post = get_post( $post_id );
-			$post_type = ( 'revision' === $post->post_type ) ? get_post_type( $post->post_parent ) : $post->post_type;
+			if ( ! empty( $post ) ) {
+				$post_type = ( 'revision' === $post->post_type ) ? get_post_type( $post->post_parent ) : $post->post_type;
 
-			if ( ! empty( $this->linked_types[ $post_type ] ) ) {
-				$term_id = get_post_meta( $post_id, $this->linked_post_meta_key , true );
-				if ( ! empty( $term_id ) ) {
-					$term = get_term( $term_id );
-					if ( ! empty( $term ) && ! is_wp_error( $term ) ) {
-						wp_cache_set( $key, $term, $this->linked_cache_group );
-					} else {
-						$term = false;
+				if ( ! empty( $this->linked_types[ $post_type ] ) ) {
+					$term_id = get_post_meta( $post_id, $this->linked_post_meta_key , true );
+					if ( ! empty( $term_id ) ) {
+						$term = get_term( $term_id );
+						if ( ! empty( $term ) && ! is_wp_error( $term ) ) {
+							wp_cache_set( $key, $term, $this->linked_cache_group );
+						} else {
+							$term = false;
+						}
 					}
 				}
+			} else {
+				$term = false;
 			}
 		}
 		return $term;

@@ -1,6 +1,6 @@
 {
 	"public": true,
 	"has_archive": true,
-	"menu_icon": "dashicons-format-gallery",
+	"menu_icon": "dashicons-groups",
 	"supports": ["title", "revisions", "excerpt", "editor"]
 }
