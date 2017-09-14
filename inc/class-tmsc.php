@@ -178,8 +178,10 @@ class TMSC {
 			define( 'WP_IMPORTING', true );
 		}
 		foreach ( self::$instance->processors( $args ) as $processor ) {
-			$processor->run();
-			tmsc_stop_the_insanity();
+			if ( ! in_array( $processor->processor_type, self::$instance->get_child_processors(), true ) ) {
+				$processor->run();
+				tmsc_stop_the_insanity();
+			}
 		}
 	}
 
@@ -301,5 +303,12 @@ class TMSC {
 			$ret[] = self::$instance->get_processor( $arg );
 		}
 		return $ret;
+	}
+
+	/**
+	 * A list of all of our child processors.
+	 */
+	private function get_child_processors() {
+		return apply_filters( 'tmsc_get_child_processors', array() );
 	}
 }

@@ -100,6 +100,7 @@ abstract class Migrateable {
 	protected function after_save() {
 		$this->migrate_children();
 		$this->set_last_updated_hash();
+		$this->save_final_object_status();
 	}
 
 	/**
@@ -148,10 +149,18 @@ abstract class Migrateable {
 	 */
 	abstract public function load_existing();
 
+
 	/**
 	 * Save this object
 	 */
 	abstract public function save();
+
+	/**
+	 * Update migrating status.
+	 */
+	public function save_final_object_status() {
+		return true;
+	}
 
 	/**
 	 * Save children migratables

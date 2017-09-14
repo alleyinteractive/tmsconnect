@@ -28,7 +28,7 @@ function tmsc_get_system_processors() {
 	// Make sure this is processed in an order of dependency.
 	// ie. Objects will have relationships with constituents and taxonomies, so make sure those are created before objects are processed.
 	$processors = array(
-		// 'taxonomy' => __( 'Taxonomy', 'tmsc' ),
+		'taxonomy' => __( 'Taxonomy', 'tmsc' ),
 		// 'constituent' => __( 'Constituent', 'tmsc' ),
 		'object' => __( 'Object', 'tmsc' ),
 		// 'exhibition' => __( 'Exhibition', 'tmsc' ),

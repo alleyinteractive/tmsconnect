@@ -152,12 +152,13 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 * @return boolean true if successfully saved
 	 */
 	public function save() {
+			/*
 		$this->before_save();
 
 		$this->load_existing();
 		if ( $this->requires_update() ) {
 
-			$this->object = $this->save_post();
+			$this->object = $this->add_attachment();
 
 			if ( empty( $this->object->ID ) ) {
 				return false;
@@ -165,12 +166,6 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 
 			// Update queue with post meta.
 			$this->save_meta_data();
-
-			// Save term relationships
-			$this->save_term_relationships();
-
-			// Save related_objects
-			$this->save_related_objects();
 
 			// Save Media Attachments
 			$this->save_media_attachments();
@@ -180,6 +175,7 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 
 			return true;
 		}
+		*/
 		return false;
 	}
 
@@ -188,6 +184,32 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 * @return WP_Object Object
 	 */
 	public function save_post() {
+
+		// $filename should be the path to a file in the upload directory.
+		$filename = $;
+
+		// The ID of the post this attachment is for.
+		$parent_post_id = 37;
+
+		// Check the type of file. We'll use this as the 'post_mime_type'.
+		$filetype = wp_check_filetype( basename( $filename ), null );
+
+		// Get the path to the upload directory.
+		$wp_upload_dir = wp_upload_dir();
+
+		// Prepare an array of post data for the attachment.
+		$attachment = array(
+			'guid'           => $wp_upload_dir['url'] . '/' . basename( $filename ),
+			'post_mime_type' => $filetype['type'],
+			'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $filename ) ),
+			'post_content'   => '',
+			'post_status'    => 'inherit',
+		);
+
+		// Insert the attachment.
+		$attach_id = wp_insert_attachment( $attachment, $filename, $parent_post_id );
+
+
 		$date = date( 'Y-m-d H:i:s', $this->get_pubdate() );
 		$post = array(
 			'ID' => empty( $this->object->ID ) ? 0 : $this->object->ID,
@@ -229,38 +251,7 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 * @return array. An array of post meta keys and corresponding db fields in our raw data.
 	 */
 	public function get_meta_keys() {
-		return apply_filters( 'tmsc_object_meta_keys', array() );
-	}
-
-	/**
-	 * Save object terms
-	 * @return void
-	 */
-	public function save_term_relationships() {
-		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ObjectID ) ) {
-			$terms = $this->processor->get_related_terms( $this->raw->ObjectID );
-			error_log(
-				strtr(
-					print_r( $terms, true),
-					array(
-						"\r\n"=>PHP_EOL,
-						"\r"=>PHP_EOL,
-						"\n"=>PHP_EOL,
-					)
-				)
-			);
-
-			foreach ( $terms as $taxonomy => $term_ids ) {
-				wp_set_object_terms( $this->object->ID, $term_ids, $taxonomy );
-			}
-		}
-	}
-
-	/**
-	 * Save related objects.
-	 */
-	public function save_related_objects() {
-
+		return apply_filters( 'tmsc_media_meta_keys', array() );
 	}
 
 	/**

@@ -146,10 +146,6 @@ abstract class Processor {
 		}
 	}
 
-	public function parse_cursor( $cursor_str ) {
-		return json_decode( $cursor_str, true );
-	}
-
 	/**
 	 * Set migration option
 	 */

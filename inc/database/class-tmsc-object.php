@@ -114,7 +114,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return string
 	 */
 	public function get_post_type() {
-		return 'tms_object';
+		return apply_filters( 'tmsc_set_object_post_type', 'tms_object' );
 	}
 
 	/**
@@ -268,7 +268,10 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	public function save_related_objects() {
 		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ObjectID ) ) {
 			// Store with migratable type as key.
-			$this->children['Object'] = $this->processor->get_related_objects( $this->raw->ObjectID );
+			$related_ids = $this->processor->get_related_objects( $this->raw->ObjectID );
+			foreach ( $related_ids as $rid ) {
+
+			}
 		}
 	}
 
@@ -277,8 +280,9 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 */
 	public function save_media_attachments() {
 		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ObjectID ) ) {
+			$this->raw->wp_parent_id = $this->object->ID;
 			// Store with migratable type as key.
-			$this->children['Media'] = $this->processor->get_object_attachments( $this->raw->ObjectID );
+			$this->children['Media'] = $this->raw;
 		}
 	}
 
@@ -288,13 +292,11 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 */
 	public function migrate_children(){
 		foreach( $this->children as $migratable_type => $raw_data ) {
-			$class = '\\TMSC\\Database\\TMSC_' . $this->migrateable_type;
-			$child_migratable = new $class();
 			$child_processor = \TMSC\TMSC::instance()->get_processor( $migratable_type );
-			$child_processor->current_batch = $raw_data;
-			$child_migratable->set_processor( $child_processor );
+			$child_processor->set_parent_object( $raw_data );
+			$child_processor->run();
+			tmsc_stop_the_insanity();
 		}
-
 		return true;
 	}
 }

@@ -32,6 +32,17 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function __construct( $type ) {
 		parent::__construct( $type );
+		add_filter( 'tmsc_get_child_processors', array( $this, 'set_child_processors' ) );
+	}
+
+	/**
+	 * This is a child processor so register it as such.
+	 * @param array $child_processors.
+	 * @return array.
+	 */
+	public function set_child_processors( $child_processors ) {
+		$child_processors[] = $this->processor_type;
+		return $child_processors;
 	}
 
 	/**
@@ -39,16 +50,17 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return void
 	 */
 	public function run() {
-		while ( $this->offset < $this->total_objects ) {
-			foreach ( $this->current_batch as $object ) {
-				$this->current_object = $object;
-				parent::run();
-			}
-			$this->offset = $this->offset + $this->batch_size;
-		}
+		parent::run();
+	}
+
+	/**
+	 * make sure we know the parent object of this migratable media.
+	 */
+	public function set_parent_object( $object ) {
+		$this->parent_object = $object;
 	}
 
 	public function get_object_query_stmt() {
-		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->current_object );
+		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->parent_object );
 	}
 }
