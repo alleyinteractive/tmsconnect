@@ -57,6 +57,9 @@ function tmsc_init() {
 	// Global functions
 	require_once( TMSCONNECT_PATH . '/functions.php' );
 
+	// Helper functions
+	require_once( TMSCONNECT_PATH . '/inc/helper-functions.php' );
+
 	// Custom Post Types
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-tms-object.php' );
