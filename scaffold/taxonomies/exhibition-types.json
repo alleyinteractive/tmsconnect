@@ -1,4 +1,4 @@
 {
-	"object_types": ["tms_object"],
+	"object_types": ["exhibition"],
 	"rewrite": {"with_front": false}
 }

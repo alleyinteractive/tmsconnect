@@ -1,5 +1,5 @@
 {
-	"object_types": ["tms_object"],
+	"object_types": ["constituent"],
 	"hierarchical": true,
 	"rewrite": {"with_front": false}
 }

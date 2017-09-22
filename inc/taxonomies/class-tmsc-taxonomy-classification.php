@@ -51,6 +51,7 @@ class Tmsc_Taxonomy_Classification extends Tmsc_Taxonomy {
 				'choose_from_most_used' => __( 'Choose from most used Classifications', 'tmsc' ),
 				'menu_name'             => __( 'Classifications', 'tmsc' ),
 			),
+			'hierarchical' => true,
 			'rewrite' => array(
 				'with_front' => false,
 			),

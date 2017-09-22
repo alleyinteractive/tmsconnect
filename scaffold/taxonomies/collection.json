@@ -1,4 +1,5 @@
 {
 	"object_types": ["tms_object"],
+	"hierarchical": true,
 	"rewrite": {"with_front": false}
 }

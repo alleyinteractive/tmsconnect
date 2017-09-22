@@ -51,6 +51,7 @@ class Tmsc_Taxonomy_Period extends Tmsc_Taxonomy {
 				'choose_from_most_used' => __( 'Choose from most used Periods', 'tmsc' ),
 				'menu_name'             => __( 'Periods', 'tmsc' ),
 			),
+			'hierarchical' => true,
 			'rewrite' => array(
 				'with_front' => false,
 			),
