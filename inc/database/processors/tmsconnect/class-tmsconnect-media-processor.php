@@ -21,12 +21,6 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	public $parent_object;
 
 	/**
-	 * Current object raw data.
-	 * @var object
-	 */
-	private $current_object = null;
-
-	/**
 	 * Constructor
 	 * @param string $type
 	 */
@@ -62,5 +56,30 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 
 	public function get_object_query_stmt() {
 		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->parent_object );
+	}
+
+	/**
+	 * Get the related WP terms of a given TMS Media.
+	 * @param int $object_id. TMS raw Media data.
+	 * @return array. An associate array of taxonmies and it's term ids. array( 'taxonomy-slug' => array( 1, 2... ) ).
+	 */
+	public function get_related_terms( $object_id ) {
+		$query_key = $this->object_query_key . '_terms';
+		$terms = array();
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_related_terms_stmt_query", '', $object_id );
+		if ( ! empty( $stmt ) ) {
+			$results = $this->fetch_results( $stmt, $query_key );
+
+			$terms = array();
+			if ( ! empty( $results ) ) {
+				foreach ( $results as $row ) {
+					$term = tmsc_get_term_by_legacy_id( $row->TermID );
+					if ( ! empty( $term ) && ! is_wp_error( $term ) ) {
+						$terms[ $term->taxonomy ][] = $term->term_id;
+					}
+				}
+			}
+		}
+		return $terms;
 	}
 }

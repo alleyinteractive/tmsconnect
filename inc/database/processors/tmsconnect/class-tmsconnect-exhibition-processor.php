@@ -3,7 +3,7 @@
  * The class used to process TMS Exhibition Modules
  */
 namespace TMSC\Database\Processors\TMSConnect;
-class TMSConnect_Exhibition_Processor extends \TMSC\Database\Processors\TMSConnect\TMSC_Object_Processor {
+class TMSConnect_Exhibition_Processor extends \TMSC\Database\TMSC_Processor {
 	/**
 	 * Which migratable type the objects of this processor will be.
 	 */

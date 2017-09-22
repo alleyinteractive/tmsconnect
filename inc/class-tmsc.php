@@ -75,6 +75,9 @@ class TMSC {
 			}
 		}
 		add_action( 'fm_submenu_tmsc_guide_terms', array( $this, 'sync_init' ) );
+
+		// Handle External Image Processing as featured images.
+		add_filter( 'wp_get_attachment_image_src', array( $this, 'get_img_src' ), 20, 4 );
 	}
 
 	/**
@@ -310,5 +313,14 @@ class TMSC {
 	 */
 	private function get_child_processors() {
 		return apply_filters( 'tmsc_get_child_processors', array() );
+	}
+
+	/**
+	 * Override images if we are using an external image
+	 *
+	 */
+	public function get_img_src( $image, $attachment_id, $size, $icon ) {
+
+		return $image;
 	}
 }

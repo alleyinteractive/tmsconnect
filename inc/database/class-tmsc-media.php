@@ -57,7 +57,7 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 */
 	public function get_title(){
 		$title = ( empty( $this->raw->Title ) ) ? $this->raw->RawTitle : $this->raw->Title;
-		return apply_filters( 'tmsc_set_object_title', $title, $this->raw );
+		return apply_filters( "tmsc_set_{$this->processor_type}_title", $title, $this->raw );
 	}
 
 	/**
@@ -65,7 +65,7 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 * @return int unix timestamp
 	 */
 	public function get_pubdate(){
-		return apply_filters( 'tmsc_set_object_pubdate', time(), $this->raw );
+		return apply_filters( "tmsc_set_{$this->processor_type}_pubdate", time(), $this->raw );
 	}
 
 	/**
@@ -73,7 +73,7 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 * @return HTML
 	 */
 	public function get_body(){
-		return apply_filters( 'tmsc_set_object_body', '', $this->raw );
+		return apply_filters( "tmsc_set_{$this->processor_type}_body", '', $this->raw );
 	}
 
 	/**
@@ -97,6 +97,7 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 * @return string
 	 */
 	public function get_post_type() {
+		// No hook here as this much be an attachment.
 		return 'attachment';
 	}
 
@@ -114,7 +115,7 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 */
 	public function save_final_object_status() {
 		$this->object->post_status = $this->get_post_status();
-		$this->update( $this->object );
+		$this->update();
 	}
 
 	/**
@@ -152,7 +153,7 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 * @return boolean true if successfully saved
 	 */
 	public function save() {
-			/*
+
 		$this->before_save();
 
 		$this->load_existing();
@@ -167,15 +168,15 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 			// Update queue with post meta.
 			$this->save_meta_data();
 
-			// Save Media Attachments
-			$this->save_media_attachments();
+			// Save term relationships
+			$this->save_term_relationships();
 
 			// Update status.
 			$this->after_save();
 
 			return true;
 		}
-		*/
+
 		return false;
 	}
 
@@ -186,48 +187,38 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	public function save_post() {
 
 		// $filename should be the path to a file in the upload directory.
-		$filename = $;
+		$filename = $this->raw->FileName . '.jpg';
 
 		// The ID of the post this attachment is for.
-		$parent_post_id = 37;
+		$parent_post_id = $this->raw->WPParentID;
 
 		// Check the type of file. We'll use this as the 'post_mime_type'.
 		$filetype = wp_check_filetype( basename( $filename ), null );
 
 		// Get the path to the upload directory.
 		$wp_upload_dir = wp_upload_dir();
+		$guid_url = trailingslashit( get_option( 'tmsc-ids-image-url', $wp_upload_dir['baseurl'] ) );
 
 		// Prepare an array of post data for the attachment.
 		$attachment = array(
-			'guid'           => $wp_upload_dir['url'] . '/' . basename( $filename ),
+			'guid' => $guid_url . '/' . basename( $filename ),
 			'post_mime_type' => $filetype['type'],
-			'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $filename ) ),
-			'post_content'   => '',
-			'post_status'    => 'inherit',
+			'post_title' => $this->raw->Title,
+			'post_content' => $this->raw->PublicCaption,
+			'post_excerpt' => $this->raw->Description,
+			'post_status' => 'inherit',
+			'menu_order' => abint( $this->raw->Rank ),
 		);
 
 		// Insert the attachment.
 		$attach_id = wp_insert_attachment( $attachment, $filename, $parent_post_id );
 
+		if ( 1 === absint( $this->raw->PrimaryDisplay )  ) {
+			set_post_thumbnail( $parent_post_id, $attach_id );
+		}
 
-		$date = date( 'Y-m-d H:i:s', $this->get_pubdate() );
-		$post = array(
-			'ID' => empty( $this->object->ID ) ? 0 : $this->object->ID,
-			'post_title' => $this->get_title(),
-			'post_status' => 'migrating',
-			'post_author' => $this->get_post_author(),
-			'post_date' => $date,
-			'post_date_gmt' => get_gmt_from_date( $date ),
-			'post_type' => $this->get_post_type(),
-			'post_content' => $this->get_body(),
-			'post_excerpt' => $this->get_excerpt(),
-			'post_name' => $this->get_post_name(),
-			'comment_status' => 'closed',
-		);
-
-		$post_id = wp_insert_post( $post );
-		if ( ! empty( $post_id ) ) {
-			return get_post( $post_id );
+		if ( ! empty( $attach_id ) ) {
+			return get_post( $attach_id );
 		}
 		return false;
 	}
@@ -251,51 +242,19 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 * @return array. An array of post meta keys and corresponding db fields in our raw data.
 	 */
 	public function get_meta_keys() {
-		return apply_filters( 'tmsc_media_meta_keys', array() );
+		return apply_filters( "tmsc_{$this->processor_type}_meta_keys", array() );
 	}
 
 	/**
-	 * Save media attachments.
+	 * Save object terms
+	 * @return void
 	 */
-	public function save_media_attachments() {
+	public function save_term_relationships() {
 		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ObjectID ) ) {
-			$attachments = $this->processor->get_object_attachments( $this->raw->ObjectID );
-			foreach ( $attachments as $attachment_raw_data ) {
-				$this->add_attachment( $attachment_raw_data, $this->object->ID );
+			$terms = $this->processor->get_related_terms( $this->raw->ObjectID );
+			foreach ( $terms as $taxonomy => $term_ids ) {
+				wp_set_object_terms( $this->object->ID, $term_ids, $taxonomy );
 			}
 		}
-	}
-
-
-	/**
-	 * Create or update an attachment
-	 * @return object. WP_Attachment
-	 */
-	public function add_attachment( $data, $object_id ) {
-
-		// $filename should be the path to a file in the upload directory.
-		$filename = '/path/to/uploads/2013/03/filename.jpg';
-
-		// The ID of the post this attachment is for.
-		$parent_post_id = 37;
-
-		// Check the type of file. We'll use this as the 'post_mime_type'.
-		$filetype = wp_check_filetype( basename( $filename ), null );
-
-		// Get the path to the upload directory.
-		$wp_upload_dir = wp_upload_dir();
-
-		// Prepare an array of post data for the attachment.
-		$attachment = array(
-			'guid'           => $wp_upload_dir['url'] . '/' . basename( $filename ),
-			'post_mime_type' => $filetype['type'],
-			'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $filename ) ),
-			'post_content'   => '',
-			'post_status'    => 'inherit',
-		);
-
-		// Insert the attachment.
-		$attach_id = wp_insert_attachment( $attachment, $filename, $parent_post_id );
-
 	}
 }
