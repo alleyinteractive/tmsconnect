@@ -90,21 +90,21 @@ class TMSC_Custom_Landing_Page_Types {
 		$this->types = apply_filters( 'tmsc_define_custom_landing_pages', array(
 			'exhibitions' => array(
 				'labels' => array(
-					'name' => __( 'Exhibitions', 'ai' ),
-					'child_name' => __( 'Exhibition Subpages', 'ai' ),
-					'singular_name' => __( 'Exhibition', 'ai' ),
-					'add_new' => __( 'Add New Exhibition', 'ai' ),
-					'add_new_item' => __( 'Add New Exhibition', 'ai' ),
-					'add_new_child' => __( 'Add New Exhibition Subpage', 'ai' ),
-					'edit_item' => __( 'Edit Exhibition', 'ai' ),
-					'edit_child' => __( 'Edit Exhibition Subpage', 'ai' ),
-					'new_item' => __( 'New Exhibition', 'ai' ),
-					'view_item' => __( 'View Exhibition', 'ai' ),
-					'search_items' => __( 'Search Exhibitions', 'ai' ),
-					'not_found' => __( 'No Exhibitions found', 'ai' ),
-					'not_found_in_trash' => __( 'No Exhibitions found in Trash', 'ai' ),
-					'parent_item_colon' => __( 'Parent Exhibition:', 'ai' ),
-					'menu_name' => __( 'Exhibitions', 'ai' ),
+					'name' => __( 'Exhibitions', 'tmsc' ),
+					'child_name' => __( 'Exhibition Subpages', 'tmsc' ),
+					'singular_name' => __( 'Exhibition', 'tmsc' ),
+					'add_new' => __( 'Add New Exhibition', 'tmsc' ),
+					'add_new_item' => __( 'Add New Exhibition', 'tmsc' ),
+					'add_new_child' => __( 'Add New Exhibition Subpage', 'tmsc' ),
+					'edit_item' => __( 'Edit Exhibition', 'tmsc' ),
+					'edit_child' => __( 'Edit Exhibition Subpage', 'tmsc' ),
+					'new_item' => __( 'New Exhibition', 'tmsc' ),
+					'view_item' => __( 'View Exhibition', 'tmsc' ),
+					'search_items' => __( 'Search Exhibitions', 'tmsc' ),
+					'not_found' => __( 'No Exhibitions found', 'tmsc' ),
+					'not_found_in_trash' => __( 'No Exhibitions found in Trash', 'tmsc' ),
+					'parent_item_colon' => __( 'Parent Exhibition:', 'tmsc' ),
+					'menu_name' => __( 'Exhibitions', 'tmsc' ),
 				),
 				'menu_icon' => 'dashicons-format-gallery',
 				'menu_order' => 20,
@@ -394,7 +394,7 @@ class TMSC_Custom_Landing_Page_Types {
 			$selected = ( ! empty( $this->current_term->term_id ) ) ? $this->current_term->term_id : 0;
 
 			wp_dropdown_categories( array(
-				'show_option_all' =>  __( sprintf( 'Show All %s', $label ), 'ai' ),
+				'show_option_all' =>  __( sprintf( 'Show All %s', $label ), 'tmsc' ),
 				'taxonomy' =>  $this->current_taxonomy,
 				'name' =>  $this->current_taxonomy,
 				'orderby' =>  'name',
@@ -536,10 +536,10 @@ class TMSC_Custom_Landing_Page_Types {
 		$trash_attrs = ( ! empty( $_GET['post_status'] ) && 'trash' === $_GET['post_status'] ) ? array( 'class' => 'current' ) : array();
 
 		return array(
-			'all' => $this->get_admin_link( 'edit.php', $args, __( 'All', 'ai' ), $all_attrs ),
+			'all' => $this->get_admin_link( 'edit.php', $args, __( 'All', 'tmsc' ), $all_attrs ),
 			'parents' => $this->get_admin_link( 'edit.php', array_merge( $args, array( 'landing_type' => 'archive' ) ), $this->types[ $this->current_taxonomy ]['labels']['name'], $parent_attrs ),
 			'subpages' => $this->get_admin_link( 'edit.php', array_merge( $args, array( 'landing_type' => 'single' ) ), $this->types[ $this->current_taxonomy ]['labels']['child_name'], $subpages_attrs ),
-			'trash' => $this->get_admin_link( 'edit.php', array_merge( $args, array( 'post_status' => 'trash' ) ), __( 'Trash', 'ai' ), $trash_attrs ),
+			'trash' => $this->get_admin_link( 'edit.php', array_merge( $args, array( 'post_status' => 'trash' ) ), __( 'Trash', 'tmsc' ), $trash_attrs ),
 		);
 	}
 
@@ -566,7 +566,7 @@ class TMSC_Custom_Landing_Page_Types {
 		if ( $this->on_custom_landing_admin_page( $post ) && $this->is_parent_landing_page( $post ) ) {
 			$term = tmsc_get_linked_term( $post->ID );
 
-			$link = '<a href="' . esc_url( add_query_arg( array( 'post_type' => $this->current_post_type, $this->current_taxonomy => $term->term_id ), 'edit.php' ) ) . '" aria-label="' . esc_html__( 'View ', 'ai' ) . esc_attr( $post->post_title ) . ' ' . esc_html( $this->types[ $this->current_taxonomy ]['labels']['child_name'] ) . '">' . esc_html( $this->types[ $this->current_taxonomy ]['labels']['child_name'] ) . '</a>';
+			$link = '<a href="' . esc_url( add_query_arg( array( 'post_type' => $this->current_post_type, $this->current_taxonomy => $term->term_id ), 'edit.php' ) ) . '" aria-label="' . esc_html__( 'View ', 'tmsc' ) . esc_attr( $post->post_title ) . ' ' . esc_html( $this->types[ $this->current_taxonomy ]['labels']['child_name'] ) . '">' . esc_html( $this->types[ $this->current_taxonomy ]['labels']['child_name'] ) . '</a>';
 			$actions = array_merge( array( 'subpages' => $link ), $actions );
 
 		}
@@ -600,7 +600,7 @@ class TMSC_Custom_Landing_Page_Types {
 			'<a href="%s"%s>%s</a>',
 			esc_url( $url ),
 			$attr_html,
-			$label
+			esc_html( $label )
 		);
 	}
 
@@ -617,9 +617,9 @@ class TMSC_Custom_Landing_Page_Types {
 					<?php if ( $this->is_parent_landing_page( $post ) ) {
 						$term = tmsc_get_linked_term( $post->ID ); ?>
 						<strong><?php echo esc_html( $this->types[ $this->current_taxonomy ]['labels']['child_name'] ); ?>:</strong>
-						<a href="<?php echo esc_url( add_query_arg( array( 'post_type' => $this->current_post_type, $this->current_taxonomy => $term->term_id ), 'edit.php' ) ); ?>"><?php esc_html_e( 'View', 'ai' ); ?></a>
+						<a href="<?php echo esc_url( add_query_arg( array( 'post_type' => $this->current_post_type, $this->current_taxonomy => $term->term_id ), 'edit.php' ) ); ?>"><?php esc_html_e( 'View', 'tmsc' ); ?></a>
 					<?php } else { ?>
-						<strong><?php echo esc_html_e( 'Parent ', 'ai'); echo esc_html( $this->types[ $this->current_taxonomy ]['labels']['singular_name'] ); ?>:</strong>
+						<strong><?php echo esc_html_e( 'Parent ', 'tmsc'); echo esc_html( $this->types[ $this->current_taxonomy ]['labels']['singular_name'] ); ?>:</strong>
 						<a href="<?php echo esc_url( add_query_arg( array( 'post' => $post->post_parent, 'action' => 'edit' ), 'post.php' ) );?>"><?php echo esc_html( get_the_title( $post->post_parent ) ); ?></a>
 					<?php } ?>
 				</div>
@@ -716,14 +716,14 @@ class TMSC_Custom_Landing_Page_Types {
 				</span>
 				&nbsp;<?php echo esc_html( $name ); ?>: <b><span class="ai-target-text"><?php echo ( ! empty( $this->current_term ) ) ? esc_html( $this->current_term->name ) : ''; ?></span></b>
 				<a href="#custom-landing-page-type" class="ai-edit-button edit-custom-landing-page-type hide-if-no-js" role="button">
-					<span aria-hidden="true"><?php _e( 'Edit', 'ai' ); ?></span>
+					<span aria-hidden="true"><?php esc_html_e( 'Edit', 'tmsc' ); ?></span>
 					<span class="screen-reader-text">
-						<?php _e( 'Edit ', 'ai' );
+						<?php _e( 'Edit ', 'tmsc' );
 						echo esc_html( $name ); ?>
 					</span>
 				</a>
 				<div id="custom-landing-page-type-select" class="ai-edit-button-target hide-if-js">
-					<label for="custom-landing-page-type" class="screen-reader-text"><?php _e( 'Set ', 'ai' );
+					<label for="custom-landing-page-type" class="screen-reader-text"><?php _e( 'Set ', 'tmsc' );
 						echo esc_html( $name ); ?></label>
 					<select name="post_parent" id="post_parent">
 						<?php foreach ( $terms as $term ) {

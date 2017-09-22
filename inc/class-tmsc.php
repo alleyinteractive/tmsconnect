@@ -204,6 +204,12 @@ class TMSC {
 				)
 			);
 			foreach ( $ids as $meta ) {
+				/**
+				 * @TODO
+				 *
+				 * Update the call_user_func_array to only use a whitelist of functions
+				 * not just any function.
+				 */
 				$new_value = call_user_func_array( $function, array( $meta->post_id, $meta_key, $meta->meta_value ) );
 				update_post_meta( $meta->post_id, $meta_key, $new_value, $meta->meta_value );
 			}

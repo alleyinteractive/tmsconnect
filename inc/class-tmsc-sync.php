@@ -190,8 +190,13 @@ class TMSC_Sync {
 
 	// Connect to the feed and update our post types with the latest data.
 	public function object_sync() {
-
+		/**
+		 * @TODO
+		 *
+		 * Remove the max_execution_time update.
+		 */
 		ini_set( 'max_execution_time', 300 );
+
 		$message = __( 'Syncing TMS Objects', 'tmsc' );
 		tmsc_set_sync_status( $message );
 		// Register an instantiate processors
@@ -205,6 +210,12 @@ class TMSC_Sync {
 
 		// Set sync status and clear our message cache.
 		tmsc_set_sync_status( $message );
+
+		/**
+		 * @TODO
+		 *
+		 * Remove the max_execution_time update.
+		 */
 		ini_set( 'max_execution_time', 30 );
 	}
 }

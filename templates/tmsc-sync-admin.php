@@ -2,7 +2,7 @@
 <div class="no-key config-wrap">
 	<p><?php esc_html_e( 'This utility will connect to the specified address and import TMSC objects.', 'tmsc' ); ?></p>
 	<div class="activate-highlight secondary activate-option">
-		<form method="post" id="tmsc-form" name="tmsc-form" class="right" action="<?php echo admin_url( 'admin-ajax.php' ); ?>">
+		<form method="post" id="tmsc-form" name="tmsc-form" class="right" action="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>">
 			<p>
 				<label for="tmsc-db-host"><?php esc_html_e( 'Database Server Address: ', 'tmsc' );?></label>
 				<input type="text" id="tmsc-db-host" name="tmsc-db-host" value="<?php echo esc_attr( get_option( 'tmsc-db-host', '' ) ); ?>" class="regular-text code">
