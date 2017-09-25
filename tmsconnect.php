@@ -57,6 +57,9 @@ function tmsc_init() {
 	// Global functions
 	require_once( TMSCONNECT_PATH . '/functions.php' );
 
+	// Singleton
+	require_once( TMSCONNECT_PATH . '/inc/trait-singleton.php' );
+
 	// Custom Post Types
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-tms-object.php' );
@@ -83,6 +86,9 @@ function tmsc_init() {
 
 	// TMSC Sync Class
 	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-sync.php' );
+
+	// Media URL
+	require_once( TMSCONNECT_PATH . '/inc/class-media-urls.php' );
 
 	// Metabox FM Fields
 	require_once( TMSCONNECT_PATH . '/inc/fields.php' );
