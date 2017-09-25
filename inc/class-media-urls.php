@@ -23,6 +23,7 @@ class Media_URLs {
 		add_filter( 'wp_get_attachment_image_src', [ $this, 'filter_image_source' ], 10, 4 );
 		add_filter( 'image_downsize', [ $this, 'filter_image_downsize' ], 10, 3 );
 		add_filter( 'load_image_to_edit_path', [ $this, 'filter_edit_image_path' ], 10, 3 );
+		add_filter( 'wp_prepare_attachment_for_js', [ $this, 'filter_attachment_js' ], 10, 3 );
 	}
 
 	/**
@@ -137,6 +138,42 @@ class Media_URLs {
 		}
 
 		return $filepath;
+	}
+
+	/**
+	 * Filter the attachment JS sizes array to only return a single size if using
+	 * a custom URL.
+	 *
+	 * @param  array      $response   Array of prepared attachment data.
+	 * @param  int|object $attachment Attachment ID or object.
+	 * @param  array      $meta       Array of attachment meta data.
+	 * @return array      $response   Array of prepared attachment data.
+	 */
+	public function filter_attachment_js( $response, $attachment, $meta ) {
+		if ( $attachment instanceof \WP_Post ) {
+			$attachment_id = $attachment->ID;
+		}
+
+		if ( ! empty( $attachment_id ) && is_int( $attachment_id ) ) {
+			// Attempt to get the custom URL.
+			$new_url = $this->get_custom_image_src( $attachment_id );
+
+			// Add the new image src to the existing image.
+			if ( ! empty( $new_url ) && ! empty( $response['sizes'] ) ) {
+				// Get the full size array.
+				$full = $response['sizes']['full'];
+
+				// Update the URL.
+				$full['url'] = $new_url;
+
+				// Make sure to only return this full size array to ensure the
+				// custom image size is used.
+				$response['sizes'] = [];
+				$response['sizes']['full'] = $full;
+			}
+		}
+
+		return $response;
 	}
 }
 
