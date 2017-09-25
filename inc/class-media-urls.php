@@ -45,7 +45,7 @@ class Media_URLs {
 			// Make sure we have a valid source URL.
 			if ( ! empty( $image_delivery_system_url ) && filter_var( $image_delivery_system_url, FILTER_VALIDATE_URL ) ) {
 				// Create the new image source URL.
-				$new_url = $image_delivery_system_url . '/' . $filename;
+				$new_url = add_query_arg( 'id', $filename, $image_delivery_system_url );
 			}
 		}
 
