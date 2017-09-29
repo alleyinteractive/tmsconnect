@@ -18,7 +18,7 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	/**
 	 * The parent object for this set of media attachments.
 	 */
-	public $parent_object;
+	public $parent_object = 0;
 
 	/**
 	 * Constructor
@@ -44,7 +44,11 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return void
 	 */
 	public function run() {
-		parent::run();
+		$this->attachments = $this->get_parent_attachments();
+		foreach ( $this->attachments as $attachment ) {
+			$this->current_attachment = $attachment;
+			parent::run();
+		}
 	}
 
 	/**
@@ -55,7 +59,18 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	}
 
 	public function get_object_query_stmt() {
-		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->parent_object );
+		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->current_attachment, $this->parent_object );
+	}
+
+	/**
+	 * Get all of the attachments of a single parent.
+	 */
+	public function get_parent_attachments() {
+		$query_key = $this->object_query_key . '_all';
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_batch_stmt_query", '', $this->parent_object, $this );
+		if ( ! empty( $stmt ) ) {
+			return $this->fetch_results( $stmt, $query_key );
+		}
 	}
 
 	/**
@@ -65,21 +80,9 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function get_related_terms( $object_id ) {
 		$query_key = $this->object_query_key . '_terms';
-		$terms = array();
 		$stmt = apply_filters( "tmsc_{$this->processor_type}_related_terms_stmt_query", '', $object_id );
 		if ( ! empty( $stmt ) ) {
-			$results = $this->fetch_results( $stmt, $query_key );
-
-			$terms = array();
-			if ( ! empty( $results ) ) {
-				foreach ( $results as $row ) {
-					$term = tmsc_get_term_by_legacy_id( $row->TermID );
-					if ( ! empty( $term ) && ! is_wp_error( $term ) ) {
-						$terms[ $term->taxonomy ][] = $term->term_id;
-					}
-				}
-			}
+			return $this->fetch_results( $stmt, $query_key );
 		}
-		return $terms;
 	}
 }

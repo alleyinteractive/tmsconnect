@@ -49,25 +49,14 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	 * Ensure that these objects are ordered by CN and return the columns.
 	 */
 	public function get_object_query_stmt() {
-		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", "SELECT DISTINCT
-			Terms.TermID,
-			Terms.Term,
-			TermMaster.CN,
-			TermMaster.Children,
-			'{$this->current_tax->taxonomy}' as taxonomy
-		FROM Terms
-		INNER JOIN TermMaster on Terms.TermMasterID = TermMaster.TermMasterID
-		INNER JOIN TermTypes on Terms.TermTypeID = TermTypes.TermTypeID
-		WHERE Terms.TermTypeID = 1
-		AND TermMaster.CN LIKE '{$this->current_tax->CN}.%'
-		ORDER BY TermMaster.CN", $this );
+		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->current_tax->taxonomy, $this->current_tax->CN, $this );
 	}
 
 	/**
 	 * Get the taxonomies that we will be migrating.
 	 */
 	public function get_migratable_taxonomies() {
-		$guide_terms = get_option( 'tmsc_guide_terms', array() );
+		$guide_terms = apply_filters( "tmsc_{$this->processor_type}_guide_terms", get_option( 'tmsc_guide_terms', array() ) );
 		$cns = array();
 		if ( ! empty( $guide_terms ) && ! empty( $guide_terms['term']['data'] ) ) {
 			foreach ( $guide_terms['term']['data'] as $taxonomies ) {
@@ -81,22 +70,11 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 				}
 			}
 
-			$guide_terms_stmt = "'" . implode( "','", array_keys( $cns ) ) . "'";
+			$stmt = apply_filters( "tmsc_{$this->processor_type}_batch_stmt_query", '', $cns, $this );
 
-			$stmt = "SELECT DISTINCT
-				Terms.TermID,
-				Terms.Term,
-				TermMaster.CN
-				FROM Terms
-				INNER JOIN TermMaster on Terms.TermMasterID = TermMaster.TermMasterID
-				INNER JOIN TermTypes on Terms.TermTypeID = TermTypes.TermTypeID
-				WHERE TermMaster.CN IN ( $guide_terms_stmt )
-				AND Children = 1
-				AND (TermMaster.GuideTerm = 1)
-				ORDER BY TermMaster.CN";
 			$this->prepare( $this->object_query_key, $stmt );
 			$query = $this->query( $this->object_query_key );
-			$results = $query->fetchAll();
+			$results = $this->fetch_results( $stmt, $this->object_query_key );
 
 			// Set the guide term as the top level taxonomy so that our results know the proper WP taxonomy.
 			foreach ( $results as $index => $result ) {

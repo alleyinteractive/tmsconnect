@@ -34,6 +34,9 @@ class Tmsc_Post_Type_Tms_Object extends Tmsc_Post_Type {
 			'has_archive' => true,
 			'menu_icon' => 'dashicons-book-alt',
 			'supports' => array( 'title', 'revisions', 'excerpt', 'editor' ),
+			'rewrite' => array(
+				'slug' => 'objects',
+			),
 		) );
 	}
 }

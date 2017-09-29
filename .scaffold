@@ -1,6 +1,6 @@
 {
   "version": "0.4.1",
-  "cpt:tms_object": "ee98d277dfb979d32b80d5d8908787b9",
+  "cpt:tms_object": "505bfdfcfb2c03f983be6de88db63e53",
   "tax:classification": "c4cc783ddbcabb8b9d85cb472ead84f7",
   "tax:period": "25b0bf92641bc0496ac72a1f3bc99a78",
   "tax:collection": "43ee054f2786be0dc977ed72f8d14b18",
@@ -26,5 +26,6 @@
   "fm:object_name": "d6fccdcc73bb8851f4234c80b7d131ed",
   "cpt:constituent": "b79f460919c119f244e5e5785e9062c8",
   "tax:exhibition-types": "61815416e05ed98e638a336d203160f2",
-  "tax:constituent-types": "14aad8c7c17f361b81b643f60d5bdab1"
+  "tax:constituent-types": "72e2ebdc017d28736306dc7092f5857d",
+  "tax:constituent-roles": "29ac4e7bc42f71b7ce26cbf0289e184a"
 }

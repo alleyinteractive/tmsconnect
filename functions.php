@@ -50,11 +50,12 @@ function tmsc_stop_the_insanity() {
 /**
  * Return the post object of a legacy TMS object ID
  * @param string $legacy_id of TMS object.
+ * @param string $post_type. Optional post type to grab legacy item from.
  * @return object
  */
-function tmsc_get_object_by_legacy_id( $legacy_id ) {
+function tmsc_get_object_by_legacy_id( $legacy_id, $post_type = 'tms_object' ) {
 	$args = array(
-		'post_type' => 'tms_object',
+		'post_type' => $post_type,
 		'meta_key' => 'tmsc_legacy_id',
 		'meta_value_num' => $legacy_id,
 		'suppress_filters' => false,
@@ -70,7 +71,7 @@ function tmsc_get_object_by_legacy_id( $legacy_id ) {
  * @param string $taxonomy
  * @return object
  */
-function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy = '' ) {
+function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy = null ) {
 	$args = array(
 		'taxonomy' => $taxonomy,
 		'meta_key' => 'tmsc_legacy_id',
@@ -82,23 +83,6 @@ function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy = '' ) {
 		return reset( $terms );
 	}
 	return;
-}
-
-/**
- * Get attachment with a legeacy MediaMasterID
- * @param int $legacy_id. MediaMasterID.
- * @param string $taxonomy.
- * @return object
- */
-function tmsc_get_attachment_by_legacy_id( $legacy_id ) {
-	$args = array(
-		'post_type' => 'attachment',
-		'meta_key' => 'tmsc_legacy_id',
-		'meta_value_num' => $legacy_id,
-		'suppress_filters' => false,
-	);
-	$posts = get_posts( $args );
-	return reset( $posts );
 }
 
 /**
