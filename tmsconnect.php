@@ -30,8 +30,8 @@ function tmsc_get_system_processors() {
 	$processors = array(
 		'taxonomy' => __( 'Taxonomy', 'tmsc' ),
 		// 'constituent' => __( 'Constituent', 'tmsc' ),
+		'exhibition' => __( 'Exhibition', 'tmsc' ),
 		'object' => __( 'Object', 'tmsc' ),
-		// 'exhibition' => __( 'Exhibition', 'tmsc' ),
 	);
 	return apply_filters( 'tmsc_get_system_processors', $processors );
 }
@@ -104,11 +104,16 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-processor.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-object.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-taxonomy.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-media.php' );
+
 
 	// The system this plugin is active for. Built with Freer_Sackler using mySQL.
 	foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
 		require_once( trailingslashit( TMSC_SYSTEM_PATH ) . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-' . $processor_slug . '-processor.php' );
 	}
+
+	// Load child processors here such as media.
+	require_once( trailingslashit( TMSC_SYSTEM_PATH ) . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-media-processor.php' );
 
 	add_action( 'admin_enqueue_scripts', 'tmsc_enqueue_assets' );
 }

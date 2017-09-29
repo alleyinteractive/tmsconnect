@@ -232,6 +232,7 @@ abstract class Migrateable {
 	 */
 	public function set_processor( $processor ) {
 		$this->processor = $processor;
+		$this->name = $processor->processor_type;
 	}
 
 	/**

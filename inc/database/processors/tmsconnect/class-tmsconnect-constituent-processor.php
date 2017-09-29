@@ -15,6 +15,10 @@ class TMSConnect_Constituent_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public $object_query_key = 'tms_constituents';
 
+	public $types;
+
+	public $roles;
+
 	/**
 	 * Constructor
 	 * @param string $type
@@ -22,46 +26,30 @@ class TMSConnect_Constituent_Processor extends \TMSC\Database\TMSC_Processor {
 	public function __construct( $type ) {
 		parent::__construct( $type );
 		$this->types = $this->get_constituent_types();
-		$this->individual_types = $this->get_individual_types();
+		$this->roles = $this->get_constituent_roles();
 	}
 
 	/**
 	 * Get the constituent types that we will be migrating.
 	 */
 	public function get_constituent_types() {
-		$types = array();
-
-		$stmt = '';
+		$query_key = $this->object_query_key . '_all';
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_batch_stmt_query", '', $this );
 		if ( ! empty( $stmt ) ) {
-			$this->prepare( $this->object_query_key, $stmt );
-			$query = $this->query( $this->object_query_key );
-			$results = $query->fetchAll();
-
-			// Set the guide term as the top level taxonomy so that our results know the proper WP taxonomy.
-			foreach ( $results as $index => $result ) {
-				$results[ $index ]->taxonomy = $cns[ $result->CN ];
-			}
-			return $results;
+			if ( ! empty( $stmt ) ) {
+			return $this->fetch_results( $stmt, $query_key );
 		}
 	}
 
 	/**
-	 * Get the individual constituent types that we will be migrating.
+	 * Get the constituent roles that we will be migrating.
 	 */
-	public function get_individual_types() {
-		$types = array();
-
-		$stmt = '';
+	public function get_constituent_roles() {
+		$query_key = $this->object_query_key . '_all';
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_roles_stmt_query", '', $this );
 		if ( ! empty( $stmt ) ) {
-			$this->prepare( $this->object_query_key, $stmt );
-			$query = $this->query( $this->object_query_key );
-			$results = $query->fetchAll();
-
-			// Set the guide term as the top level taxonomy so that our results know the proper WP taxonomy.
-			foreach ( $results as $index => $result ) {
-				$results[ $index ]->taxonomy = $cns[ $result->CN ];
-			}
-			return $results;
+			if ( ! empty( $stmt ) ) {
+			return $this->fetch_results( $stmt, $query_key );
 		}
 	}
 

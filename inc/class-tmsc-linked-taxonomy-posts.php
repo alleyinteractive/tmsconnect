@@ -9,11 +9,6 @@ class TMSC_Linked_Taxonomy_Posts {
 	private static $instance;
 
 	/**
-	 * Module name/slug
-	 */
-	public $module_name = 'linked-taxonomy-posts';
-
-	/**
 	 * The linked post types and taxonomies.
 	 *
 	 * @var array. array( 'post_type_slug' => 'taxonomy_slug' )
@@ -49,6 +44,7 @@ class TMSC_Linked_Taxonomy_Posts {
 	 */
 	public $linked_taxonomy_meta_key = 'linked_taxonomy';
 
+
 	/**
 	 * If we are linking to parent terms instead of a taxonomy, we track the terms here.
 	 *
@@ -82,7 +78,7 @@ class TMSC_Linked_Taxonomy_Posts {
 	 */
 	public function setup() {
 		// Allow us to set our linked items with a filter instead of using the config.
-		$this->linked_types = apply_filters( 'tmsc_linked_taxonomy_posts', $this->linked_types );
+		$this->linked_types = apply_filters( 'tmsc_linked_taxonomy_posts',  $this->linked_types );
 
 		// Setup save post hooks.
 		$this->set_hooks();
@@ -101,7 +97,7 @@ class TMSC_Linked_Taxonomy_Posts {
 			// Save our linked taxonomies when a post is created/edited.
 			foreach ( $this->linked_types as $post_type => $tax ) {
 				// Our link save post logic
-				add_action( "save_post_{$post_type}", array( $this, 'save_linked_taxonomy' ), 100,3 );
+				add_action( "save_post_{$post_type}", array( $this, 'save_linked_taxonomy' ), 20,3 );
 			}
 		}
 
@@ -163,7 +159,6 @@ class TMSC_Linked_Taxonomy_Posts {
 
 		if ( empty( $term ) ) {
 
-
 			$post = ( empty( $post ) ) ? get_post( $post_id ) : $post;
 			$post_type = ( 'revision' === $post->post_type ) ? get_post_type( $post->post_parent ) : $post->post_type;
 
@@ -184,6 +179,7 @@ class TMSC_Linked_Taxonomy_Posts {
 				if ( 'auto-draft' !== $post->post_status ) {
 					// Often the top level posts will act as a container for child posts and we won't need terms for these.
 					// Use the filter hook||config below to enable it for child posts.
+
 					if ( empty( $post->post_parent ) || apply_filters( 'tmsc_link_child_posts', false, $post, $taxonomy ) ) {
 
 						// If filter hook above has been applied, then write a child term.
@@ -205,14 +201,17 @@ class TMSC_Linked_Taxonomy_Posts {
 							$term = get_term( $term['term_id'], $taxonomy );
 						}
 					} else {
+
+						$this->clear_linked_cache( $post->post_parent );
 						$term = $this->get_linked_term( $post->post_parent );
+
 						// Set the meta data for the children.
 						update_term_meta( $term->term_id, $this->linked_term_meta_key, $post->post_parent );
 						update_post_meta( $post_id, $this->linked_post_meta_key, $term->term_id );
 						update_post_meta( $post_id, $this->linked_taxonomy_meta_key, $taxonomy );
 					}
 				}
-			}
+			} // End if().
 		} // End if().
 
 		$this->clear_linked_cache( $post_id );
@@ -229,28 +228,32 @@ class TMSC_Linked_Taxonomy_Posts {
 		global $taxnow, $typenow;
 		$value = '';
 		$url_args = wp_parse_args( wp_parse_url( wp_get_referer(), PHP_URL_QUERY ) );
+		// Get the value of an arbitrary post argument.
+		// @todo We are suppressing the need for a nonce check, which means this whole thing likely needs a rewrite.
+		$post_arg_val = ! empty( $_POST[ $name ] ) ? sanitize_text_field( wp_unslash( $_POST[ $name ] ) ) : null; // @codingStandardsIgnoreLine
 
-		switch( true ) {
-			case ( ! empty( get_query_var( $name ) ) ) :
+		switch ( true ) {
+			case ( ! empty( get_query_var( $name ) ) ):
 				$value = get_query_var( $name );
 				break;
 			// If the query arg isn't set. Check POST and GET requests.
-			case ( ! empty( $_POST[ $name ] ) ) :
-				$value = sanitize_text_field(  $_POST[ $name ] );
+			case ( ! empty( $post_arg_val ) ):
+				// Verify nonce here.
+				$value = $post_arg_val;
 				break;
-			case ( ! empty( $_GET[ $name ] ) ) :
-				$value = sanitize_text_field(  $_GET[ $name ] );
+			case ( ! empty( $_GET[ $name ] ) ):
+				$value = sanitize_text_field( wp_unslash( $_GET[ $name ] ) );
 				break;
-			case ( 'post_type' === $name && ! empty( $typenow ) ) :
+			case ( 'post_type' === $name && ! empty( $typenow ) ):
 				$value = $typenow;
 				break;
-			case ( 'taxonomy' === $name && ! empty( $taxnow ) ) :
+			case ( 'taxonomy' === $name && ! empty( $taxnow ) ):
 				$value = $taxnow;
 				break;
-			case ( ! empty( $url_args[ $name ] ) ) :
+			case ( ! empty( $url_args[ $name ] ) ):
 				$value = $url_args[ $name ];
 				break;
-			default :
+			default:
 				$value = '';
 		}
 		return $value;
@@ -280,7 +283,7 @@ class TMSC_Linked_Taxonomy_Posts {
 			'post_type' => $post->post_type,
 			'post_parent' => $post->ID,
 		) );
-		foreach( $children as $child ) {
+		foreach ( $children as $child ) {
 			wp_trash_post( $child->ID );
 			clean_post_cache( $child );
 			$this->clear_linked_cache( $child->ID );

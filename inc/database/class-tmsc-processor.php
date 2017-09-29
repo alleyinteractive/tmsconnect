@@ -1,6 +1,7 @@
 <?php
 namespace TMSC\Database;
 abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
+
 	/**
 	 * Constructor
 	 * @param string $type

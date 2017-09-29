@@ -16,6 +16,11 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	public $object_query_key = 'tms_objects';
 
 	/**
+	 * The post type used with this processor if applicable.
+	 */
+	public $post_type = 'tms_object';
+
+	/**
 	 * The number of web visible TMS objects to migrate.
 	 */
 	public $total_objects = 0;
@@ -59,6 +64,7 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return void
 	 */
 	public function run() {
+		add_filter( "tmsc_set_{$this->processor_type}_post_type", array( $this, 'get_post_type' ) );
 		while ( $this->offset < $this->total_objects ) {
 			$this->current_batch = $this->get_migratable_objects();
 			foreach ( $this->current_batch as $object ) {
@@ -67,6 +73,14 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 			}
 			$this->offset = $this->offset + $this->batch_size;
 		}
+		remove_filter( "tmsc_set_{$this->processor_type}_post_type", array( $this, 'get_post_type' ) );
+	}
+
+	/**
+	 * Get the current post type associated with this processor if applicable.
+	 */
+	public function get_post_type() {
+		return $this->post_type;
 	}
 
 	public function get_object_query_stmt() {

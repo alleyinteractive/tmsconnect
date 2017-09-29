@@ -2,5 +2,6 @@
 	"public": true,
 	"has_archive": true,
 	"menu_icon": "dashicons-book-alt",
-	"supports": ["title", "revisions", "excerpt", "editor"]
+	"supports": ["title", "excerpt", "editor"],
+	"rewrite": { "slug": "objects" }
 }

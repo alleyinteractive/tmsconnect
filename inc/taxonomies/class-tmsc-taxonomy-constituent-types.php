@@ -51,7 +51,6 @@ class Tmsc_Taxonomy_Constituent_Types extends Tmsc_Taxonomy {
 				'choose_from_most_used' => __( 'Choose from most used Constituent Types', 'tmsc' ),
 				'menu_name'             => __( 'Constituent Types', 'tmsc' ),
 			),
-			'hierarchical' => true,
 			'rewrite' => array(
 				'with_front' => false,
 			),
