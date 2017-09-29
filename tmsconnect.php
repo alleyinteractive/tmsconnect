@@ -59,6 +59,8 @@ function tmsc_init() {
 
 	// Singleton
 	require_once( TMSCONNECT_PATH . '/inc/trait-singleton.php' );
+	// Helper functions
+	require_once( TMSCONNECT_PATH . '/inc/helper-functions.php' );
 
 	// Custom Post Types
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type.php' );
