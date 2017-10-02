@@ -1,4 +1,37 @@
 <?php
+/**
+ * Auto generate our FM fields based on our meta data mappings for our defined post types.
+ */
+function tmsc_add_fm_meta_boxes() {
+	if ( is_admin() ) {
+		$processors = tmsc_get_system_processors();
+		// We will add meta fields for any post types that aren't objects. By default constituents and exhibitions.
+		foreach ( array_keys( $processors ) as $type ) {
+			if ( post_type_exists( $type ) ) {
+				add_action( "fm_post_{$type}", 'tmsc_add_post_type_meta_boxes' );
+			}
+		}
+	}
+}
+add_action( 'init', 'tmsc_add_fm_meta_boxes' );
+
+/**
+ * Generic function to auto generate Fieldmanager text fields for imported data.
+ */
+function tmsc_add_post_type_meta_boxes( $type ) {
+	if ( ! empty( $type ) && TMSC_Custom_Landing_Page_Types()->on_custom_landing_admin_page() && 'single' !== TMSC_Custom_Landing_Page_Types()->current_landing_type ) {
+		$mapping = apply_filters( "tmsc_{$type}_meta_keys", array() );
+		if ( ! empty( $mapping ) ) {
+			foreach ( $mapping as $key => $field ) {
+				$fm = new Fieldmanager_Textfield( array(
+					'name' => $key,
+					'label' => __( 'Imported DB Field', 'tmsc' ),
+				) );
+				$fm->add_meta_box( $field, array( $type ), 'normal' );
+			}
+		}
+	}
+}
 
 /* begin fm:related_objects */
 /**
@@ -166,9 +199,6 @@ function tmsc_fm_web_resources() {
 add_action( 'fm_post_tms_object', 'tmsc_fm_web_resources' );
 /* end fm:web_resources */
 
-
-
-
 /* begin fm:medium */
 /**
  * `medium` Fieldmanager fields.
@@ -182,9 +212,6 @@ function tmsc_fm_medium() {
 }
 add_action( 'fm_post_tms_object', 'tmsc_fm_medium' );
 /* end fm:medium */
-
-
-
 
 /* begin fm:object_name */
 /**

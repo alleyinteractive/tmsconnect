@@ -5,7 +5,7 @@
  * @package  TNSConnect
  */
 class TMSC_Custom_Landing_Page_Types {
-	private static $instance;
+	use \TMSC\Singleton;
 
 	/**
 	 * The custom landing page types.
@@ -61,27 +61,6 @@ class TMSC_Custom_Landing_Page_Types {
 	 * Store the current submenu_file.
 	 */
 	public $submenu_file = '';
-
-	private function __construct() {
-		/* Don't do anything, needs to be initialized via instance() method */
-	}
-
-	public function __clone() {
-		wp_die( "Please don't __clone " . __CLASS__ );
-	}
-
-	public function __wakeup() {
-		wp_die( "Please don't __wakeup " . __CLASS__ );
-	}
-
-	public static function instance() {
-		if ( ! isset( self::$instance ) ) {
-			self::$instance = new TMSC_Custom_Landing_Page_Types();
-			self::$instance->setup();
-		}
-		return self::$instance;
-	}
-
 
 	/**
 	 * Initialize our class
@@ -850,5 +829,9 @@ class TMSC_Custom_Landing_Page_Types {
 	}
 }
 
+function TMSC_Custom_Landing_Page_Types() {
+	return TMSC_Custom_Landing_Page_Types::get_instance();
+}
 // Initial call to setup instance
-add_action( 'after_setup_theme', array( 'TMSC_Custom_Landing_Page_Types', 'instance' ), 10 );
+add_action( 'after_setup_theme', 'TMSC_Custom_Landing_Page_Types', 10 );
+

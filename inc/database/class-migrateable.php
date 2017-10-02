@@ -98,9 +98,11 @@ abstract class Migrateable {
 	 * @return void
 	 */
 	protected function after_save() {
-		$this->migrate_children();
 		$this->set_last_updated_hash();
 		$this->save_final_object_status();
+		$id = $this->id[ $this->type ];
+		$clear_cache_function = "clean_{$this->type}_cache";
+		$clear_cache_function( $this->object->{$id} );
 	}
 
 	/**
@@ -192,7 +194,7 @@ abstract class Migrateable {
 	}
 
 	public function update() {
-		$func = 'wp_update' . $this->type;
+		$func = 'wp_update_' . $this->type;
 		if ( function_exists( $func ) ) {
 			$args = func_get_args();
 			$this->stmt_queue[] = array( $func, $args );

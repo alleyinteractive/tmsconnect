@@ -6,7 +6,7 @@
  */
 
 class TMSC_Linked_Taxonomy_Posts {
-	private static $instance;
+	use \TMSC\Singleton;
 
 	/**
 	 * The linked post types and taxonomies.
@@ -52,26 +52,6 @@ class TMSC_Linked_Taxonomy_Posts {
 	 */
 	public $parent_term = null;
 
-	private function __construct() {
-		/* Don't do anything, needs to be initialized via instance() method */
-	}
-
-	public function __clone() {
-		wp_die( "Please don't __clone " . __CLASS__ );
-	}
-
-	public function __wakeup() {
-		wp_die( "Please don't __wakeup " . __CLASS__ );
-	}
-
-	public static function instance() {
-		if ( ! isset( self::$instance ) ) {
-			self::$instance = new TMSC_Linked_Taxonomy_Posts();
-			self::$instance->setup();
-		}
-		return self::$instance;
-	}
-
 	/**
 	 * Initialize our class
 	 * @return void.
@@ -92,8 +72,7 @@ class TMSC_Linked_Taxonomy_Posts {
 	public function set_hooks() {
 		add_action( 'init', array( $this, 'manage_linked_taxonomy_caps' ), 50 );
 
-		// This will prevent autosaves.
-		if ( is_admin() && ! wp_doing_ajax() ) {
+		if ( is_admin() ) {
 			// Save our linked taxonomies when a post is created/edited.
 			foreach ( $this->linked_types as $post_type => $tax ) {
 				// Our link save post logic
@@ -357,5 +336,8 @@ class TMSC_Linked_Taxonomy_Posts {
 	}
 }
 
+function TMSC_Linked_Taxonomy_Posts() {
+	return TMSC_Linked_Taxonomy_Posts::get_instance();
+}
 // Initial call to setup instance
-add_action( 'after_setup_theme', array( 'TMSC_Linked_Taxonomy_Posts', 'instance' ), 15 );
+add_action( 'after_setup_theme', 'TMSC_Linked_Taxonomy_Posts', 15 );

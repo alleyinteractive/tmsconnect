@@ -96,7 +96,8 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return HTML
 	 */
 	public function get_body(){
-		return apply_filters( "tmsc_set_{$this->name}_body", '', $this->raw );
+		$content = apply_filters( "tmsc_set_{$this->name}_body", '', $this->raw );
+		return ( empty( $content ) ) ? '' : $content;
 	}
 
 	/**
@@ -213,6 +214,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 */
 	public function save_post() {
 		$date = date( 'Y-m-d H:i:s', $this->get_pubdate() );
+
 		$post = array(
 			'ID' => empty( $this->object->ID ) ? 0 : $this->object->ID,
 			'post_title' => $this->get_title(),
@@ -246,6 +248,11 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 			}
 		}
 		return;
+	}
+
+	public function after_save() {
+		$this->migrate_children();
+		parent::after_save();
 	}
 
 	/**
@@ -290,6 +297,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Save media attachments.
 	 */
 	public function save_media_attachments() {
+		$this->children['Media'] = null;
 		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ID ) ) {
 			$this->raw->wp_parent_id = $this->object->ID;
 			// Store with migratable type as key.
@@ -304,10 +312,11 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	public function migrate_children(){
 		if ( ! empty( $this->children ) ) {
 			foreach( $this->children as $migratable_type => $raw_data ) {
-				$child_processor = \TMSC\TMSC::instance()->get_processor( $migratable_type );
-				$child_processor->set_parent_object( $raw_data );
-				$child_processor->run();
-				tmsc_stop_the_insanity();
+				if ( ! empty( $raw_data ) ) {
+					$child_processor = \TMSC\TMSC::instance()->get_processor( $migratable_type );
+					$child_processor->set_parent_object( $raw_data );
+					$child_processor->run();
+				}
 			}
 			return true;
 		}

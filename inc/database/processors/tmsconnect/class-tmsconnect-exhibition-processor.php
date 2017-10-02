@@ -26,7 +26,7 @@ class TMSConnect_Exhibition_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function __construct( $type ) {
 		parent::__construct( $type );
-		$this->exhibitions = $this->get_exhibitions();
+		//$this->exhibitions = $this->get_exhibitions();
 	}
 
 	/**
@@ -35,10 +35,7 @@ class TMSConnect_Exhibition_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function run() {
 		add_filter( "tmsc_set_{$this->processor_type}_post_type", array( $this, 'get_post_type' ) );
-		foreach ( $this->exhibitions as $exhibition ) {
-			$this->current_exhibition = $exhibition;
-			parent::run();
-		}
+		parent::run();
 		remove_filter( "tmsc_set_{$this->processor_type}_post_type", array( $this, 'get_post_type' ) );
 	}
 
@@ -53,17 +50,7 @@ class TMSConnect_Exhibition_Processor extends \TMSC\Database\TMSC_Processor {
 	 * Generate our exhibitions we are migrating.
 	 */
 	public function get_object_query_stmt() {
-		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->current_exhibition, $this );
-	}
-	/**
-	 * Get all of the exhibitions
-	 */
-	public function get_exhibitions() {
-		$query_key = $this->object_query_key . '_all';
-		$stmt = apply_filters( "tmsc_{$this->processor_type}_batch_stmt_query", '', $this );
-		if ( ! empty( $stmt ) ) {
-			return $this->fetch_results( $stmt, $query_key );
-		}
+		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this );
 	}
 
 	/**
@@ -78,7 +65,6 @@ class TMSConnect_Exhibition_Processor extends \TMSC\Database\TMSC_Processor {
 		if ( ! empty( $stmt ) ) {
 			$results = $this->fetch_results( $stmt, $query_key );
 
-			$terms = array();
 			if ( ! empty( $results ) ) {
 				foreach ( $results as $row ) {
 					$term = tmsc_get_term_by_legacy_id( $row->TermID );

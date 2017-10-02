@@ -62,6 +62,11 @@ function tmsc_init() {
 	// Helper functions
 	require_once( TMSCONNECT_PATH . '/inc/helper-functions.php' );
 
+	// Allow linked post/taxonomies.
+	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-linked-taxonomy-posts.php' );
+	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-custom-landing-page-types.php' );
+
+
 	// Custom Post Types
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type.php' );
 	require_once( TMSCONNECT_PATH . '/inc/post-types/class-tmsc-post-type-tms-object.php' );
@@ -81,10 +86,6 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-material.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-period.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-sites.php' );
-
-	// Allow linked post/taxonomies.
-	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-linked-taxonomy-posts.php' );
-	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-custom-landing-page-types.php' );
 
 	// TMSC Sync Class
 	require_once( TMSCONNECT_PATH . '/inc/class-tmsc-sync.php' );

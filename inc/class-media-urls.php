@@ -20,6 +20,7 @@ class Media_URLs {
 	 * Setup the class.
 	 */
 	public function setup() {
+		add_filter( 'wp_get_attachment_image_attributes', [ $this, 'filter_image_attrs' ], 10, 3 );
 		add_filter( 'wp_get_attachment_image_src', [ $this, 'filter_image_source' ], 10, 4 );
 		add_filter( 'image_downsize', [ $this, 'filter_image_downsize' ], 10, 3 );
 		add_filter( 'load_image_to_edit_path', [ $this, 'filter_edit_image_path' ], 10, 3 );
@@ -33,21 +34,8 @@ class Media_URLs {
 	 * @param  int         $attachment_id The attachment ID.
 	 * @return string|bool                False if there is an error, otherwise the new URL.
 	 */
-	public function get_custom_image_src( int $attachment_id ) {
-		$new_url = false;
-
-		// See if this attachment has a filename attribute.
-		$filename = get_post_meta( $attachment_id, 'tms_media_filename', true );
-		if ( ! empty( $filename ) ) {
-			// Get the Image Delivery System URL.
-			$image_delivery_system_url = get_option( 'tmsc-image-url' );
-
-			// Make sure we have a valid source URL.
-			if ( ! empty( $image_delivery_system_url ) && filter_var( $image_delivery_system_url, FILTER_VALIDATE_URL ) ) {
-				// Create the new image source URL.
-				$new_url = add_query_arg( 'id', $filename, $image_delivery_system_url );
-			}
-		}
+	public function get_custom_image_src( int $attachment_id, $size = null ) {
+		$new_url = apply_filters( 'tmsc_get_custom_image_src', false, $attachment_id, $size );
 
 		return $new_url;
 	}
@@ -64,7 +52,7 @@ class Media_URLs {
 	 */
 	public function filter_image_source( $image, $attachment_id, $size, $icon ) {
 		// Attempt to get the custom URL.
-		$new_url = $this->get_custom_image_src( $attachment_id );
+		$new_url = $this->get_custom_image_src( $attachment_id, $size );
 
 		// Add the new image src to the existing image.
 		if (
@@ -80,6 +68,24 @@ class Media_URLs {
 	}
 
 	/**
+	 * Filter wp_get_attachment_image in the media table.
+	 *
+	 * @param  array|false  $attr          Either array with img attrs.
+	 * @param  object       $attachment    WP Post Object.
+	 * @param  string|array $size          Size of image. Image size or array of width and height values
+	 *                                     (in that order). Default 'thumbnail'.
+	 * @return array|false                 Array with image element attributes.
+	 */
+	public function filter_image_attrs( $attr, $attachment, $size ) {
+		global $pagenow;
+		if ( is_admin() && ! empty( $pagenow ) && 'upload.php' === $pagenow && [60,60] === $size ) {
+			// We are on the list view of media attachments. Lets pull our images.
+			$attr['src'] = $this->get_custom_image_src( $attachment->ID, $size );
+		}
+		return $attr;
+	}
+
+	/**
 	 * Filter the image downsize array to return custom image source URLs.
 	 *
 	 * @param  bool         $downsize Whether to short-circuit the image downsize. Default false.
@@ -90,7 +96,7 @@ class Media_URLs {
 	 */
 	public function filter_image_downsize( $downsize, $id, $size ) {
 		// Attempt to get the custom URL.
-		$new_url = $this->get_custom_image_src( $id );
+		$new_url = $this->get_custom_image_src( $id, $size );
 
 		/**
 		 * If we have a custom URL then get all of the other attributes from
@@ -110,6 +116,24 @@ class Media_URLs {
 				&& is_string( $image[0] )
 			) {
 				$image[0] = $new_url;
+				// Attempt to add in size data.
+				global $_wp_additional_image_sizes;
+				if ( ! empty( $size ) && 'full' !== $size ) {
+					$width = '';
+					$height = '';
+					if ( is_array( $size ) ) {
+						$width = $size[0];
+						$height = $size[1];
+					} elseif ( ! empty( $_wp_additional_image_sizes[ $size ] ) ) {
+						$width  = $_wp_additional_image_sizes[ $size ]['width'];
+						$height = $_wp_additional_image_sizes[ $size ]['height'];
+					} elseif ( in_array( $size, [ 'thumbnail', 'medium', 'medium_large', 'large' ] ) ) {
+						$width = get_option( "{$size}_size_w" );
+						$height = get_option( "{$size}_size_h" );
+					}
+					$image[1] = $width;
+					$image[2] = $height;
+				}
 			}
 
 			add_filter( 'image_downsize', [ $this, 'filter_image_downsize' ], 10, 3 );
@@ -130,7 +154,7 @@ class Media_URLs {
 	 */
 	public function filter_edit_image_path( $filepath, $attachment_id, $size ) {
 		// Attempt to get the custom URL.
-		$new_url = $this->get_custom_image_src( $attachment_id );
+		$new_url = $this->get_custom_image_src( $attachment_id, $size );
 
 		// Add the new image src to the existing image.
 		if ( ! empty( $new_url ) ) {

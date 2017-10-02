@@ -190,12 +190,6 @@ class TMSC_Sync {
 
 	// Connect to the feed and update our post types with the latest data.
 	public function object_sync() {
-		// If we are syncing disable post revisions.
-
-		if ( ! defined( 'WP_POST_REVISIONS' ) || WP_POST_REVISIONS ) {
-			define( 'WP_POST_REVISIONS', FALSE );
-		}
-
 		/**
 		 * @TODO
 		 *

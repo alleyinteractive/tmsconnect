@@ -55,13 +55,19 @@ function tmsc_stop_the_insanity() {
  */
 function tmsc_get_object_by_legacy_id( $legacy_id, $post_type = 'tms_object' ) {
 	$args = array(
+		'post_status' => 'any',
 		'post_type' => $post_type,
 		'meta_key' => 'tmsc_legacy_id',
-		'meta_value_num' => $legacy_id,
+		'meta_value' => $legacy_id, // With the uncertainty of the legacy id format, this is being saved as a string always so don't use meta_value_num.
 		'suppress_filters' => false,
 	);
+
 	$posts = get_posts( $args );
-	return reset( $posts );
+
+	if ( ! empty( $posts ) ) {
+		return reset( $posts );
+	}
+	return false;
 
 }
 
@@ -91,7 +97,7 @@ function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy = null ) {
  * @return object. WP_Term Object.
  */
 function tmsc_get_linked_term( $post_id ) {
-	return TMSC_Linked_Taxonomy_Posts::instance()->get_linked_term( $post_id );
+	return TMSC_Linked_Taxonomy_Posts()->get_linked_term( $post_id );
 }
 
 /**
@@ -100,7 +106,7 @@ function tmsc_get_linked_term( $post_id ) {
  * @return object. WP_Post Object.
  */
 function tmsc_get_linked_post( $term_id ) {
-	return TMSC_Linked_Taxonomy_Posts::instance()->get_linked_post( $term_id );
+	return TMSC_Linked_Taxonomy_Posts()->get_linked_post( $term_id );
 }
 
 /**
@@ -108,5 +114,5 @@ function tmsc_get_linked_post( $term_id ) {
  * @return array. array( 'post_type_slug' => 'taxonomy_slug' ).
  */
 function tmsc_get_linked_types() {
-	return TMSC_Linked_Taxonomy_Posts::instance()->linked_types;
+	return TMSC_Linked_Taxonomy_Posts()->linked_types;
 }
