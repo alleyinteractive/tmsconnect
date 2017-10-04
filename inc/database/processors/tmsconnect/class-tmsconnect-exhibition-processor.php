@@ -26,7 +26,6 @@ class TMSConnect_Exhibition_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function __construct( $type ) {
 		parent::__construct( $type );
-		//$this->exhibitions = $this->get_exhibitions();
 	}
 
 	/**
