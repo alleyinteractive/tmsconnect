@@ -20,8 +20,6 @@ class Search {
 		$this->setup_auth();
 		$this->delay_sync_actions();
 
-		add_filter( 'query_vars', [ $this, 'query_vars' ] );
-
 		// SearchPress customizations.
 		// TODO: Add customizations.
 
