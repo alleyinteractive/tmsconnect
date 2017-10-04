@@ -116,3 +116,11 @@ function tmsc_get_linked_post( $term_id ) {
 function tmsc_get_linked_types() {
 	return TMSC_Linked_Taxonomy_Posts()->linked_types;
 }
+
+/**
+ * Get the associated TMS objects to a term
+ * @param int $term_id
+ * @return array. Array of tms_object Post Objects.
+ */
+function tmsc_get_related_tms_objects() {
+}
