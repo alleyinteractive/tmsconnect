@@ -37,8 +37,10 @@ class Search {
 	protected function setup_auth() {
 		// If ES hosted by Found and protected by Shield, it requires http basic
 		// authentication.
+		$username = apply_filter( 'tmsc_sp_username', '' );
+		$password = apply_filter( 'tmsc_sp_pass', '' );
 		if ( function_exists( 'SP_API' ) && false !== strpos( SP_Config()->get_setting( 'host' ), 'aws.found.io' ) ) {
-			SP_API()->request_defaults['headers']['Authorization'] = 'Basic ' . base64_encode( 'elastic:bQgT8CpV5R8nr3tuv1CU2BGz' );
+			SP_API()->request_defaults['headers']['Authorization'] = 'Basic ' . base64_encode( "$username:$password" );
 		}
 	}
 
