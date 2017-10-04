@@ -34,7 +34,7 @@ class Media_URLs {
 	 * @param  int         $attachment_id The attachment ID.
 	 * @return string|bool                False if there is an error, otherwise the new URL.
 	 */
-	public function get_custom_image_src( int $attachment_id, $size = null ) {
+	public function get_custom_image_src( $attachment_id, $size = null ) {
 		$new_url = apply_filters( 'tmsc_get_custom_image_src', false, $attachment_id, $size );
 
 		return $new_url;
