@@ -118,6 +118,10 @@ function tmsc_init() {
 	// Load child processors here such as media.
 	require_once( trailingslashit( TMSC_SYSTEM_PATH ) . TMSC_SYSTEM_BUILD_FILE_PREFIX . '/class-' . TMSC_SYSTEM_BUILD_FILE_PREFIX . '-media-processor.php' );
 
+	//Setup our search class
+	require_once( TMSCONNECT_PATH . '/inc/class-search.php' );
+
+
 	add_action( 'admin_enqueue_scripts', 'tmsc_enqueue_assets' );
 }
 add_action( 'plugins_loaded', 'tmsc_init' );
@@ -130,6 +134,7 @@ function tmsc_dependency() {
 		new \TMSC\Plugin_Dependency( 'TMS Connect', 'Fieldmanager', 'https://github.com/alleyinteractive/wordpress-fieldmanager' ),
 		new \TMSC\Plugin_Dependency( 'TMS Connect', 'Zone Manager (Zoninator)', 'https://github.com/Automattic/zoninator' ),
 		new \TMSC\Plugin_Dependency( 'TMS Connect', 'Fieldmanager Zones', 'https://github.com/alleyinteractive/fm-zones' ),
+		new \TMSC\Plugin_Dependency( 'SearchPress', 'SearchPress', 'https://github.com/alleyinteractive/searchpress' ),
 	);
 	foreach ( $tmsc_dependencies as $tmsc_dependency ) {
 		if ( ! $tmsc_dependency->verify() ) {
