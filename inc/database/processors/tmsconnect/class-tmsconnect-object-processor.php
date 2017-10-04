@@ -53,10 +53,8 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function __construct( $type ) {
 		parent::__construct( $type );
-		$this->batch_size = apply_filters( 'tmsc_sync_batch_size', 500 );
+		$this->batch_size = apply_filters( 'tmsc_sync_batch_size', 200 );
 		$this->total_objects = $this->get_num_objects();
-		// TODO: DELETE THIS AFTER TESTING
-		// $this->total_objects = 50;
 	}
 
 	/**

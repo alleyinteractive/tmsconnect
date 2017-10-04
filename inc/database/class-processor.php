@@ -70,6 +70,7 @@ abstract class Processor {
 	 */
 	public function mark_object_as_processed( $saved_migrateable ) {
 		$object = $saved_migrateable->get_object();
+
 		if ( ! empty( $object ) ) {
 			if ( ! empty( $saved_migrateable->get_legacy_cn() ) ) {
 				$saved_migrateable->update_meta( 'tmsc_legacy_CN', $saved_migrateable->get_legacy_cn() );
@@ -108,11 +109,11 @@ abstract class Processor {
 				$this->before_migrate_object();
 				$this->migrate_object();
 				$this->after_migrate_object();
+				$this->disable_autocommit();
+				$this->migrateable->flush_stmt_queue();
+				$this->commit();
 				$this->finish();
 			}
-			$this->disable_autocommit();
-			$this->migrateable->flush_stmt_queue();
-			$this->commit();
 		}
 		$this->after_run();
 

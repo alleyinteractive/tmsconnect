@@ -184,38 +184,39 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 * @return WP_Object Object
 	 */
 	public function save_post() {
+		if ( ! empty( $this->raw->Title ) ) {
+			// $filename should be the path to a file in the upload directory.
+			$filename = $this->raw->FileName;
 
-		// $filename should be the path to a file in the upload directory.
-		$filename = $this->raw->FileName;
+			// The ID of the post this attachment is for.
+			$parent_post_id = $this->raw->WPParentID;
 
-		// The ID of the post this attachment is for.
-		$parent_post_id = $this->raw->WPParentID;
+			// Check the type of file. We'll use this as the 'post_mime_type'.
+			$filetype = 'image/jpeg/';
 
-		// Check the type of file. We'll use this as the 'post_mime_type'.
-		$filetype = 'image/jpeg/';
+			// Get the path to the upload directory.
+			$wp_upload_dir = wp_upload_dir();
+			$guid_url = trailingslashit( get_option( 'tmsc-ids-image-url', $wp_upload_dir['baseurl'] ) );
 
-		// Get the path to the upload directory.
-		$wp_upload_dir = wp_upload_dir();
-		$guid_url = trailingslashit( get_option( 'tmsc-ids-image-url', $wp_upload_dir['baseurl'] ) );
+			// Prepare an array of post data for the attachment.
+			$attachment = array(
+				'guid' => add_query_arg( array( 'id' => $filename ), $guid_url ),
+				'post_mime_type' => $filetype,
+				'post_title' => $this->raw->Title,
+				'post_content' => ( ! empty( $this->raw->PublicCaption ) ) ? $this->raw->PublicCaption : '',
+				'post_excerpt' => ( ! empty( $this->raw->Description ) ) ? $this->raw->Description : '',
+				'post_status' => 'inherit',
+				'menu_order' => absint( $this->raw->Rank ),
+			);
 
-		// Prepare an array of post data for the attachment.
-		$attachment = array(
-			'guid' => add_query_arg( array( 'id' => $filename ), $guid_url ),
-			'post_mime_type' => $filetype,
-			'post_title' => $this->raw->Title,
-			'post_content' => $this->raw->PublicCaption,
-			'post_excerpt' => $this->raw->Description,
-			'post_status' => 'inherit',
-			'menu_order' => absint( $this->raw->Rank ),
-		);
-
-		// Insert the attachment.
-		$attach_id = wp_insert_attachment( $attachment, $filename, $parent_post_id );
-		if ( ! empty( $attach_id ) ) {
-			if ( 1 === absint( $this->raw->PrimaryDisplay )  ) {
-				set_post_thumbnail( $parent_post_id, $attach_id );
+			// Insert the attachment.
+			$attach_id = wp_insert_attachment( $attachment, $filename, $parent_post_id );
+			if ( ! empty( $attach_id ) ) {
+				if ( 1 === absint( $this->raw->PrimaryDisplay )  ) {
+					set_post_thumbnail( $parent_post_id, $attach_id );
+				}
+				return get_post( $attach_id );
 			}
-			return get_post( $attach_id );
 		}
 		return false;
 	}

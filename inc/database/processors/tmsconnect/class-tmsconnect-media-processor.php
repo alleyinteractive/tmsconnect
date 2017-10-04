@@ -44,9 +44,7 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return void
 	 */
 	public function run() {
-		$this->attachments = $this->get_parent_attachments();
-		foreach ( $this->attachments as $attachment ) {
-			$this->current_attachment = $attachment;
+		if ( ! empty( $this->parent_object ) ) {
 			parent::run();
 		}
 	}
@@ -59,18 +57,7 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	}
 
 	public function get_object_query_stmt() {
-		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->current_attachment, $this->parent_object );
-	}
-
-	/**
-	 * Get all of the attachments of a single parent.
-	 */
-	public function get_parent_attachments() {
-		$query_key = $this->object_query_key . '_all';
-		$stmt = apply_filters( "tmsc_{$this->processor_type}_batch_stmt_query", '', $this->parent_object, $this );
-		if ( ! empty( $stmt ) ) {
-			return $this->fetch_results( $stmt, $query_key );
-		}
+		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->parent_object, $this );
 	}
 
 	/**
