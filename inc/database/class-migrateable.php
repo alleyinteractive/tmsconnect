@@ -100,6 +100,7 @@ abstract class Migrateable {
 	protected function after_save() {
 		$this->set_last_updated_hash();
 		$this->save_final_object_status();
+		$this->update_meta( 'tmsc_processor_type', $this->processor->processor_type );
 		$id = $this->id[ $this->type ];
 		$clear_cache_function = "clean_{$this->type}_cache";
 		$clear_cache_function( $this->object->{$id} );
@@ -117,6 +118,10 @@ abstract class Migrateable {
 	 * @return boolean
 	 */
 	public function requires_update() {
+		// Force an update of the data regardless of hash matching.
+		if ( apply_filters( 'tmsc_force_sync_update', false ) ) {
+			return true;
+		}
 		if ( ! empty( $this->object )  ) {
 			$last_updated = $this->get_last_updated_hash();
 			if ( ! empty( $last_updated ) && ! empty( $this->raw ) && tmsc_hash_data( $this->raw ) === $last_updated ) {

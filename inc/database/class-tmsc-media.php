@@ -26,8 +26,8 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 *
 	 */
 	public function get_legacy_id() {
-		if ( ! empty( $this->raw->MediaMasterID ) ) {
-			return $this->raw->MediaMasterID;
+		if ( ! empty( $this->raw->MediaMasterID ) || 0 === $this->raw->MediaMasterID || '0' === $this->raw->MediaMasterID ) {
+			return ( 0 === $this->raw->MediaMasterID || '0' === $this->raw->MediaMasterID ) ? '0' : $this->raw->MediaMasterID ;
 		}
 	}
 

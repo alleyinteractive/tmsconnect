@@ -42,8 +42,8 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 	 *
 	 */
 	public function get_legacy_id() {
-		if ( ! empty( $this->raw->TermID ) ) {
-			return $this->raw->TermID;
+		if ( ! empty( $this->raw->TermID ) || 0 === $this->raw->TermID || '0' === $this->raw->TermID ) {
+			return ( 0 === $this->raw->TermID || '0' === $this->raw->TermID ) ? '0' : $this->raw->TermID;
 		}
 	}
 

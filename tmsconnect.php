@@ -28,10 +28,10 @@ function tmsc_get_system_processors() {
 	// Make sure this is processed in an order of dependency.
 	// ie. Objects will have relationships with constituents and taxonomies, so make sure those are created before objects are processed.
 	$processors = array(
-		//'taxonomy' => __( 'Taxonomy', 'tmsc' ),
+		// 'taxonomy' => __( 'Taxonomy', 'tmsc' ),
 		// 'constituent' => __( 'Constituent', 'tmsc' ),
 		'exhibition' => __( 'Exhibition', 'tmsc' ),
-		//'object' => __( 'Object', 'tmsc' ),
+		// 'object' => __( 'Object', 'tmsc' ),
 	);
 	return apply_filters( 'tmsc_get_system_processors', $processors );
 }
@@ -80,7 +80,6 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-constituents.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-constituent-types.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-exhibitions.php' );
-	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-exhibition-types.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-geography.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-keywords.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-material.php' );
@@ -95,9 +94,6 @@ function tmsc_init() {
 
 	// Metabox FM Fields
 	require_once( TMSCONNECT_PATH . '/inc/fields.php' );
-
-	// Nav customizations.
-	require_once( TMSCONNECT_PATH . '/inc/nav.php' );
 
 	// Our DB connectivity classes.
 	require_once( TMSCONNECT_PATH . '/inc/database/class-processor.php' );

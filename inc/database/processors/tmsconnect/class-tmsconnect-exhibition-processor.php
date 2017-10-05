@@ -89,7 +89,8 @@ class TMSConnect_Exhibition_Processor extends \TMSC\Database\TMSC_Processor {
 				$query_key = "{$this->object_query_key}_{$key}";
 				$stmt = apply_filters( "tmsc_{$this->processor_type}_relationship_{$key}_stmt_query", '', $object_id, $relationship, $this );
 				if ( ! empty( $stmt ) ) {
-					$relationship_data[ $key ] = $this->fetch_results( $stmt, $query_key );
+					$results = $this->fetch_results( $stmt, $query_key );
+					$relationship_data[ $key ] = wp_list_pluck( $results, 'ID' );
 				}
 			}
 			return $relationship_data;

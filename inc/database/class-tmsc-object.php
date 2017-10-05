@@ -32,8 +32,8 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 *
 	 */
 	public function get_legacy_id() {
-		if ( ! empty( $this->raw->ID ) ) {
-			return $this->raw->ID;
+		if ( ! empty( $this->raw->ID ) || 0 === $this->raw->ID || '0' === $this->raw->ID ) {
+			return ( 0 === $this->raw->ID || '0' === $this->raw->ID ) ? '0' : $this->raw->ID;
 		}
 	}
 
@@ -286,7 +286,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 			// Store with migratable type as key.
 			$related_ids = $this->processor->get_related_objects( $this->raw->ID );
 			if ( ! empty( $related_ids ) ) {
-				$this->update_meta( 'tmsc_related_post_processing', $related_ids );
+				$this->update_meta( 'tmsc_post_processing', $related_ids );
 			}
 		}
 	}

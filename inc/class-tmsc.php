@@ -222,13 +222,9 @@ class TMSC {
 	 * fresh.
 	 */
 	public function clean( $args = array() ) {
-		global $_wp_using_ext_object_cache;
-
 		foreach ( self::$instance->processors( $args ) as $processor ) {
 			$processor->clean();
 		}
-
-		// TODO: Flush all transients
 	}
 
 	/**

@@ -723,7 +723,7 @@ class TMSC_Custom_Landing_Page_Types {
 					<select name="post_parent" id="post_parent">
 						<?php foreach ( $terms as $term ) : ?>
 							<?php $parent = tmsc_get_linked_post( $term->term_id ); ?>
-							<option value="<?php echo esc_attr( $parent->ID ); ?>"<?php echo ( $term->term_id === $this->current_term->term_id ) ? ' selected="selected"' : ''; ?>><?php echo esc_html( $term->name ); ?></option>
+							<option value="<?php echo esc_attr( $parent->ID ); ?>"<?php echo ( ! empty( $this->current_term->term_id ) && $term->term_id === $this->current_term->term_id ) ? ' selected="selected"' : ''; ?>><?php echo esc_html( $term->name ); ?></option>
 						<?php endforeach; ?>
 					</select>
 					<a href="#custom-landing-page-type" class="ai-save-button save-custom-landing-page-type hide-if-no-js button">OK</a>
