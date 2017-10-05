@@ -32,6 +32,9 @@ class TMSC_Sync {
 	// TMS DB user password.
 	public static $tms_db_password = '';
 
+	// Our persistant DB connection.
+	public static $tms_pdo_connection = null;
+
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */
 	}
@@ -65,6 +68,9 @@ class TMSC_Sync {
 			add_filter( 'cron_schedules', array( self::$instance, 'add_intervals' ) );
 			add_action( 'tmsc_cron_events', array( self::$instance, 'cron_events' ), 10, 1 );
 			add_action( 'wp', array( self::$instance, 'cron_events_activation' ) );
+
+			// Set-up a persistant connection.
+			self::$tms_pdo_connection = self::$instance->get_connection();
 		}
 
 		if ( current_user_can( self::$capability ) ) {
@@ -87,6 +93,18 @@ class TMSC_Sync {
 	 */
 	public function render_object_sync_submenu_page() {
 		load_template( TMSCONNECT_PATH . '/templates/tmsc-sync-admin.php' );
+	}
+
+	/**
+	 * Setup a persistant connection for our DB processors.
+	 */
+	public function get_connection() {
+		if ( empty( self::$tms_pdo_connection ) ) {
+			$system_processor = new \TMSC\Database\System_Processor();
+			return $system_processor->get_connection();
+		} else {
+			return self::$tms_pdo_connection;
+		}
 	}
 
 	/**
@@ -123,8 +141,8 @@ class TMSC_Sync {
 			/**
 			 * Uncomment the schedule event function and comment the object sync function to enable asynchronous sync.
 			 */
-			self::$instance->object_sync();
-			// wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
+			// self::$instance->object_sync();
+			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 			echo 1;
 		} else {
 			echo 0;
@@ -185,22 +203,16 @@ class TMSC_Sync {
 		if ( 'Syncing TMS Objects' !== get_option( 'tmsc-last-sync-date' ) ) {
 			// Update our custom post type.
 			self::$instance->object_sync();
+
+			self::$instance->do_post_processing();
 		}
 	}
 
 	// Connect to the feed and update our post types with the latest data.
 	public function object_sync() {
-		/**
-		 * @TODO
-		 *
-		 * Remove the max_execution_time update.
-		 */
-		ini_set( 'max_execution_time', 300 );
-
 		$message = __( 'Syncing TMS Objects', 'tmsc' );
 		tmsc_set_sync_status( $message );
 		// Register and instantiate processors
-
 		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
 			\TMSC\TMSC::instance()->get_processor( $processor_class_slug );
 		}
@@ -208,19 +220,10 @@ class TMSC_Sync {
 		// Migrate our objects and taxonomies.
 		\TMSC\TMSC::instance()->migrate( array( 'all' ), array( 'start' => 0 ) );
 
-		self::$instance->do_post_processing();
-
 		$message = date( 'Y-m-d H:i:s' );
 
 		// Set sync status and clear our message cache.
 		tmsc_set_sync_status( $message );
-
-		/**
-		 * @TODO
-		 *
-		 * Remove the max_execution_time update.
-		 */
-		ini_set( 'max_execution_time', 30 );
 	}
 
 	/**
@@ -263,4 +266,5 @@ class TMSC_Sync {
 function tmsc_sync() {
 	return \TMSC\TMSC_Sync::instance();
 }
-tmsc_sync();
+// Initial call to setup instance
+add_action( 'after_setup_theme', __NAMESPACE__ . '\\tmsc_sync', 100 );

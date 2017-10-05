@@ -38,7 +38,7 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return void
 	 */
 	public function run() {
-		foreach ( $this->taxonomies as $taxonomy ) {
+		foreach ( $this->taxonomies as $index => $taxonomy ) {
 			$this->current_tax = $taxonomy;
 			parent::run();
 		}

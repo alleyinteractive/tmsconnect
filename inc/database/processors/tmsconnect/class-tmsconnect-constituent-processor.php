@@ -13,12 +13,12 @@ class TMSConnect_Constituent_Processor extends \TMSC\Database\TMSC_Processor {
 	 * The key used for the current object query
 	 * @var string
 	 */
-	public $object_query_key = 'tms_contituents';
+	public $object_query_key = 'tms_constituents';
 
 	/**
 	 * The post type used with this processor if applicable.
 	 */
-	public $post_type = 'contituent';
+	public $post_type = 'constituent';
 
 	public $constituent_roles = array();
 

@@ -1,12 +1,12 @@
 <?php
 namespace TMSC\Database;
 
-abstract class MySQL_Processor extends \TMSC\Database\Database_Processor {
+class MySQL_Processor extends \TMSC\Database\Database_Processor {
 
 	/**
 	 * Constructor
 	 */
-	public function __construct( $type ) {
+	public function __construct( $type = null ) {
 		parent::__construct( $type );
 	}
 
@@ -14,19 +14,17 @@ abstract class MySQL_Processor extends \TMSC\Database\Database_Processor {
 	 * Get the database connection
 	 * @return \PDO database connection instance
 	 */
-	protected function get_connection() {
-		// Return the existing connection if set
-		if ( ! empty( $this->pdo ) ) {
-			return $this->pdo;
-		}
-
+	public function get_connection() {
+		$dbname = \TMSC\tmsc_sync()::$tms_db_name;
+		$username = \TMSC\tmsc_sync()::$tms_db_user;
+		$password = \TMSC\tmsc_sync()::$tms_db_password;
 		// Build the DSN string
-		$host = $this->host;
-		list( $host, $port ) = explode( ':', $this->host );
+		$host = \TMSC\tmsc_sync()::$tms_db_host;
+		list( $host, $port ) = explode( ':', $host );
 		$port = ( empty( $port ) ) ? '3306' : $port;
-		$dsn = "mysql:host={$host};port={$port};dbname={$this->dbname}";
+		$dsn = "mysql:host={$host};port={$port};dbname={$dbname}";
 
-		$connection = new \PDO( $dsn, $this->username, $this->password, array(
+		$connection = new \PDO( $dsn, $username, $password, array(
 			\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
 		) );
 

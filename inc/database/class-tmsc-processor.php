@@ -41,6 +41,21 @@ abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
 		$this->set_object_query( $stmt );
 
 		parent::before_run( $params );
+
+		$this->update_cursor();
+	}
+
+	/**
+	 * Keep track of where our last run terminated.
+	 */
+	protected function update_cursor() {
+		$current_state = array(
+			'migratable' => '',
+			'processor' => '',
+			'batch' => array(),
+		);
+		wp_cache_delete( 'tmsc-cursor-state', 'options' );
+		return update_option( 'tmsc-cursor-state', $current_state, false );
 	}
 
 	/**
