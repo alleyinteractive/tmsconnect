@@ -200,12 +200,9 @@ class TMSC_Sync {
 		$message = __( 'Syncing TMS Objects', 'tmsc' );
 		tmsc_set_sync_status( $message );
 		// Register an instantiate processors
-		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
-			\TMSC\TMSC::instance()->get_processor( $processor_class_slug );
-		}
 		error_log(
 			strtr(
-				print_r('#### DONE WITH PROCESSORS ####', true),
+				print_r( '### LOOPING THROUGH PROCESSORS ###', true ),
 				array(
 					"\r\n"=>PHP_EOL,
 					"\r"=>PHP_EOL,
@@ -213,33 +210,15 @@ class TMSC_Sync {
 				)
 			)
 		);
+
+		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
+			\TMSC\TMSC::instance()->get_processor( $processor_class_slug );
+		}
 
 		// Migrate our objects and taxonomies.
 		\TMSC\TMSC::instance()->migrate( array( 'all' ), array( 'start' => 0 ) );
 
-		error_log(
-			strtr(
-				print_r('#### DONE WITH MIGRATE ####', true),
-				array(
-					"\r\n"=>PHP_EOL,
-					"\r"=>PHP_EOL,
-					"\n"=>PHP_EOL,
-				)
-			)
-		);
-
 		self::$instance->do_post_processing();
-
-		error_log(
-			strtr(
-				print_r('#### DONE WITH POST PROCESSORS ####', true),
-				array(
-					"\r\n"=>PHP_EOL,
-					"\r"=>PHP_EOL,
-					"\n"=>PHP_EOL,
-				)
-			)
-		);
 
 		$message = date( 'Y-m-d H:i:s' );
 
@@ -262,16 +241,7 @@ class TMSC_Sync {
 		$post_processing_data = $wpdb->get_results(
 			$wpdb->prepare( "SELECT post_id, meta_value from {$wpdb->postmeta} WHERE meta_key = 'tmsc_post_processing'" )
 		);
-		error_log(
-			strtr(
-				print_r($post_processing_data, true),
-				array(
-					"\r\n"=>PHP_EOL,
-					"\r"=>PHP_EOL,
-					"\n"=>PHP_EOL,
-				)
-			)
-		);
+
 		foreach ( $post_processing_data as $post_id => $data ) {
 			$processor_type = get_post_meta( $post_id, 'tmsc_processor_type' ,true );
 			if ( ! empty( $processor_type ) ) {
@@ -295,17 +265,6 @@ class TMSC_Sync {
 					}
 				}
 			}
-			error_log(
-				strtr(
-					print_r('#### DELETING POST PROCESSING DATA ####', true),
-					array(
-						"\r\n"=>PHP_EOL,
-						"\r"=>PHP_EOL,
-						"\n"=>PHP_EOL,
-					)
-				)
-			);
-
 			delete_post_meta( $post_id, 'tmsc_post_processing' );
 		}
 	}

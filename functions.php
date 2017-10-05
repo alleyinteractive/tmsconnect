@@ -90,7 +90,7 @@ function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy = null ) {
 	if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
 		return reset( $terms );
 	}
-	return;
+	return false;
 }
 
 /**

@@ -35,6 +35,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 		if ( ! empty( $this->raw->ID ) || 0 === $this->raw->ID || '0' === $this->raw->ID ) {
 			return ( 0 === $this->raw->ID || '0' === $this->raw->ID ) ? '0' : $this->raw->ID;
 		}
+		return false;
 	}
 
 	/**
@@ -164,7 +165,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 		$this->children = null;
 		// Check for existing post by legacy ID
 		$legacy_id = $this->get_legacy_id();
-		if ( ! empty( $legacy_id ) ) {
+		if ( ! empty( $legacy_id ) || '0' === $legacy_id ) {
 			$existing_post = tmsc_get_object_by_legacy_id( $legacy_id, $this->get_post_type() );
 			if ( ! empty( $existing_post ) ) {
 				$this->object = $existing_post;

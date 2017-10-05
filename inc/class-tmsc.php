@@ -182,6 +182,18 @@ class TMSC {
 		}
 		foreach ( self::$instance->processors( $args ) as $processor ) {
 			if ( ! in_array( $processor->processor_type, self::$instance->get_child_processors(), true ) ) {
+						error_log(
+							strtr(
+								print_r(array( '### Running Processor ###', $processor->processor_type), true),
+								array(
+									"\r\n"=>PHP_EOL,
+									"\r"=>PHP_EOL,
+									"\n"=>PHP_EOL,
+								)
+							)
+						);
+
+
 				$processor->run();
 				tmsc_stop_the_insanity();
 			}

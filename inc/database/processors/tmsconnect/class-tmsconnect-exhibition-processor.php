@@ -77,7 +77,7 @@ class TMSConnect_Exhibition_Processor extends \TMSC\Database\TMSC_Processor {
 	}
 
 	/**
-	 * Get the related WP terms of a given TMS Object ID.
+	 * Get the related objects a given TMS Object ID.
 	 * @param int $object_id. TMS raw Object ID.
 	 * @return array. An associate array of taxonmies and it's term ids. array( 'taxonomy-slug' => array( 1, 2... ) ).
 	 */
