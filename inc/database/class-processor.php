@@ -83,7 +83,9 @@ abstract class Processor {
 	/**
 	 * Get next Migrateable object
 	 */
-	abstract public function load_migrateable();
+	public function load_migrateable() {
+
+	}
 
 	/**
 	 * Hook that runs before migrating each post; can use to reload state

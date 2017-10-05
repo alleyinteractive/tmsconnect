@@ -1,7 +1,7 @@
 <?php
 namespace TMSC\Database;
 
-abstract class SQLSrv_Processor extends \TMSC\Database\Database_Processor {
+class SQLSrv_Processor extends \TMSC\Database\Database_Processor {
 
 	/**
 	 * Constructor
@@ -14,12 +14,7 @@ abstract class SQLSrv_Processor extends \TMSC\Database\Database_Processor {
 	 * Get the database connection
 	 * @return \PDO database connection instance
 	 */
-	protected function get_connection() {
-		// Return the existing connection if set
-		if ( ! empty( $this->pdo ) ) {
-			return $this->pdo;
-		}
-
+	public function get_connection() {
 		// Build the DSN string
 		$host = $this->host;
 		list( $host, $port ) = explode( ':', $this->host );

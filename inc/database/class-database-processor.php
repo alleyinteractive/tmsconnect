@@ -1,49 +1,20 @@
 <?php
 namespace TMSC\Database;
 abstract class Database_Processor extends \TMSC\Database\Processor {
-	/**
-	 * The host name for the DB server
-	 * @var string
-	 */
-	protected $host;
-
-	/**
-	 * The database name
-	 * @var string
-	 */
-	protected $dbname;
-
-	/**
-	 * The DB username
-	 * @var string
-	 */
-	protected $username;
-
-	/**
-	 * The DB password
-	 * @var string
-	 */
-	protected $password;
-
-	protected $pdo;
-
 	protected $queries = array();
 
 
 	abstract protected function get_connection();
 
-	public function __construct( $type ) {
-
-		$this->host = get_option( 'tmsc-db-host' );
-		$this->dbname = get_option( 'tmsc-db-name' );
-		$this->username = get_option( 'tmsc-db-user' );
-		$this->password = get_option( 'tmsc-db-password' );
-
-		parent::__construct( $type );
-		$this->pdo = $this->get_connection();
+	public function __construct( $type = null ) {
+		// Only call a parent class if this has been instantiated properly.
+		if ( ! empty( $type ) ) {
+			parent::__construct( $type );
+		}
 	}
 
 	public function prepare( $key, $query ) {
+		$this->pdo = \TMSC\tmsc_sync()->get_connection();
 		if ( empty( $this->queries[ $key ] ) ) {
 			try {
 				$this->queries[ $key ] = $this->pdo->prepare( $query );
@@ -60,6 +31,16 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 				);
 			}
 		}
+		error_log(
+			strtr(
+				print_r( array( '## EXECUTING ##', $this->queries[ $key ]->queryString ), true),
+				array(
+					"\r\n"=>PHP_EOL,
+					"\r"=>PHP_EOL,
+					"\n"=>PHP_EOL,
+				)
+			)
+		);
 
 		return $this->queries[ $key ];
 	}

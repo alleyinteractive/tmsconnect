@@ -32,6 +32,9 @@ class TMSC_Sync {
 	// TMS DB user password.
 	public static $tms_db_password = '';
 
+	// Our persistant DB connection.
+	public static $tms_pdo_connection = null;
+
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */
 	}
@@ -65,6 +68,9 @@ class TMSC_Sync {
 			add_filter( 'cron_schedules', array( self::$instance, 'add_intervals' ) );
 			add_action( 'tmsc_cron_events', array( self::$instance, 'cron_events' ), 10, 1 );
 			add_action( 'wp', array( self::$instance, 'cron_events_activation' ) );
+
+			// Set-up a persistant connection.
+			self::$tms_pdo_connection = self::$instance->get_connection();
 		}
 
 		if ( current_user_can( self::$capability ) ) {
@@ -87,6 +93,18 @@ class TMSC_Sync {
 	 */
 	public function render_object_sync_submenu_page() {
 		load_template( TMSCONNECT_PATH . '/templates/tmsc-sync-admin.php' );
+	}
+
+	/**
+	 * Setup a persistant connection for our DB processors.
+	 */
+	public function get_connection() {
+		if ( empty( self::$tms_pdo_connection ) ) {
+			$system_processor = new \TMSC\Database\System_Processor();
+			return $system_processor->get_connection();
+		} else {
+			return self::$tms_pdo_connection;
+		}
 	}
 
 	/**
@@ -200,6 +218,16 @@ class TMSC_Sync {
 		$message = __( 'Syncing TMS Objects', 'tmsc' );
 		tmsc_set_sync_status( $message );
 		// Register and instantiate processors
+		error_log(
+			strtr(
+				print_r( '## Begin ##', true),
+				array(
+					"\r\n"=>PHP_EOL,
+					"\r"=>PHP_EOL,
+					"\n"=>PHP_EOL,
+				)
+			)
+		);
 
 		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
 			\TMSC\TMSC::instance()->get_processor( $processor_class_slug );
@@ -263,4 +291,5 @@ class TMSC_Sync {
 function tmsc_sync() {
 	return \TMSC\TMSC_Sync::instance();
 }
-tmsc_sync();
+// Initial call to setup instance
+add_action( 'after_setup_theme', __NAMESPACE__ . '\\tmsc_sync', 100 );
