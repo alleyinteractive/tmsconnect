@@ -199,17 +199,7 @@ class TMSC_Sync {
 
 		$message = __( 'Syncing TMS Objects', 'tmsc' );
 		tmsc_set_sync_status( $message );
-		// Register an instantiate processors
-		error_log(
-			strtr(
-				print_r( '### LOOPING THROUGH PROCESSORS ###', true ),
-				array(
-					"\r\n"=>PHP_EOL,
-					"\r"=>PHP_EOL,
-					"\n"=>PHP_EOL,
-				)
-			)
-		);
+		// Register and instantiate processors
 
 		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
 			\TMSC\TMSC::instance()->get_processor( $processor_class_slug );
