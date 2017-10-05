@@ -82,11 +82,19 @@ class TMSConnect_Exhibition_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return array. An associate array of taxonmies and it's term ids. array( 'taxonomy-slug' => array( 1, 2... ) ).
 	 */
 	public function get_related_objects( $object_id ) {
-		$query_key = $this->object_query_key . '_related_objects';
-		$stmt = apply_filters( "tmsc_{$this->processor_type}_related_objects_stmt_query", '', $object_id );
-		if ( ! empty( $stmt ) ) {
-			return $this->fetch_results( $stmt, $query_key );
+		$relationship_map = apply_filters( "tmsc_{$this->processor_type}_relationship_map", array() );
+		if ( ! empty( $relationship_map ) ) {
+			$relationship_data = array();
+			foreach ( $relationship_map as $key => $relationship ) {
+				$query_key = "{$this->object_query_key}_{$key}";
+				$stmt = apply_filters( "tmsc_{$this->processor_type}_relationship_{$key}_stmt_query", '', $object_id, $relationship, $this );
+				if ( ! empty( $stmt ) ) {
+					$relationship_data[ $key ] = $this->fetch_results( $stmt, $query_key );
+				}
+			}
+			return $relationship_data;
 		}
+
 		return array();
 	}
 }

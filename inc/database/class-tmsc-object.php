@@ -286,9 +286,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 			// Store with migratable type as key.
 			$related_ids = $this->processor->get_related_objects( $this->raw->ID );
 			if ( ! empty( $related_ids ) ) {
-				foreach ( $related_ids as $rid ) {
-					// TODO: Add in logic for related objects.
-				}
+				$this->update_meta( 'tmsc_related_post_processing', $related_ids );
 			}
 		}
 	}

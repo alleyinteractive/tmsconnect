@@ -117,13 +117,12 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return array. An associate array of taxonmies and it's term ids. array( 'taxonomy-slug' => array( 1, 2... ) ).
 	 */
 	public function get_related_terms( $object_id ) {
-		$query_key = $this->object_query_key . '_terms';
 		$terms = array();
+		$query_key = $this->object_query_key . '_terms';
 		$stmt = apply_filters( "tmsc_{$this->processor_type}_related_terms_stmt_query", '', $object_id );
 		if ( ! empty( $stmt ) ) {
 			$results = $this->fetch_results( $stmt, $query_key );
 
-			$terms = array();
 			if ( ! empty( $results ) ) {
 				foreach ( $results as $row ) {
 					$term = tmsc_get_term_by_legacy_id( $row->TermID );
