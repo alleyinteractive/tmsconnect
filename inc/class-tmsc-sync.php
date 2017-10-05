@@ -141,8 +141,8 @@ class TMSC_Sync {
 			/**
 			 * Uncomment the schedule event function and comment the object sync function to enable asynchronous sync.
 			 */
-			self::$instance->object_sync();
-			// wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
+			// self::$instance->object_sync();
+			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 			echo 1;
 		} else {
 			echo 0;
@@ -203,32 +203,16 @@ class TMSC_Sync {
 		if ( 'Syncing TMS Objects' !== get_option( 'tmsc-last-sync-date' ) ) {
 			// Update our custom post type.
 			self::$instance->object_sync();
+
+			self::$instance->do_post_processing();
 		}
 	}
 
 	// Connect to the feed and update our post types with the latest data.
 	public function object_sync() {
-		/**
-		 * @TODO
-		 *
-		 * Remove the max_execution_time update.
-		 */
-		ini_set( 'max_execution_time', 300 );
-
 		$message = __( 'Syncing TMS Objects', 'tmsc' );
 		tmsc_set_sync_status( $message );
 		// Register and instantiate processors
-		error_log(
-			strtr(
-				print_r( '## Begin ##', true),
-				array(
-					"\r\n"=>PHP_EOL,
-					"\r"=>PHP_EOL,
-					"\n"=>PHP_EOL,
-				)
-			)
-		);
-
 		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
 			\TMSC\TMSC::instance()->get_processor( $processor_class_slug );
 		}
@@ -236,19 +220,10 @@ class TMSC_Sync {
 		// Migrate our objects and taxonomies.
 		\TMSC\TMSC::instance()->migrate( array( 'all' ), array( 'start' => 0 ) );
 
-		self::$instance->do_post_processing();
-
 		$message = date( 'Y-m-d H:i:s' );
 
 		// Set sync status and clear our message cache.
 		tmsc_set_sync_status( $message );
-
-		/**
-		 * @TODO
-		 *
-		 * Remove the max_execution_time update.
-		 */
-		ini_set( 'max_execution_time', 30 );
 	}
 
 	/**

@@ -31,16 +31,6 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 				);
 			}
 		}
-		error_log(
-			strtr(
-				print_r( array( '## EXECUTING ##', $this->queries[ $key ]->queryString ), true),
-				array(
-					"\r\n"=>PHP_EOL,
-					"\r"=>PHP_EOL,
-					"\n"=>PHP_EOL,
-				)
-			)
-		);
 
 		return $this->queries[ $key ];
 	}
