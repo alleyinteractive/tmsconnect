@@ -32,9 +32,10 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 *
 	 */
 	public function get_legacy_id() {
-		if ( ! empty( $this->raw->ID ) ) {
-			return $this->raw->ID;
+		if ( ! empty( $this->raw->ID ) || 0 === $this->raw->ID || '0' === $this->raw->ID ) {
+			return ( 0 === $this->raw->ID || '0' === $this->raw->ID ) ? '0' : $this->raw->ID;
 		}
+		return false;
 	}
 
 	/**
@@ -164,7 +165,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 		$this->children = null;
 		// Check for existing post by legacy ID
 		$legacy_id = $this->get_legacy_id();
-		if ( ! empty( $legacy_id ) ) {
+		if ( ! empty( $legacy_id ) || '0' === $legacy_id ) {
 			$existing_post = tmsc_get_object_by_legacy_id( $legacy_id, $this->get_post_type() );
 			if ( ! empty( $existing_post ) ) {
 				$this->object = $existing_post;
@@ -286,9 +287,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 			// Store with migratable type as key.
 			$related_ids = $this->processor->get_related_objects( $this->raw->ID );
 			if ( ! empty( $related_ids ) ) {
-				foreach ( $related_ids as $rid ) {
-					// TODO: Add in logic for related objects.
-				}
+				$this->update_meta( 'tmsc_post_processing', $related_ids );
 			}
 		}
 	}
@@ -315,7 +314,10 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 				if ( ! empty( $raw_data ) ) {
 					$child_processor = \TMSC\TMSC::instance()->get_processor( $migratable_type );
 					$child_processor->set_parent_object( $raw_data );
-					$child_processor->run();
+
+					if ( ! empty( $child_processor->get_object_query_stmt() ) ) {
+						$child_processor->run();
+					}
 				}
 			}
 			return true;

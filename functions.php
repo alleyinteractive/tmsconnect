@@ -60,6 +60,8 @@ function tmsc_get_object_by_legacy_id( $legacy_id, $post_type = 'tms_object' ) {
 		'meta_key' => 'tmsc_legacy_id',
 		'meta_value' => $legacy_id, // With the uncertainty of the legacy id format, this is being saved as a string always so don't use meta_value_num.
 		'suppress_filters' => false,
+		'ignore_sticky_posts' => true,
+		'no_found_rows' => true,
 	);
 
 	$posts = get_posts( $args );
@@ -88,7 +90,7 @@ function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy = null ) {
 	if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
 		return reset( $terms );
 	}
-	return;
+	return false;
 }
 
 /**
@@ -115,4 +117,12 @@ function tmsc_get_linked_post( $term_id ) {
  */
 function tmsc_get_linked_types() {
 	return TMSC_Linked_Taxonomy_Posts()->linked_types;
+}
+
+/**
+ * Get the associated TMS objects to a term
+ * @param int $term_id
+ * @return array. Array of tms_object Post Objects.
+ */
+function tmsc_get_related_tms_objects() {
 }

@@ -103,7 +103,6 @@ abstract class Processor {
 		$this->load_migrateable();
 		if ( ! empty( $this->migrateable ) ) {
 			$this->migrateable->set_processor( $this );
-
 			foreach ( $this->data as $object ) {
 				$this->migrateable->set_data( $object );
 				$this->before_migrate_object();

@@ -42,6 +42,7 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 		parent::__construct( $type );
 		$this->pdo = $this->get_connection();
 	}
+
 	public function prepare( $key, $query ) {
 		if ( empty( $this->queries[ $key ] ) ) {
 			try {

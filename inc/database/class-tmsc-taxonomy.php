@@ -42,9 +42,10 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 	 *
 	 */
 	public function get_legacy_id() {
-		if ( ! empty( $this->raw->TermID ) ) {
-			return $this->raw->TermID;
+		if ( ! empty( $this->raw->TermID ) || 0 === $this->raw->TermID || '0' === $this->raw->TermID ) {
+			return ( 0 === $this->raw->TermID || '0' === $this->raw->TermID ) ? '0' : $this->raw->TermID;
 		}
+		return false;
 	}
 
 	/**
@@ -67,7 +68,7 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 		$this->object = null;
 		// Check for existing post by legacy ID
 		$legacy_id = $this->get_legacy_id();
-		if ( ! empty( $legacy_id ) && ! empty( $this->taxonomy ) ) {
+		if ( ( ! empty( $legacy_id ) || '0' === $legacy_id ) && ! empty( $this->taxonomy ) ) {
 			$existing_term = tmsc_get_term_by_legacy_id( $legacy_id, $this->taxonomy );
 			if ( ! empty( $existing_term ) ) {
 				$this->object = $existing_term;

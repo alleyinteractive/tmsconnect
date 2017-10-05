@@ -33,7 +33,7 @@ class Tmsc_Post_Type_Exhibition extends Tmsc_Post_Type {
 			'public' => true,
 			'has_archive' => true,
 			'menu_icon' => 'dashicons-format-gallery',
-			'supports' => array( 'title', 'excerpt', 'editor' ),
+			'supports' => array( 'title', 'excerpt', 'editor', 'thumbnail' ),
 		) );
 	}
 }

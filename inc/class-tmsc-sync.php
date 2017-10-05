@@ -199,12 +199,16 @@ class TMSC_Sync {
 
 		$message = __( 'Syncing TMS Objects', 'tmsc' );
 		tmsc_set_sync_status( $message );
-		// Register an instantiate processors
+		// Register and instantiate processors
+
 		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
 			\TMSC\TMSC::instance()->get_processor( $processor_class_slug );
 		}
+
 		// Migrate our objects and taxonomies.
 		\TMSC\TMSC::instance()->migrate( array( 'all' ), array( 'start' => 0 ) );
+
+		self::$instance->do_post_processing();
 
 		$message = date( 'Y-m-d H:i:s' );
 
@@ -217,6 +221,42 @@ class TMSC_Sync {
 		 * Remove the max_execution_time update.
 		 */
 		ini_set( 'max_execution_time', 30 );
+	}
+
+	/**
+	 * Iterate through our post processing meta fields and update accordingly.
+	 */
+	public function do_post_processing() {
+		global $wpdb;
+		$post_processing_data = $wpdb->get_results(
+			$wpdb->prepare( "SELECT post_id, meta_value from {$wpdb->postmeta} WHERE meta_key = 'tmsc_post_processing'" )
+		);
+
+		foreach ( $post_processing_data as $post_id => $data ) {
+			$processor_type = get_post_meta( $post_id, 'tmsc_processor_type' ,true );
+			if ( ! empty( $processor_type ) ) {
+				$relationship_map = apply_filters( "tmsc_{$processor_type}_relationship_map", array() );
+				foreach ( $data as $key => $ids ) {
+					if ( 'post' === $relationship_map[ $key ]['type'] && ! empty( $ids ) ) {
+						$related_posts = get_posts( array(
+							'fields' => 'ids',
+							'suppress_filters' => false,
+							'ignore_sticky_posts' => true,
+							'no_found_rows' => true,
+							'post_type' => $relationship_map[ $key ]['slug'],
+							'post_status' => 'publish',
+							'meta_key' => 'tmsc_legacy_id',
+							'meta_value' => $ids,
+							'meta_compare' => 'IN',
+						) );
+						if ( ! empty( $related_posts ) ) {
+							update_post_meta( $post_id, $key, $related_posts );
+						}
+					}
+				}
+			}
+			delete_post_meta( $post_id, 'tmsc_post_processing' );
+		}
 	}
 }
 

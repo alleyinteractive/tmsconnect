@@ -26,9 +26,10 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 	 *
 	 */
 	public function get_legacy_id() {
-		if ( ! empty( $this->raw->MediaMasterID ) ) {
-			return $this->raw->MediaMasterID;
+		if ( ! empty( $this->raw->MediaMasterID ) || 0 === $this->raw->MediaMasterID || '0' === $this->raw->MediaMasterID ) {
+			return ( 0 === $this->raw->MediaMasterID || '0' === $this->raw->MediaMasterID ) ? '0' : $this->raw->MediaMasterID ;
 		}
+		return false;
 	}
 
 	/**
@@ -139,7 +140,7 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 		$this->object = null;
 		// Check for existing post by legacy ID
 		$legacy_id = $this->get_legacy_id();
-		if ( ! empty( $legacy_id ) ) {
+		if ( ! empty( $legacy_id ) || '0' === $legacy_id ) {
 			$existing_post = tmsc_get_object_by_legacy_id( $legacy_id, $this->get_post_type() );
 			if ( ! empty( $existing_post ) ) {
 				$this->object = $existing_post;

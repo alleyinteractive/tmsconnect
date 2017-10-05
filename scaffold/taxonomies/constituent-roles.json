@@ -1,5 +1,0 @@
-{
-	"object_types": ["constituent"],
-	"hierarchical": false,
-	"rewrite": {"with_front": false}
-}
