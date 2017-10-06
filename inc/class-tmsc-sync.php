@@ -141,8 +141,8 @@ class TMSC_Sync {
 			/**
 			 * Uncomment the schedule event function and comment the object sync function to enable asynchronous sync.
 			 */
-			// self::$instance->object_sync();
-			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
+			self::$instance->object_sync();
+			// wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 			echo 1;
 		} else {
 			echo 0;
