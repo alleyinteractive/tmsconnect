@@ -32,10 +32,9 @@ class Tmsc_Taxonomy_Sites extends Tmsc_Taxonomy {
 	/**
 	 * Args passed to register taxonomy.
 	 * Allows for a filter.
-	 * @param array.
 	 * @return array.
 	 */
-	public function register_taxonomy_args( $args = array() ) {
+	public function register_taxonomy_args() {
 		return array(
 			'labels' => array(
 				'name'                  => __( 'Sites', 'tmsc' ),
