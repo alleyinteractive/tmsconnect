@@ -30,6 +30,16 @@ abstract class Tmsc_Taxonomy {
 	/**
 	 * Create the taxonomy.
 	 */
-	abstract public function create_taxonomy();
+	public function create_taxonomy() {
+		$args = apply_filters( 'tmsc_register_taxonomy_args', $this->register_taxonomy_args(), $this->name, $this->object_types );
+		register_taxonomy( $this->name, $this->object_types, $args );
+	}
+
+	/**
+	 * Args passed to register taxonomy.
+	 * Allows for a filter.
+	 * @return array.
+	 */
+	abstract function register_taxonomy_args();
 
 }
