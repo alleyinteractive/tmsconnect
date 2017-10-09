@@ -30,10 +30,13 @@ class Tmsc_Taxonomy_Constituent_Types extends Tmsc_Taxonomy {
 	}
 
 	/**
-	 * Creates the taxonomy.
+	 * Args passed to register taxonomy.
+	 * Allows for a filter.
+	 * @param array.
+	 * @return array.
 	 */
-	public function create_taxonomy() {
-		register_taxonomy( $this->name, $this->object_types, array(
+	public function register_taxonomy_args( $args = array() ) {
+		return array(
 			'labels' => array(
 				'name'                  => __( 'Constituent Types', 'tmsc' ),
 				'singular_name'         => __( 'Constituent Types', 'tmsc' ),
@@ -55,7 +58,7 @@ class Tmsc_Taxonomy_Constituent_Types extends Tmsc_Taxonomy {
 			'rewrite' => array(
 				'with_front' => false,
 			),
-		) );
+		);
 	}
 }
 

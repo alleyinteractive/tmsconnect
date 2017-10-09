@@ -174,95 +174,16 @@ class TMSC {
 	}
 
 	/**
-	 * Migrate all objects objects.
+	 * Migrate objects.
 	 */
-	public function migrate( $args = array(), $assc_args = array() ) {
+	public function migrate( $processor_class_slug, $assc_args = array() ) {
 		if ( ! defined( 'WP_IMPORTING' ) ) {
 			define( 'WP_IMPORTING', true );
 		}
-		foreach ( self::$instance->processors( $args ) as $processor ) {
+		foreach ( self::$instance->processors( $processor_class_slug ) as $processor ) {
 			if ( ! in_array( $processor->processor_type, self::$instance->get_child_processors(), true ) ) {
 				$processor->run();
 				tmsc_stop_the_insanity();
-			}
-		}
-	}
-
-	/**
-	 * Apply a function to all post_meta matching the given key and update the
-	 * meta value with the return value of the function.
-	 */
-	public function filter_post_meta( $args = array() ) {
-		global $wpdb;
-		$meta_key = array_shift( $args );
-		$function = array_shift( $args );
-		if ( is_callable( $function ) ) {
-			$ids = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT post_id, meta_value from {$wpdb->postmeta} WHERE meta_key = %s",
-					$meta_key
-				)
-			);
-			foreach ( $ids as $meta ) {
-				/**
-				 * @TODO
-				 *
-				 * Update the call_user_func_array to only use a whitelist of functions
-				 * not just any function.
-				 */
-				$new_value = call_user_func_array( $function, array( $meta->post_id, $meta_key, $meta->meta_value ) );
-				update_post_meta( $meta->post_id, $meta_key, $new_value, $meta->meta_value );
-			}
-		}
-	}
-
-	/**
-	 * Clean this site of all TMSC-migrated content and rewind the
-	 * processor's/processors' cursor(s). Sometimes you just need to start
-	 * fresh.
-	 */
-	public function clean( $args = array() ) {
-		foreach ( self::$instance->processors( $args ) as $processor ) {
-			$processor->clean();
-		}
-	}
-
-	/**
-	 * Update term counts for the site.
-	 *
-	 * TMSConnect disables term counts throughout the migration process to improve
-	 * performance. This command must be run after a migration to ensure that
-	 * all term functions work properly.
-	 * @return void
-	 */
-	public function update_term_count() {
-		// Note the start time and keep track of how many fields have been converted for script output
-		$timestamp_start = microtime( true );
-
-		// Get all taxonomies
-		$taxonomies = get_taxonomies();
-		foreach ( $taxonomies as $taxonomy ) {
-			// Get all terms for the taxonomy
-			// Use special handling for the 'author' taxonomy due to Co-Authors Plus custom post count function
-			if ( 'author' === $taxonomy && function_exists( 'coauthors' ) ) {
-				$args = array(
-					'hide_empty' => 0,
-				);
-				$terms = get_terms( $taxonomy, $args );
-				$tt_ids = array();
-				foreach ( $terms as $term ) {
-					$tt_ids[] = $term->term_taxonomy_id;
-				}
-				$terms = $tt_ids;
-			} else {
-				$args = array(
-					'hide_empty' => 0,
-					'fields' => 'ids',
-				);
-				$terms = get_terms( $taxonomy, $args );
-			}
-			if ( is_array( $terms ) && ! empty( $terms ) ) {
-				wp_update_term_count_now( $terms, $taxonomy );
 			}
 		}
 	}
@@ -298,14 +219,18 @@ class TMSC {
 	/**
 	 * Helper function to get an array of processors from passed arguments
 	 */
-	private function processors( $args ) {
-		if ( count( $args ) !== 0 && count( $args ) === 1 && 'all' === $args[0] ) {
-			$args = array_keys( self::$instance->register_processor() );
-		}
-
+	private function processors( $processor ) {
 		$ret = array();
-		foreach ( $args as $arg ) {
-			$ret[] = self::$instance->get_processor( $arg );
+		if ( ! empty( $processor ) ) {
+
+			if ( 'all' === $processor )	{
+				$processors = array_keys( self::$instance->register_processor() );
+				foreach ( $processors as $p ) {
+					$ret[] = self::$instance->get_processor( $p );
+				}
+			} else {
+				$ret[] = self::$instance->get_processor( $processor );
+			}
 		}
 		return $ret;
 	}

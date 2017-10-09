@@ -65,12 +65,8 @@ class TMSC_Sync {
 
 		if ( ! empty( self::$tms_db_host ) ) {
 			// Our Cron Setup
-			add_filter( 'cron_schedules', array( self::$instance, 'add_intervals' ) );
 			add_action( 'tmsc_cron_events', array( self::$instance, 'cron_events' ), 10, 1 );
 			add_action( 'wp', array( self::$instance, 'cron_events_activation' ) );
-
-			// Set-up a persistant connection.
-			self::$tms_pdo_connection = self::$instance->get_connection();
 		}
 
 		if ( current_user_can( self::$capability ) ) {
@@ -112,6 +108,9 @@ class TMSC_Sync {
 	 */
 	public function sync_objects() {
 		if ( current_user_can( self::$capability ) ) {
+			// Set-up a persistant connection.
+			self::$tms_pdo_connection = self::$instance->get_connection();
+
 			check_ajax_referer( 'tmsc_object_sync', 'tmsc_nonce' );
 			if ( ! empty( $_POST['tmsc-db-host'] ) ) {
 				$host = sanitize_text_field( wp_unslash( $_POST['tmsc-db-host'] ) );
@@ -141,7 +140,7 @@ class TMSC_Sync {
 			/**
 			 * Uncomment the schedule event function and comment the object sync function to enable asynchronous sync.
 			 */
-			self::$instance->object_sync();
+			// self::$instance->object_sync();
 			// wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 			echo 1;
 		} else {
@@ -175,21 +174,10 @@ class TMSC_Sync {
 		exit();
 	}
 
-	/**
-	 * Add custom intervals
-	 */
-	public function add_intervals( $schedules ) {
-		$schedules['halfhour'] = array(
-			'interval' => 1800,
-			'display' => __( 'Every Half Hour', 'tmsc' ),
-		);
-		return $schedules;
-	}
-
 	public function cron_events_activation() {
-		// Run our Cron every 30 mins.
+		// Run our once a day.
 		if ( ! wp_next_scheduled( 'tmsc_cron_events' ) ) {
-			wp_schedule_event( time(), 'halfhour', 'tmsc_cron_events' );
+			wp_schedule_event( time(), 'daily', 'tmsc_cron_events' );
 		}
 	}
 
@@ -201,29 +189,78 @@ class TMSC_Sync {
 	public function cron_events( $args = array() ) {
 		// Make sure sync is not currently running
 		if ( 'Syncing TMS Objects' !== get_option( 'tmsc-last-sync-date' ) ) {
-			// Update our custom post type.
-			self::$instance->object_sync();
-
-			self::$instance->do_post_processing();
+			$message = __( 'Syncing TMS Objects', 'tmsc' );
+			tmsc_set_sync_status( $message );
 		}
+
+		// Update our custom post type.
+		self::$instance->object_sync();
 	}
 
 	// Connect to the feed and update our post types with the latest data.
 	public function object_sync() {
-		$message = __( 'Syncing TMS Objects', 'tmsc' );
-		tmsc_set_sync_status( $message );
+
+		$current_processor = '';
+		$current_processor_class_slug = '';
 		// Register and instantiate processors
 		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
-			\TMSC\TMSC::instance()->get_processor( $processor_class_slug );
-		}
+					error_log(
+						strtr(
+							print_r($processor_class_slug, true),
+							array(
+								"\r\n"=>PHP_EOL,
+								"\r"=>PHP_EOL,
+								"\n"=>PHP_EOL,
+							)
+						)
+					);
 
-		// Migrate our objects and taxonomies.
-		\TMSC\TMSC::instance()->migrate( array( 'all' ), array( 'start' => 0 ) );
+			if ( empty( $current_processor ) ) {
+				$cursor = \TMSC\TMSC::instance()->get_processor( $processor_class_slug )->get_cursor( $processor_slug );
+						error_log(
+							strtr(
+								print_r( $cursor, true),
+								array(
+									"\r\n"=>PHP_EOL,
+									"\r"=>PHP_EOL,
+									"\n"=>PHP_EOL,
+								)
+							)
+						);
+
+				if ( ! empty( $cursor['completed'] ) ) {
+					$current_processor = $processor_slug;
+					$current_processor_class_slug = $processor_class_slug;
+					break;
+				}
+			}
+		}
+		if ( ! empty( $current_processor_class_slug ) ) {
+			// Migrate our objects and taxonomies.
+			\TMSC\TMSC::instance()->migrate( $current_processor_class_slug );
+			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
+		} else {
+			self::$instance->complete_sync();
+		}
+	}
+
+	/**
+	 * Handle our post processing meta fields and clean up after import.
+	 */
+	public function complete_sync() {
+		self::$instance->do_post_processing();
+
+		self::$instance->update_term_count();
+
+		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
+			delete_option( "tmsc-cursor-{$processor_slug}" );
+		}
 
 		$message = date( 'Y-m-d H:i:s' );
 
 		// Set sync status and clear our message cache.
 		tmsc_set_sync_status( $message );
+		tmsc_stop_the_insanity();
 	}
 
 	/**
@@ -261,6 +298,47 @@ class TMSC_Sync {
 			delete_post_meta( $post_id, 'tmsc_post_processing' );
 		}
 	}
+
+	/**
+	 * Update term counts for the site.
+	 *
+	 * TMSConnect disables term counts throughout the migration process to improve
+	 * performance. This command must be run after a migration to ensure that
+	 * all term functions work properly.
+	 * @return void
+	 */
+	public function update_term_count() {
+		// Note the start time and keep track of how many fields have been converted for script output
+		$timestamp_start = microtime( true );
+
+		// Get all taxonomies
+		$taxonomies = get_taxonomies();
+		foreach ( $taxonomies as $taxonomy ) {
+			// Get all terms for the taxonomy
+			// Use special handling for the 'author' taxonomy due to Co-Authors Plus custom post count function
+			if ( 'author' === $taxonomy && function_exists( 'coauthors' ) ) {
+				$args = array(
+					'hide_empty' => 0,
+				);
+				$terms = get_terms( $taxonomy, $args );
+				$tt_ids = array();
+				foreach ( $terms as $term ) {
+					$tt_ids[] = $term->term_taxonomy_id;
+				}
+				$terms = $tt_ids;
+			} else {
+				$args = array(
+					'hide_empty' => 0,
+					'fields' => 'ids',
+				);
+				$terms = get_terms( $taxonomy, $args );
+			}
+			if ( is_array( $terms ) && ! empty( $terms ) ) {
+				wp_update_term_count_now( $terms, $taxonomy );
+			}
+		}
+	}
+
 }
 
 function tmsc_sync() {

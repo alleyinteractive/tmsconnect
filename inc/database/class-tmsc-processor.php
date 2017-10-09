@@ -37,25 +37,48 @@ abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
 	 */
 	protected function before_run( $params = array() ) {
 		$stmt = $this->get_object_query_stmt();
+		$stmt = $this->set_offset_sql( $stmt );
 		// Set the object query to get the next result set, required by System_Processor
 		$this->set_object_query( $stmt );
+		$cursor = $this->get_cursor( $this->processor_type );
 
-		parent::before_run( $params );
+		$offset_params = array(
+			':offset' => $cursor['offset'],
+			':size' => $this->batch_size,
+		);
+		$full_params = array_merge( $params, $offset_params );
 
-		$this->update_cursor();
+		parent::before_run( $full_params );
+
+		// If no data was found, we're finished
+		if ( empty( $this->data ) ) {
+			$this->update_cursor( $this->processor_type, true );
+		}
+	}
+
+	/**
+	 * Get the offset of the current processor batch
+	 */
+	public function get_cursor( $processor ) {
+		return get_option( "tmsc-cursor-{$processor}", array( 'offset' => 0, 'completed' => false ) );
 	}
 
 	/**
 	 * Keep track of where our last run terminated.
 	 */
-	protected function update_cursor() {
-		$current_state = array(
-			'migratable' => '',
-			'processor' => '',
-			'batch' => array(),
-		);
-		wp_cache_delete( 'tmsc-cursor-state', 'options' );
-		return update_option( 'tmsc-cursor-state', $current_state, false );
+	public function update_cursor( $processor, $completed = false ) {
+		if ( ! empty( $processor ) ) {
+			$cursor = $this->get_cursor( $this->processor_type );
+			if ( empty( $completed ) ) {
+				$cursor['offset'] = $cursor['offset'] + $this->batch_size + 1;
+			} else {
+				$cursor['completed'] = true;
+			}
+
+			update_option( "tmsc-cursor-{$processor}", $cursor, false );
+			wp_cache_delete( "tmsc-cursor-{$processor}", 'options' );
+		}
+		return;
 	}
 
 	/**
@@ -63,6 +86,9 @@ abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
 	 */
 	protected function after_run( $params = array() ) {
 		parent::after_run( $params );
+		if ( ! empty( $this->data ) ) {
+			$this->update_cursor( $this->processor_type );
+		}
 	}
 
 	/**

@@ -56,13 +56,16 @@ class MySQL_Processor extends \TMSC\Database\Database_Processor {
 	}
 
 	/**
-	 *
+	 * Our batch processing requires offset an offset.
 	 */
 	public function set_offset_sql( $stmt ) {
 		$query = strtoupper( $stmt );
 		if ( false === stripos( $query, 'ORDER BY' ) ) {
-			throw new \Exception( 'Please ensure the SQL statement inlcudes an ORDER BY clause.' );
-		} elseif ( false === stripos( $query, 'LIMIT' )
+			// By default order by the first ID.
+			$stmt .= 'ORDER BY 1';
+		}
+
+		if ( false === stripos( $query, 'LIMIT' )
 			&& false === stripos( $query, 'PROCEDURE' )
 			&& false === stripos( $query, 'FOR UPDATE' )
 			&& false === stripos( $query, 'LOCK IN SHARE MODE' ) ) {

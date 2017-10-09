@@ -54,11 +54,6 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 		// Execute the query and store the results
 		$query = $this->query( $this->object_query_key, $params );
 		$this->data = $query->fetchAll();
-
-		// If no data was found, we're finished
-		if ( empty( $this->data ) ) {
-			$this->finish();
-		}
 	}
 
 	/**
@@ -80,12 +75,7 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 	 * End this batch if no rows remain to process.
 	 * @param boolean $dry
 	 */
-	protected function before_migrate_object() {
-		// If no data is left, we're done with this batch
-		if ( empty( $this->data ) ) {
-			$this->halt();
-		}
-	}
+	protected function before_migrate_object() {}
 
 	/**
 	 * Hook that runs after migrating a post.

@@ -54,6 +54,7 @@ abstract class Processor {
 	 */
 	public function __construct( $type ) {
 		$this->processor_type = strtolower( $type );
+		$this->batch_size = apply_filters( 'tmsc_sync_batch_size', $this->batch_size );
 	}
 
 	/**
@@ -101,10 +102,10 @@ abstract class Processor {
 		wp_defer_term_counting( true );
 		wp_defer_comment_counting( true );
 
-		$this->before_run();
 		$this->load_migrateable();
 		if ( ! empty( $this->migrateable ) ) {
 			$this->migrateable->set_processor( $this );
+			$this->before_run();
 			foreach ( $this->data as $object ) {
 				$this->migrateable->set_data( $object );
 				$this->before_migrate_object();
@@ -113,10 +114,9 @@ abstract class Processor {
 				$this->disable_autocommit();
 				$this->migrateable->flush_stmt_queue();
 				$this->commit();
-				$this->finish();
 			}
+			$this->after_run();
 		}
-		$this->after_run();
 
 		wp_defer_term_counting( false );
 		wp_defer_comment_counting( false );
@@ -127,33 +127,6 @@ abstract class Processor {
 	 * Hook that runs after migrating each post; can use to save state or increment the cursor
 	 */
 	abstract protected function after_migrate_object();
-
-	/**
-	 * Remove all content migrated by this processor. Override this if you don't like how awesomely fast it is and
-	 * would prefer to use a lame method like wp_delete_post().
-	 */
-	public function clean() {
-		global $wpdb;
-		$name = static::NAME;
-		$ids = $wpdb->get_results(
-			"SELECT post_id from {$wpdb->postmeta} WHERE meta_key = 'tmsc_source' AND meta_value = '$name'"
-		);
-		foreach ( $ids as $idobj ) {
-			$id = $idobj->post_id;
-			// blunt but fast.
-			$wpdb->query( "DELETE FROM {$wpdb->posts} WHERE ID = $id OR post_parent = $id" );
-			$wpdb->query( "DELETE FROM {$wpdb->term_relationships} WHERE object_id = $id" );
-			$wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE post_id = $id" );
-			$this->after_delete( $id );
-		}
-	}
-
-	/**
-	 * Set migration option
-	 */
-	protected function get_option( $k ) {
-		return get_option( 'tmsc_' . $this->processor_type . '_' . $k );
-	}
 
 	/**
 	 * Hook that runs before the batch starts; could use to reload state
@@ -174,28 +147,6 @@ abstract class Processor {
 	 */
 	protected function after_delete( $post_id ) {
 
-	}
-
-	/**
-	 * Stop the migration
-	 */
-	protected function halt() {
-		$this->stop_processing = true;
-	}
-
-	/**
-	 * Complete the migration
-	 */
-	protected function finish() {
-		$this->halt();
-	}
-
-	/**
-	 * Is the migration complete?
-	 */
-	public function is_finished() {
-		$done = $this->get_option( 'done' );
-		return ! empty( $done );
 	}
 
 	/**

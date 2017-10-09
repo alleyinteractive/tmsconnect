@@ -15,8 +15,8 @@ jQuery(document).ready(($) => {
   // Override the form submit button
   objectSyncForm.submit((e) => {
     // Hide our sync UI and display core WP spinner
-    //objectSyncButton.hide();
-    //updatedTxt.hide();
+    objectSyncButton.hide();
+    updatedTxt.hide();
     loadingImg.attr('style', 'visibility:visible');
     // Run our async Sync
     doSync();
@@ -28,8 +28,8 @@ jQuery(document).ready(($) => {
    */
   function setUIVisibility() {
     if ('Syncing TMS Objects' === updatedTime.val()) {
-      //objectSyncButton.hide();
-      //updatedTxt.hide();
+      objectSyncButton.hide();
+      updatedTxt.hide();
       loadingImg.attr('style', 'visibility:visible');
       setTimeout(pollSyncStatus, 5000);
     } else {
