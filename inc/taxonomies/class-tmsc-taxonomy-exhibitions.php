@@ -30,10 +30,12 @@ class Tmsc_Taxonomy_Exhibitions extends Tmsc_Taxonomy {
 	}
 
 	/**
-	 * Creates the taxonomy.
+	 * Args passed to register taxonomy.
+	 * Allows for a filter.
+	 * @return array.
 	 */
-	public function create_taxonomy() {
-		register_taxonomy( $this->name, $this->object_types, array(
+	public function register_taxonomy_args() {
+		return array(
 			'labels' => array(
 				'name'                  => __( 'Exhibitions', 'tmsc' ),
 				'singular_name'         => __( 'Exhibitions', 'tmsc' ),
@@ -54,7 +56,7 @@ class Tmsc_Taxonomy_Exhibitions extends Tmsc_Taxonomy {
 			'rewrite' => array(
 				'with_front' => false,
 			),
-		) );
+		);
 	}
 }
 
