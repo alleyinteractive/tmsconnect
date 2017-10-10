@@ -68,9 +68,6 @@ class TMSC_Sync {
 			add_filter( 'cron_schedules', array( self::$instance, 'add_intervals' ) );
 			add_action( 'tmsc_cron_events', array( self::$instance, 'cron_events' ), 10, 1 );
 			add_action( 'wp', array( self::$instance, 'cron_events_activation' ) );
-
-			// Set-up a persistant connection.
-			self::$tms_pdo_connection = self::$instance->get_connection();
 		}
 
 		if ( current_user_can( self::$capability ) ) {
@@ -113,6 +110,10 @@ class TMSC_Sync {
 	public function sync_objects() {
 		if ( current_user_can( self::$capability ) ) {
 			check_ajax_referer( 'tmsc_object_sync', 'tmsc_nonce' );
+
+			// Set-up a persistant connection.
+			self::$tms_pdo_connection = self::$instance->get_connection();
+
 			if ( ! empty( $_POST['tmsc-db-host'] ) ) {
 				$host = sanitize_text_field( wp_unslash( $_POST['tmsc-db-host'] ) );
 				update_option( 'tmsc-db-host', $host, false );

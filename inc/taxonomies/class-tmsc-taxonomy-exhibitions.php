@@ -24,7 +24,7 @@ class Tmsc_Taxonomy_Exhibitions extends Tmsc_Taxonomy {
 	 * Build the taxonomy object.
 	 */
 	public function __construct() {
-		$this->object_types = array( 'tms_object' );
+		$this->object_types = array( 'tms_object', 'event' );
 
 		parent::__construct();
 	}
