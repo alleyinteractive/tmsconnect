@@ -25,6 +25,7 @@ abstract class Tmsc_Taxonomy {
 	public function __construct() {
 		// Create the taxonomy
 		add_action( 'init', array( $this, 'create_taxonomy' ) );
+		$this->object_types = apply_filters( 'tmsc_register_taxonomy_object_types', $this->object_types, $this->name );
 	}
 
 	/**

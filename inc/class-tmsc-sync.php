@@ -112,6 +112,10 @@ class TMSC_Sync {
 			self::$tms_pdo_connection = self::$instance->get_connection();
 
 			check_ajax_referer( 'tmsc_object_sync', 'tmsc_nonce' );
+
+			// Set-up a persistant connection.
+			self::$tms_pdo_connection = self::$instance->get_connection();
+
 			if ( ! empty( $_POST['tmsc-db-host'] ) ) {
 				$host = sanitize_text_field( wp_unslash( $_POST['tmsc-db-host'] ) );
 				update_option( 'tmsc-db-host', $host, false );
