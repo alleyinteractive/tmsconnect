@@ -27,6 +27,16 @@ class Search {
 		add_filter( 'es_admin_searchable_fields', [ $this, 'es_admin_searchable_fields' ] );
 		add_filter( 'es_admin_query_attachments_searchable_fields', [ $this, 'es_admin_query_attachments_searchable_fields' ], 10, 2 );
 		add_action( 'es_admin_integration_pre_get_posts', [ $this, 'es_admin_integration_pre_get_posts' ] );
+		add_filter( 'es_admin_adapter', [ $this, 'es_admin_adapter' ] );
+	}
+
+	/**
+	 * Get the ES_Admin adapter to use.
+	 *
+	 * @return string The ES Admin adapter.
+	 */
+	public function es_admin_adapter() {
+		return '\ES_Admin\Adapters\SearchPress';
 	}
 
 	/**
