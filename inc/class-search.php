@@ -46,9 +46,9 @@ class Search {
 		// If ES hosted by Found and protected by Shield, it requires http basic
 		// authentication.
 		$username = apply_filters( 'tmsc_sp_username', '' );
-		$password = apply_filters( 'tmsc_sp_pass', '' );
+		$password = apply_filters( 'tmsc_sp_password', '' );
 		if ( function_exists( 'SP_API' ) && false !== strpos( SP_Config()->get_setting( 'host' ), 'aws.found.io' ) ) {
-			SP_API()->request_defaults['headers']['Authorization'] = 'Basic ' . base64_encode( "$username:$password" );
+			SP_API()->request_defaults['headers']['Authorization'] = 'Basic ' . base64_encode( "{$username}:{$password}" );
 		}
 	}
 
@@ -127,4 +127,10 @@ class Search {
 		] );
 	}
 }
-Search::get_instance();
+function TMSC_Search() {
+	return \TMSC\Search::get_instance();
+}
+// Initial call to setup instance
+add_action( 'after_setup_theme', __NAMESPACE__ . '\\TMSC_Search' );
+
+
