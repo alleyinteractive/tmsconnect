@@ -67,6 +67,7 @@ class TMSC_Sync {
 			// Our Cron Setup
 			add_action( 'tmsc_cron_events', array( self::$instance, 'cron_events' ), 10, 1 );
 			add_action( 'tmsc_complete_sync', array( self::$instance, 'complete_sync' ), 10, 1 );
+			add_action( 'tmsc_do_post_processing', array( self::$instance, 'do_post_processing' ), 10, 1 );
 			add_action( 'wp', array( self::$instance, 'cron_events_activation' ) );
 		}
 
@@ -139,8 +140,11 @@ class TMSC_Sync {
 				update_option( 'tmsc-image-url', $url, false );
 				self::$image_url = $url;
 			}
-
-			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
+			// If we pressed the button manually, process any post processing data.
+			// wp_schedule_single_event( time(), 'tmsc_do_post_processing', array() );
+			// wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
+			self::$instance->do_post_processing();
+			self::$instance->object_sync();
 			echo 1;
 		} else {
 			echo 0;
@@ -230,8 +234,6 @@ class TMSC_Sync {
 	public function complete_sync() {
 		self::$instance->do_post_processing();
 
-		self::$instance->update_term_count();
-
 		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
 			delete_option( "tmsc-cursor-{$processor_slug}" );
 		}
@@ -277,6 +279,7 @@ class TMSC_Sync {
 			}
 			delete_post_meta( $post_id, 'tmsc_post_processing' );
 		}
+		self::$instance->update_term_count();
 	}
 
 	/**
