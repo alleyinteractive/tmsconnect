@@ -78,6 +78,9 @@ class TMSC {
 
 		// Handle External Image Processing as featured images.
 		add_filter( 'wp_get_attachment_image_src', array( $this, 'get_img_src' ), 20, 4 );
+
+		// Setup our search class
+		require_once( TMSCONNECT_PATH . '/inc/class-search.php' );
 	}
 
 	/**
