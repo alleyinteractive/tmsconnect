@@ -10,7 +10,7 @@ class Tmsc_Taxonomy_Exhibition_Type extends Tmsc_Taxonomy {
 	 *
 	 * @var string
 	 */
-	public $name = 'exhibition-type';
+	public $name = 'exhibition_type';
 
 	/**
 	 * Object types for this taxonomy
