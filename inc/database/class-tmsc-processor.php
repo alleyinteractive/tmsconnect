@@ -37,25 +37,26 @@ abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
 	 */
 	protected function before_run( $params = array() ) {
 		$stmt = $this->get_object_query_stmt();
+
+		// Child processors are inherently batched. So skip.
+		if ( ! in_array( $this->processor_type, \TMSC\TMSC::instance()->get_child_processors(), true ) ) {
+			$stmt = $this->set_offset_sql( $stmt );
+			$cursor = tmsc_get_cursor( $this->processor_type );
+			$offset_params = array(
+				':offset' => $cursor['offset'],
+				':size' => $this->batch_size,
+			);
+			$params = array_merge( $params, $offset_params );
+		}
+
 		// Set the object query to get the next result set, required by System_Processor
 		$this->set_object_query( $stmt );
-
 		parent::before_run( $params );
 
-		$this->update_cursor();
-	}
-
-	/**
-	 * Keep track of where our last run terminated.
-	 */
-	protected function update_cursor() {
-		$current_state = array(
-			'migratable' => '',
-			'processor' => '',
-			'batch' => array(),
-		);
-		wp_cache_delete( 'tmsc-cursor-state', 'options' );
-		return update_option( 'tmsc-cursor-state', $current_state, false );
+		// If no data was found, we're finished
+		if ( empty( $this->data ) && ! in_array( $this->processor_type, \TMSC\TMSC::instance()->get_child_processors(), true ) ) {
+			tmsc_update_cursor( $this->processor_type, $this->batch_size, true );
+		}
 	}
 
 	/**
@@ -63,6 +64,9 @@ abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
 	 */
 	protected function after_run( $params = array() ) {
 		parent::after_run( $params );
+		if ( ! empty( $this->data ) && ! in_array( $this->processor_type, \TMSC\TMSC::instance()->get_child_processors(), true ) ) {
+			tmsc_update_cursor( $this->processor_type, $this->batch_size );
+		}
 	}
 
 	/**

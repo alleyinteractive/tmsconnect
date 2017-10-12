@@ -183,17 +183,22 @@ class Media_URLs {
 			$new_url = $this->get_custom_image_src( $attachment_id );
 
 			// Add the new image src to the existing image.
-			if ( ! empty( $new_url ) && ! empty( $response['sizes'] ) ) {
-				// Get the full size array.
-				$full = $response['sizes']['full'];
+			if ( ! empty( $new_url ) ) {
 
-				// Update the URL.
-				$full['url'] = $new_url;
+				if ( ! empty( $response['sizes'] ) ) {
+					// Get the full size array.
+					$full = $response['sizes']['full'];
 
-				// Make sure to only return this full size array to ensure the
-				// custom image size is used.
-				$response['sizes'] = [];
-				$response['sizes']['full'] = $full;
+					// Update the URL.
+					$full['url'] = $new_url;
+
+					// Make sure to only return this full size array to ensure the
+					// custom image size is used.
+					$response['sizes'] = [];
+					$response['sizes']['full'] = $full;
+				} else {
+					$response['icon'] = $this->get_custom_image_src( $attachment_id, 'thumbnail' );
+				}
 			}
 		}
 

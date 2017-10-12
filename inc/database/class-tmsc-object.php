@@ -29,7 +29,6 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	/**
 	 * Get legacy ID
 	 * @return int
-	 *
 	 */
 	public function get_legacy_id() {
 		if ( ! empty( $this->raw->ID ) || 0 === $this->raw->ID || '0' === $this->raw->ID ) {

@@ -14,6 +14,40 @@ function tmsc_set_sync_status( $message ) {
 }
 
 /**
+ * Get the offset of the current processor batch
+ * @param string $processor.
+ * @return array.
+ */
+function tmsc_get_cursor( $processor ) {
+	return get_option( "tmsc-cursor-{$processor}", array( 'offset' => 0, 'completed' => false ) );
+}
+
+/**
+ * Keep track of where our last run terminated.
+ * Set the cursor for the processor.
+ * @param string $processor.
+ * @param int $batch_size.
+ * @param boolean $completed. The value to set completed to.
+ * @return void.
+ */
+function tmsc_update_cursor( $processor, $batch_size = 0, $completed = false ) {
+	if ( ! empty( $processor ) ) {
+		$cursor = tmsc_get_cursor( $processor );
+		if ( empty( $completed ) ) {
+			$cursor['offset'] = $cursor['offset'] + $batch_size + 1;
+			$cursor['completed'] = false;
+		} else {
+			$cursor['completed'] = true;
+		}
+
+		update_option( "tmsc-cursor-{$processor}", $cursor, false );
+		wp_cache_delete( "tmsc-cursor-{$processor}", 'options' );
+	}
+	return;
+}
+
+
+/**
  * Create a unique string for a data field.
  * This allows us to quickly check if data has been changed on sync.
  * @param mixed $data. Can be any data type.

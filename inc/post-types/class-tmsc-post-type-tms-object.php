@@ -2,7 +2,7 @@
 /**
  * Custom post type for Tms Objects.
  */
-class Tmsc_Post_Type_Tms_Object extends Tmsc_Post_Type {
+class Tmsc_Post_Type_TMS_Object extends Tmsc_Post_Type {
 
 	/**
 	 * Name of the custom post type.
@@ -17,18 +17,18 @@ class Tmsc_Post_Type_Tms_Object extends Tmsc_Post_Type {
 	public function create_post_type() {
 		register_post_type( $this->name, array(
 			'labels' => array(
-				'name'               => __( 'Tms Objects', 'tmsc' ),
-				'singular_name'      => __( 'Tms Object', 'tmsc' ),
-				'add_new'            => __( 'Add New Tms Object', 'tmsc' ),
-				'add_new_item'       => __( 'Add New Tms Object', 'tmsc' ),
-				'edit_item'          => __( 'Edit Tms Object', 'tmsc' ),
-				'new_item'           => __( 'New Tms Object', 'tmsc' ),
-				'view_item'          => __( 'View Tms Object', 'tmsc' ),
-				'search_items'       => __( 'Search Tms Objects', 'tmsc' ),
-				'not_found'          => __( 'No Tms Objects found', 'tmsc' ),
-				'not_found_in_trash' => __( 'No Tms Objects found in Trash', 'tmsc' ),
-				'parent_item_colon'  => __( 'Parent Tms Object:', 'tmsc' ),
-				'menu_name'          => __( 'Tms Objects', 'tmsc' ),
+				'name'               => __( 'TMS Objects', 'tmsc' ),
+				'singular_name'      => __( 'TMS Object', 'tmsc' ),
+				'add_new'            => __( 'Add New TMS Object', 'tmsc' ),
+				'add_new_item'       => __( 'Add New TMS Object', 'tmsc' ),
+				'edit_item'          => __( 'Edit TMS Object', 'tmsc' ),
+				'new_item'           => __( 'New TMS Object', 'tmsc' ),
+				'view_item'          => __( 'View TMS Object', 'tmsc' ),
+				'search_items'       => __( 'Search TMS Objects', 'tmsc' ),
+				'not_found'          => __( 'No TMS Objects found', 'tmsc' ),
+				'not_found_in_trash' => __( 'No TMS Objects found in Trash', 'tmsc' ),
+				'parent_item_colon'  => __( 'Parent TMS Object:', 'tmsc' ),
+				'menu_name'          => __( 'TMS Objects', 'tmsc' ),
 			),
 			'public' => true,
 			'has_archive' => true,

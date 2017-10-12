@@ -38,10 +38,34 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return void
 	 */
 	public function run() {
+		$cursor = $this->get_taxonomy_cursor();
 		foreach ( $this->taxonomies as $index => $taxonomy ) {
-			$this->current_tax = $taxonomy;
-			parent::run();
+			if ( ! in_array( $taxonomy->taxonomy, $cursor['migrated'] ) ) {
+				$this->current_tax = $taxonomy;
+				break;
+			}
 		}
+
+		// If we have migrated all the taxonomies, set it as completed.
+		if ( ! empty( $this->current_tax ) ) {
+			parent::run();
+		} else {
+			tmsc_update_cursor( $this->processor_type, $this->batch_size, true );
+		}
+	}
+
+	/**
+	 * Get our taxonomy cursor.
+	 */
+	public function get_taxonomy_cursor() {
+		$cursor = tmsc_get_cursor( $this->processor_type );
+		// If it is our first run through, then set the appropriate migrated cursor value.
+		if ( empty( $cursor['migrated'] ) ) {
+			$cursor['migrated'] = array();
+			update_option( "tmsc-cursor-{$this->processor_type}", $cursor, false );
+			wp_cache_delete( "tmsc-cursor-{$this->processor_type}", 'options' );
+		}
+		return $cursor;
 	}
 
 	/**
@@ -50,6 +74,23 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function get_object_query_stmt() {
 		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->current_tax->taxonomy, $this->current_tax->CN, $this );
+	}
+
+	/**
+	 * Prepare our statement with the current taxonomy.
+	 */
+	protected function before_run( $params = array() ) {
+		parent::before_run( $params );
+		$cursor = $this->get_taxonomy_cursor();
+
+		if ( $cursor['completed'] && ! empty( $this->current_tax ) ) {
+			$cursor['migrated'][] = $this->current_tax->taxonomy;
+			$cursor['offset'] = 0;
+			// Set the global completed to false and allow it to get set in the run function.
+			$cursor['completed'] = false;
+			update_option( "tmsc-cursor-{$this->processor_type}", $cursor, true );
+			wp_cache_delete( "tmsc-cursor-{$this->processor_type}", 'options' );
+		}
 	}
 
 	/**

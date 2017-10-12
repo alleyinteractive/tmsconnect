@@ -21,31 +21,9 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	public $post_type = 'tms_object';
 
 	/**
-	 * The number of web visible TMS objects to migrate.
+	 * Number of objects to process at a time.
 	 */
-	public $total_objects = 0;
-
-	/**
-	 * The number of web visible TMS objects to migrate in a batch.
-	 */
-	public $batch_size = 0;
-
-	/**
-	 * The starting point of our batch.
-	 */
-	public $offset = 0;
-
-	/**
-	 * Current raw data of our batch objects.
-	 * @var array
-	 */
-	private $current_batch = array();
-
-	/**
-	 * Current object raw data.
-	 * @var object
-	 */
-	private $current_object = null;
+	public $batch_size = 30;
 
 	/**
 	 * Constructor
@@ -53,8 +31,6 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function __construct( $type ) {
 		parent::__construct( $type );
-		$this->batch_size = apply_filters( 'tmsc_sync_batch_size', 200 );
-		$this->total_objects = $this->get_num_objects();
 	}
 
 	/**
@@ -63,14 +39,7 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function run() {
 		add_filter( "tmsc_set_{$this->processor_type}_post_type", array( $this, 'get_post_type' ) );
-		while ( $this->offset < $this->total_objects ) {
-			$this->current_batch = $this->get_migratable_objects();
-			foreach ( $this->current_batch as $object ) {
-				$this->current_object = $object;
-				parent::run();
-			}
-			$this->offset = $this->offset + $this->batch_size;
-		}
+		parent::run();
 		remove_filter( "tmsc_set_{$this->processor_type}_post_type", array( $this, 'get_post_type' ) );
 	}
 
@@ -82,33 +51,7 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	}
 
 	public function get_object_query_stmt() {
-		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->current_object );
-	}
-
-	/**
-	 * Generate a batch of objects to migrate.
-	 * Ensure that these objects are ordered by ObjectID and return the columns.
-	 */
-	public function get_migratable_objects() {
-		$stmt = apply_filters( "tmsc_{$this->processor_type}_batch_stmt_query", '' );
-
-		// DB systems use different syntax for offsets and limits.
-		$stmt = $this->set_offset_sql( $stmt );
-		$params = array(
-			':offset' => $this->offset,
-			':size' => $this->batch_size,
-		);
-		return $this->fetch_results( $stmt, $this->object_query_key, $params );
-	}
-
-	/**
-	 * Get the total number of TMS objects that we will be migrating.
-	 */
-	public function get_num_objects() {
-		$query_key = $this->object_query_key . '_count';
-		$stmt = apply_filters( "tmsc_{$this->processor_type}_count_stmt_query", '' );
-		$results = $this->fetch_results( $stmt, $query_key );
-		return reset( $results )->total;
+		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '' );
 	}
 
 	/**
