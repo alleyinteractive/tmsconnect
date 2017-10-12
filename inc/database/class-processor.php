@@ -39,17 +39,6 @@ abstract class Processor {
 	public $batch_size = 200;
 
 	/**
-	 * Number of objects processed.
-	 */
-	public $processed_count = 0;
-
-	/**
-	 * Holds the URL of the current site being migrated
-	 * @var string
-	 */
-	public $url;
-
-	/**
 	 * Constructor
 	 */
 	public function __construct( $type ) {
@@ -101,11 +90,10 @@ abstract class Processor {
 	public function run() {
 		wp_defer_term_counting( true );
 		wp_defer_comment_counting( true );
-
+		$this->before_run();
 		$this->load_migrateable();
 		if ( ! empty( $this->migrateable ) ) {
 			$this->migrateable->set_processor( $this );
-			$this->before_run();
 			foreach ( $this->data as $object ) {
 				$this->migrateable->set_data( $object );
 				$this->before_migrate_object();
@@ -115,8 +103,8 @@ abstract class Processor {
 				$this->migrateable->flush_stmt_queue();
 				$this->commit();
 			}
-			$this->after_run();
 		}
+		$this->after_run();
 
 		wp_defer_term_counting( false );
 		wp_defer_comment_counting( false );

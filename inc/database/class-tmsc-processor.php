@@ -37,48 +37,26 @@ abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
 	 */
 	protected function before_run( $params = array() ) {
 		$stmt = $this->get_object_query_stmt();
-		$stmt = $this->set_offset_sql( $stmt );
+
+		// Child processors are inherently batched. So skip.
+		if ( ! in_array( $this->processor_type, \TMSC\TMSC::instance()->get_child_processors(), true ) ) {
+			$stmt = $this->set_offset_sql( $stmt );
+			$cursor = tmsc_get_cursor( $this->processor_type );
+			$offset_params = array(
+				':offset' => $cursor['offset'],
+				':size' => $this->batch_size,
+			);
+			$params = array_merge( $params, $offset_params );
+		}
+
 		// Set the object query to get the next result set, required by System_Processor
 		$this->set_object_query( $stmt );
-		$cursor = $this->get_cursor( $this->processor_type );
-
-		$offset_params = array(
-			':offset' => $cursor['offset'],
-			':size' => $this->batch_size,
-		);
-		$full_params = array_merge( $params, $offset_params );
-
-		parent::before_run( $full_params );
+		parent::before_run( $params );
 
 		// If no data was found, we're finished
-		if ( empty( $this->data ) ) {
-			$this->update_cursor( $this->processor_type, true );
+		if ( empty( $this->data ) && ! in_array( $this->processor_type, \TMSC\TMSC::instance()->get_child_processors(), true ) ) {
+			tmsc_update_cursor( $this->processor_type, $this->batch_size, true );
 		}
-	}
-
-	/**
-	 * Get the offset of the current processor batch
-	 */
-	public function get_cursor( $processor ) {
-		return get_option( "tmsc-cursor-{$processor}", array( 'offset' => 0, 'completed' => false ) );
-	}
-
-	/**
-	 * Keep track of where our last run terminated.
-	 */
-	public function update_cursor( $processor, $completed = false ) {
-		if ( ! empty( $processor ) ) {
-			$cursor = $this->get_cursor( $this->processor_type );
-			if ( empty( $completed ) ) {
-				$cursor['offset'] = $cursor['offset'] + $this->batch_size + 1;
-			} else {
-				$cursor['completed'] = true;
-			}
-
-			update_option( "tmsc-cursor-{$processor}", $cursor, false );
-			wp_cache_delete( "tmsc-cursor-{$processor}", 'options' );
-		}
-		return;
 	}
 
 	/**
@@ -86,8 +64,8 @@ abstract class TMSC_Processor extends \TMSC\Database\System_Processor {
 	 */
 	protected function after_run( $params = array() ) {
 		parent::after_run( $params );
-		if ( ! empty( $this->data ) ) {
-			$this->update_cursor( $this->processor_type );
+		if ( ! empty( $this->data ) && ! in_array( $this->processor_type, \TMSC\TMSC::instance()->get_child_processors(), true ) ) {
+			tmsc_update_cursor( $this->processor_type, $this->batch_size );
 		}
 	}
 

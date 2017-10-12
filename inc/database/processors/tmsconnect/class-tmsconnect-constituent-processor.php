@@ -25,6 +25,11 @@ class TMSConnect_Constituent_Processor extends \TMSC\Database\TMSC_Processor {
 	public $constituent_types = array();
 
 	/**
+	 * Number of objects to process at a time.
+	 */
+	public $batch_size = 100;
+
+	/**
 	 * Constructor
 	 * @param string $type
 	 */

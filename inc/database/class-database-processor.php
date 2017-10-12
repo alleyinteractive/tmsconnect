@@ -53,6 +53,7 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 	protected function before_run( $params = array() ) {
 		// Execute the query and store the results
 		$query = $this->query( $this->object_query_key, $params );
+
 		$this->data = $query->fetchAll();
 	}
 

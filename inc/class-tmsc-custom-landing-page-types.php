@@ -159,6 +159,8 @@ class TMSC_Custom_Landing_Page_Types {
 			add_action( 'load-edit.php', array( $this, 'set_admin_page_labels' ) );
 			add_action( 'load-post-new.php', array( $this, 'set_admin_page_labels' ) );
 			add_action( 'load-post.php', array( $this, 'set_admin_page_labels' ) );
+
+			add_action( 'restrict_manage_posts', array( $this, 'add_taxonomy_search_field' ) );
 		} // End if().
 	}
 
@@ -568,6 +570,16 @@ class TMSC_Custom_Landing_Page_Types {
 
 		}
 		return $actions;
+	}
+
+
+	/**
+	 * Add input fields to specfic post list tables to allow for proper searching.
+	 */
+	public function add_taxonomy_search_field( $post_type ) {
+		if ( in_array( $post_type, array_keys( $this->linked_types ), true ) ) {
+			echo '<input type="hidden" name="taxonomy" value="' . esc_attr( $this->linked_types[ $post_type ] ) .'" />';
+		}
 	}
 
 	/**

@@ -21,31 +21,9 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	public $post_type = 'tms_object';
 
 	/**
-	 * The number of web visible TMS objects to migrate.
+	 * Number of objects to process at a time.
 	 */
-	public $total_objects = 0;
-
-	/**
-	 * The number of web visible TMS objects to migrate in a batch.
-	 */
-	public $batch_size = 0;
-
-	/**
-	 * The starting point of our batch.
-	 */
-	public $offset = 0;
-
-	/**
-	 * Current raw data of our batch objects.
-	 * @var array
-	 */
-	private $current_batch = array();
-
-	/**
-	 * Current object raw data.
-	 * @var object
-	 */
-	private $current_object = null;
+	public $batch_size = 30;
 
 	/**
 	 * Constructor
@@ -73,7 +51,7 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	}
 
 	public function get_object_query_stmt() {
-		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '', $this->current_object );
+		return apply_filters( "tmsc_{$this->processor_type}_stmt_query", '' );
 	}
 
 	/**

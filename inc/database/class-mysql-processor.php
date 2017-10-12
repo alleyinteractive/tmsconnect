@@ -62,7 +62,7 @@ class MySQL_Processor extends \TMSC\Database\Database_Processor {
 		$query = strtoupper( $stmt );
 		if ( false === stripos( $query, 'ORDER BY' ) ) {
 			// By default order by the first ID.
-			$stmt .= 'ORDER BY 1';
+			$stmt .= ' ORDER BY 1';
 		}
 
 		if ( false === stripos( $query, 'LIMIT' )

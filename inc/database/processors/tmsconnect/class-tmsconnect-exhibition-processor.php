@@ -21,6 +21,11 @@ class TMSConnect_Exhibition_Processor extends \TMSC\Database\TMSC_Processor {
 	public $post_type = 'exhibition';
 
 	/**
+	 * Number of objects to process at a time.
+	 */
+	public $batch_size = 100;
+
+	/**
 	 * Constructor
 	 * @param string $type
 	 */

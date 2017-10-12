@@ -66,6 +66,7 @@ class TMSC_Sync {
 		if ( ! empty( self::$tms_db_host ) ) {
 			// Our Cron Setup
 			add_action( 'tmsc_cron_events', array( self::$instance, 'cron_events' ), 10, 1 );
+			add_action( 'tmsc_complete_sync', array( self::$instance, 'complete_sync' ), 10, 1 );
 			add_action( 'wp', array( self::$instance, 'cron_events_activation' ) );
 		}
 
@@ -108,9 +109,6 @@ class TMSC_Sync {
 	 */
 	public function sync_objects() {
 		if ( current_user_can( self::$capability ) ) {
-			// Set-up a persistant connection.
-			self::$tms_pdo_connection = self::$instance->get_connection();
-
 			check_ajax_referer( 'tmsc_object_sync', 'tmsc_nonce' );
 
 			// Set-up a persistant connection.
@@ -141,11 +139,8 @@ class TMSC_Sync {
 				update_option( 'tmsc-image-url', $url, false );
 				self::$image_url = $url;
 			}
-			/**
-			 * Uncomment the schedule event function and comment the object sync function to enable asynchronous sync.
-			 */
-			// self::$instance->object_sync();
-			// wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
+
+			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 			echo 1;
 		} else {
 			echo 0;
@@ -208,43 +203,24 @@ class TMSC_Sync {
 		$current_processor_class_slug = '';
 		// Register and instantiate processors
 		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
-					error_log(
-						strtr(
-							print_r($processor_class_slug, true),
-							array(
-								"\r\n"=>PHP_EOL,
-								"\r"=>PHP_EOL,
-								"\n"=>PHP_EOL,
-							)
-						)
-					);
-
 			if ( empty( $current_processor ) ) {
-				$cursor = \TMSC\TMSC::instance()->get_processor( $processor_class_slug )->get_cursor( $processor_slug );
-						error_log(
-							strtr(
-								print_r( $cursor, true),
-								array(
-									"\r\n"=>PHP_EOL,
-									"\r"=>PHP_EOL,
-									"\n"=>PHP_EOL,
-								)
-							)
-						);
+				$processor = \TMSC\TMSC::instance()->get_processor( $processor_class_slug );
+				$cursor = tmsc_get_cursor( $processor_slug );
 
-				if ( ! empty( $cursor['completed'] ) ) {
+				if ( empty( $cursor['completed'] ) ) {
 					$current_processor = $processor_slug;
 					$current_processor_class_slug = $processor_class_slug;
 					break;
 				}
 			}
 		}
+
 		if ( ! empty( $current_processor_class_slug ) ) {
 			// Migrate our objects and taxonomies.
 			\TMSC\TMSC::instance()->migrate( $current_processor_class_slug );
 			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 		} else {
-			self::$instance->complete_sync();
+			wp_schedule_single_event( time(), 'tmsc_complete_sync', array() );
 		}
 	}
 
@@ -273,7 +249,7 @@ class TMSC_Sync {
 	public function do_post_processing() {
 		global $wpdb;
 		$post_processing_data = $wpdb->get_results(
-			$wpdb->prepare( "SELECT post_id, meta_value from {$wpdb->postmeta} WHERE meta_key = 'tmsc_post_processing'" )
+			$wpdb->prepare( "SELECT post_id, meta_value from {$wpdb->postmeta} WHERE meta_key = %s", 'tmsc_post_processing' )
 		);
 
 		foreach ( $post_processing_data as $post_id => $data ) {
