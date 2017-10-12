@@ -88,5 +88,25 @@ jQuery(document).ready(($) => {
       }
     });
   }
+
+  /**
+   * Handle manual updates with sync-lock field
+   */
+  const publishButton = $('#publish');
+  const synclockClear = $('#clear-sync-lock-status');
+  if ( synclockClear.size() ) {
+    console.log( synclockClear.size() );
+    // Override the form submit button
+    publishButton.on( 'click', (e) => {
+      $('#sync_lock').val( 1 );
+    });
+
+    // Override the form submit button
+    synclockClear.on( 'click', (e) => {
+      $('#sync_lock').val( 0 );
+      $('#post').submit();
+      e.preventDefault();
+    });
+  }
 });
 

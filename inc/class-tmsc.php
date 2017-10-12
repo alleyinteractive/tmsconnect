@@ -76,8 +76,11 @@ class TMSC {
 		}
 		add_action( 'fm_submenu_tmsc_guide_terms', array( $this, 'sync_init' ) );
 
-		// Handle External Image Processing as featured images.
-		add_filter( 'wp_get_attachment_image_src', array( $this, 'get_img_src' ), 20, 4 );
+		/**
+		 * Allow manual edits of posts and prevent sync overwrites.
+		 */
+		add_action( 'post_submitbox_misc_actions', array( $this, 'add_sync_lock_meta_field' ) );
+		add_action( 'save_post', array( $this, 'set_sync_lock' ) );
 
 		// Setup our search class
 		require_once( TMSCONNECT_PATH . '/inc/class-search.php' );
@@ -248,11 +251,54 @@ class TMSC {
 	}
 
 	/**
-	 * Override images if we are using an external image
-	 *
+	 * Add a hidden sync lock meta field that set on click of the update button.
 	 */
-	public function get_img_src( $image, $attachment_id, $size, $icon ) {
+	public function add_sync_lock_meta_field( $post ) {
 
-		return $image;
+		// If the post has been created, we can grab the saved info.
+		if ( $this->sync_lock_enabled( $post->ID ) ) {
+			$status = ( empty( get_post_meta( $post->ID, 'tmsc_sync_lock', true ) ) ) ? 0 : 1;
+			?>
+			<div class="misc-pub-section misc-pub-synclock">
+				<span id="synclock-pub-section">
+					<span id="synclock-pub-section-icon" class="dashicons dashicons-<?php echo ( empty( $status ) ) ? esc_attr( 'unlock' ) : esc_attr( 'lock' ); ?>"></span>
+				</span>
+				&nbsp;<?php esc_html_e( 'Sync Lock Status: ', 'tmsc' ); ?>: <b><span class="ai-target-text"><?php echo ( $status ) ? __( 'Locked', 'tmsc' ) : __( 'Unlocked', 'tmsc' ); ?></span></b>
+				<a id="clear-sync-lock-status" href="#clear-sync-lock-status" class="clear-lock-status hide-if-no-js" role="button">
+					<span aria-hidden="true"><?php esc_html_e( 'Clear', 'tmsc' ); ?></span>
+					<span class="screen-reader-text">
+						<?php
+						esc_html_e( 'Clear Lock Status ', 'tmsc' );
+						?>
+					</span>
+				</a>
+				<div id="sync-lock-input">
+					<input id="sync_lock" name="sync_lock" type="hidden" value="<?php echo esc_attr( $status ); ?>">
+				</div>
+			</div>
+			<?php
+		}
+	}
+
+	/**
+	 * Set sync lock for our posts.
+	 */
+	public function set_sync_lock( $post_id ) {
+		if ( $this->sync_lock_enabled( $post_id ) ) {
+			if ( empty( absint( $_POST['sync_lock'] ) ) ) {
+				delete_post_meta( $post_id, 'tmsc_sync_lock' );
+			} else {
+				update_post_meta( $post_id, 'tmsc_sync_lock', true );
+			}
+		}
+	}
+
+	/**
+	 * Enable Sync Lock
+	 */
+	public function sync_lock_enabled( $post_id ) {
+		$post_type = get_post_type( $post_id );
+		$sync_locked_types = apply_filters( 'tmsc_sync_lock_enabled', array( 'tms_object', 'exhibition', 'constituant' ) );
+		return in_array( $post_type, $sync_locked_types, true );
 	}
 }
