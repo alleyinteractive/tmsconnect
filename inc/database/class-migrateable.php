@@ -118,16 +118,23 @@ abstract class Migrateable {
 	 * @return boolean
 	 */
 	public function requires_update() {
-		// Force an update of the data regardless of hash matching.
-		if ( apply_filters( 'tmsc_force_sync_update', false ) ) {
-			return true;
-		}
-		if ( ! empty( $this->object )  ) {
+		if ( ! empty( $this->object ) ) {
+			// Never update an item that is sync locked.
+			if ( ! empty( $this->get_meta( 'tmsc_sync_lock', true ) ) ) {
+				return false;
+			}
+
+			// Force an update of the data regardless of hash matching.
+			if ( apply_filters( 'tmsc_force_sync_update', false ) ) {
+				return true;
+			}
+
 			$last_updated = $this->get_last_updated_hash();
 			if ( ! empty( $last_updated ) && ! empty( $this->raw ) && tmsc_hash_data( $this->raw ) === $last_updated ) {
 				return false;
 			}
 		}
+		// If no object, the always update.
 		return true;
 	}
 
