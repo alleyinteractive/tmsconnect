@@ -13,7 +13,7 @@
  */
 function tmsc_add_type_taxonomies( $post_type, $taxonomy, $edit_slug, $labels ) {
 	if ( 'exhibition' === $post_type ) {
-		$tag_url = add_query_arg( array( 'taxonomy' => 'exhibition-type', 'post_type' => 'exhibition' ), 'edit-tags.php' );
+		$tag_url = add_query_arg( array( 'taxonomy' => 'exhibition_type', 'post_type' => 'exhibition' ), 'edit-tags.php' );
 		add_submenu_page(
 			$edit_slug,
 			__( 'Exhibition Types', 'tmsc' ),
@@ -35,9 +35,9 @@ add_action( 'tmsc_add_custom_landing_submenus', 'tmsc_add_type_taxonomies', 20, 
  */
 function tmsc_highlight_edit_tag() {
 	global $submenu_file, $parent_file, $typenow, $taxnow;
-	if ( 'exhibition' === $typenow && 'exhibition-type' === $taxnow ) {
+	if ( 'exhibition' === $typenow && 'exhibition_type' === $taxnow ) {
 		$parent_file = add_query_arg( array( 'post_type' => 'exhibition', 'taxonomy' => 'exhibitions' ), 'edit.php' );
-		$submenu_file = add_query_arg( array( 'taxonomy' => 'exhibition-type', 'post_type' => 'exhibition' ), 'edit-tags.php' );
+		$submenu_file = add_query_arg( array( 'taxonomy' => 'exhibition_type', 'post_type' => 'exhibition' ), 'edit-tags.php' );
 	}
 }
 add_action( 'admin_enqueue_scripts', 'tmsc_highlight_edit_tag' );

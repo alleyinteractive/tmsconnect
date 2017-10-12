@@ -10,7 +10,7 @@ class Tmsc_Taxonomy_Constituent_Type extends Tmsc_Taxonomy {
 	 *
 	 * @var string
 	 */
-	public $name = 'constituent-type';
+	public $name = 'constituent_type';
 
 	/**
 	 * Object types for this taxonomy
