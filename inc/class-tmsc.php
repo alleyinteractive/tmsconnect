@@ -40,28 +40,7 @@ class TMSC {
 		/**
 		 * Our Default Zones
 		 */
-		$this->default_zones = array(
-			array(
-				'slug' => 'on-view',
-				'name' => __( 'On View', 'tmsc' ),
-				'description' => __( 'Manages the collection objects that are currently on view', 'tmsc' ),
-			),
-			array(
-				'slug' => 'collection-highlights',
-				'name' => __( 'Collection Highlights', 'tmsc' ),
-				'description' => __( 'Manages the collection objects that are currently highlighted', 'tmsc' ),
-			),
-			array(
-				'slug' => 'new-aquisitions',
-				'name' => __( 'New Aquisitions', 'tmsc' ),
-				'description' => __( 'Manages the collection objects that are new acquisitions, through both gift and purchase', 'tmsc' ),
-			),
-			array(
-				'slug' => 'on-loan',
-				'name' => __( 'On Loan', 'tmsc' ),
-				'description' => __( 'Manages the collection objects that are currently on loan to other museums for temporary exhibitions or long-term display', 'tmsc' ),
-			),
-		);
+		$this->default_zones = apply_filters( 'tmsc_curated_areas', array() );
 
 		// Add zoninator post type support
 		add_action( 'zoninator_post_init', array( $this, 'zoninator_post_type_support' ), 99 );
@@ -98,8 +77,12 @@ class TMSC {
 	 * @return void
 	 */
 	public function zoninator_post_type_support() {
+		global $zoninator;
+		// Remove the standard menu and put one in that is more Museum friendly.
+		remove_action( 'admin_menu', array( $zoninator, 'admin_page_init' ) );
+		add_action( 'admin_menu', array( $this, 'setup_curated_area_menu' ) );
 
-		$post_types = array( 'tms_object' );
+		$post_types = array( 'tms_object', 'exhibition' );
 
 		// Add the Zoninator taxonomy for the defined post types
 		foreach ( $post_types as $post_type ) {
@@ -113,15 +96,23 @@ class TMSC {
 	}
 
 	/**
+	 * Relabel our zone menu.
+	 */
+	public function setup_curated_area_menu() {
+		global $zoninator;
+		add_menu_page( __( 'Curated Zones', 'tmsc' ), __( 'Curated Zones', 'tmsc' ), $zoninator->_get_manage_zones_cap(), $zoninator->key, array( $zoninator, 'admin_page' ), 'dashicons-images-alt2', 11 );
+	}
+
+	/**
 	 * Only display tmsc objects in our TMSConnect Zones.
 	 */
 	public function filter_zone_post_types( $args ) {
 		$active_zone_id = z_get_zoninator()->_get_request_var( 'zone_id', 0, 'absint' );
-		$tmsc_zones = wp_list_pluck( $this->default_zones, 'slug' );
+		$tmsc_zones = array_keys( $this->default_zones );
 		if ( ! empty( $active_zone_id ) ) {
 			$zone = z_get_zone( $active_zone_id );
 			if ( in_array( $zone->slug, $tmsc_zones ) ) {
-				$args['post_type'] = array( 'tms_object' );
+				$args['post_type'] = ( empty( $this->default_zones[ $zone->slug ]['post_type'] ) ) ? array( 'tms_object' ) : $this->default_zones[ $zone->slug ]['post_type'];
 			}
 		}
 
