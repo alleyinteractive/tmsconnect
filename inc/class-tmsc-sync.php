@@ -105,6 +105,13 @@ class TMSC_Sync {
 	}
 
 	/**
+	 * Terminate our persistant connection for our DB processors.
+	 */
+	public function terminate_connection() {
+		self::$tms_pdo_connection = null;
+	}
+
+	/**
 	 * Our ajax handler for syncing manually from the wp-admin area submenu.
 	 */
 	public function sync_objects() {
@@ -238,8 +245,10 @@ class TMSC_Sync {
 		if ( ! empty( $current_processor_class_slug ) ) {
 			// Migrate our objects and taxonomies.
 			\TMSC\TMSC::instance()->migrate( $current_processor_class_slug );
+			self::$instance->terminate_connection();
 			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 		} else {
+			self::$instance->terminate_connection();
 			wp_schedule_single_event( time(), 'tmsc_complete_sync', array() );
 		}
 	}
