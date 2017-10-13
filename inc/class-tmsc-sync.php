@@ -99,10 +99,16 @@ class TMSC_Sync {
 	public function get_connection() {
 		if ( empty( self::$tms_pdo_connection ) ) {
 			$system_processor = new \TMSC\Database\System_Processor();
-			return $system_processor->get_connection();
-		} else {
-			return self::$tms_pdo_connection;
+			self::$tms_pdo_connection = $system_processor->get_connection();
 		}
+		return self::$tms_pdo_connection;
+	}
+
+	/**
+	 * Terminate our persistant connection for our DB processors.
+	 */
+	public function terminate_connection() {
+		self::$tms_pdo_connection = null;
 	}
 
 	/**
@@ -111,9 +117,6 @@ class TMSC_Sync {
 	public function sync_objects() {
 		if ( current_user_can( self::$capability ) ) {
 			check_ajax_referer( 'tmsc_object_sync', 'tmsc_nonce' );
-
-			// Set-up a persistant connection.
-			self::$tms_pdo_connection = self::$instance->get_connection();
 
 			if ( ! empty( $_POST['tmsc-db-host'] ) ) {
 				$host = sanitize_text_field( wp_unslash( $_POST['tmsc-db-host'] ) );
@@ -140,11 +143,26 @@ class TMSC_Sync {
 				update_option( 'tmsc-image-url', $url, false );
 				self::$image_url = $url;
 			}
+			if ( ! empty( $_POST['tmsc-processors'] ) ) {
+				$cursor = get_option( 'tmsc-processors-cursor', array() );
+				if ( empty( $cursor ) ) {
+					$system_processors = tmsc_get_system_processors();
+					foreach( $_POST['tmsc-processors'] as $processor_slug ) {
+						$cursor[ $processor_slug ] = $system_processors[ $processor_slug ];
+					}
+					update_option( 'tmsc-processors-cursor', $cursor, false );
+				}
+			}
+
+
+
 			// If we pressed the button manually, process any post processing data.
-			// wp_schedule_single_event( time(), 'tmsc_do_post_processing', array() );
-			// wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
-			self::$instance->do_post_processing();
-			self::$instance->object_sync();
+			// self::$instance->do_post_processing();
+			// self::$instance->object_sync();
+
+			wp_schedule_single_event( time(), 'tmsc_do_post_processing', array() );
+			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
+
 			echo 1;
 		} else {
 			echo 0;
@@ -205,8 +223,13 @@ class TMSC_Sync {
 
 		$current_processor = '';
 		$current_processor_class_slug = '';
+
+		// Set-up a persistant connection.
+		self::$instance->get_connection();
+
+		$system_processors = get_option( 'tmsc-processors-cursor', tmsc_get_system_processors() );
 		// Register and instantiate processors
-		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
+		foreach ( $system_processors as $processor_slug => $processor_class_slug ) {
 			if ( empty( $current_processor ) ) {
 				$processor = \TMSC\TMSC::instance()->get_processor( $processor_class_slug );
 				$cursor = tmsc_get_cursor( $processor_slug );
@@ -222,8 +245,10 @@ class TMSC_Sync {
 		if ( ! empty( $current_processor_class_slug ) ) {
 			// Migrate our objects and taxonomies.
 			\TMSC\TMSC::instance()->migrate( $current_processor_class_slug );
+			self::$instance->terminate_connection();
 			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 		} else {
+			self::$instance->terminate_connection();
 			wp_schedule_single_event( time(), 'tmsc_complete_sync', array() );
 		}
 	}
@@ -237,6 +262,7 @@ class TMSC_Sync {
 		foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
 			delete_option( "tmsc-cursor-{$processor_slug}" );
 		}
+		delete_option( 'tmsc-processors-cursor' );
 
 		$message = date( 'Y-m-d H:i:s' );
 
@@ -254,10 +280,12 @@ class TMSC_Sync {
 			$wpdb->prepare( "SELECT post_id, meta_value from {$wpdb->postmeta} WHERE meta_key = %s", 'tmsc_post_processing' )
 		);
 
-		foreach ( $post_processing_data as $post_id => $data ) {
+		foreach ( $post_processing_data as $row ) {
+			$post_id = $row->post_id;
 			$processor_type = get_post_meta( $post_id, 'tmsc_processor_type' ,true );
 			if ( ! empty( $processor_type ) ) {
 				$relationship_map = apply_filters( "tmsc_{$processor_type}_relationship_map", array() );
+				$data = maybe_unserialize( $row->meta_value );
 				foreach ( $data as $key => $ids ) {
 					if ( 'post' === $relationship_map[ $key ]['type'] && ! empty( $ids ) ) {
 						$related_posts = get_posts( array(

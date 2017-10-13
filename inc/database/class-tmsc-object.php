@@ -62,7 +62,8 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return html
 	 */
 	public function get_excerpt(){
-		return apply_filters( "tmsc_set_{$this->name}_excerpt", '', $this->raw );
+		$default = ( ! empty( $this->object ) ) ? $this->object->post_excerpt : '';
+		return apply_filters( "tmsc_set_{$this->name}_excerpt", $default, $this->raw );
 	}
 
 	/**
@@ -70,7 +71,8 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return string
 	 */
 	public function get_title(){
-		$title = ( ! empty( $this->raw->Title ) ) ? $this->raw->Title : '';
+		$default = ( ! empty( $this->object ) ) ? $this->object->post_title : '';
+		$title = ( ! empty( $this->raw->Title ) ) ? $this->raw->Title : $default;
 		return apply_filters( "tmsc_set_{$this->name}_title", $title, $this->raw );
 	}
 
@@ -79,8 +81,9 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return int ID of author user.
 	 */
 	public function get_post_author() {
+		$default = ( ! empty( $this->object ) ) ? $this->object->post_author : 1;
 		// Use the admin user by default
-		return apply_filters( "tmsc_set_{$this->name}_author", 1, $this->raw );
+		return apply_filters( "tmsc_set_{$this->name}_author", $default, $this->raw );
 	}
 
 	/**
@@ -88,7 +91,8 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return int unix timestamp
 	 */
 	public function get_pubdate(){
-		return apply_filters( "tmsc_set_{$this->name}_pubdate", time(), $this->raw );
+		$default = ( ! empty( $this->object ) ) ? $this->object->post_date : current_time();
+		return apply_filters( "tmsc_set_{$this->name}_pubdate", $default, $this->raw );
 	}
 
 	/**
@@ -96,8 +100,9 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return HTML
 	 */
 	public function get_body(){
-		$content = apply_filters( "tmsc_set_{$this->name}_body", '', $this->raw );
-		return ( empty( $content ) ) ? '' : $content;
+		$default = ( ! empty( $this->object ) ) ? $this->object->post_content : '';
+		$content = apply_filters( "tmsc_set_{$this->name}_body", $default, $this->raw );
+		return ( empty( $content ) ) ? $default : $content;
 	}
 
 	/**
@@ -205,6 +210,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 
 			return true;
 		}
+
 		return false;
 	}
 

@@ -19,7 +19,9 @@ add_action( 'init', 'tmsc_add_fm_meta_boxes' );
  * Generic function to auto generate Fieldmanager text fields for imported data.
  */
 function tmsc_add_post_type_meta_boxes( $type ) {
-	if ( ! empty( $type ) && TMSC_Custom_Landing_Page_Types()->on_custom_landing_admin_page() && 'single' !== TMSC_Custom_Landing_Page_Types()->current_landing_type ) {
+	if ( ! empty( $type ) && in_array( $type, array_keys( tmsc_get_system_processors() ) ) && ! ( TMSC_Custom_Landing_Page_Types()->on_custom_landing_admin_page() && 'single' === TMSC_Custom_Landing_Page_Types()->current_landing_type ) && 'taxonomy' !== $type ) {
+		$post_type = ( 'object' === $type ) ? 'tms_object' : $type;
+
 		$mapping = apply_filters( "tmsc_{$type}_meta_keys", array() );
 		if ( ! empty( $mapping ) ) {
 			foreach ( $mapping as $key => $field ) {
@@ -27,32 +29,59 @@ function tmsc_add_post_type_meta_boxes( $type ) {
 					'name' => $key,
 					'label' => __( 'Imported DB Field', 'tmsc' ),
 				) );
-				$fm->add_meta_box( $field, array( $type ), 'normal' );
+				$fm->add_meta_box( $field, array( $post_type ), 'normal' );
+			}
+		}
+		$post_processed_fields = apply_filters( "tmsc_{$type}_relationship_map", array() );
+		if ( ! empty( $post_processed_fields ) ) {
+			foreach ( $post_processed_fields as $slug => $config ) {
+				if ( 'post' === $config['type'] || 'page' === $config['type'] ) {
+					$fm = new Fieldmanager_Zone_Field(
+						array(
+							'name' => $slug,
+							'query_args' => array( 'post_type' => $config['slug'] ),
+						)
+					);
+					$fm->add_meta_box( $config['label'], $post_type );
+				} elseif ( 'media' === $config['type'] ) {
+					new Fieldmanager_Group( array(
+						'name' => $slug,
+						'limit' => 0,
+						'add_more_label' => __( 'Add', 'tmsc' ),
+						'sortable' => true,
+						'children' => array(
+							'ids' => new Fieldmanager_Media(),
+						),
+					) );
+					$fm->add_meta_box( $config['label'], $post_type );
+				} elseif ( 'link' === $config['type'] ) {
+					$fm = new Fieldmanager_Group( array (
+						'name' => $slug,
+						'limit' => 0,
+						'add_more_label' => __( 'Add', 'tmsc' ),
+						'sortable' => true,
+						'children' => array(
+							'links' => new Fieldmanager_Group( array(
+								'children' => array(
+									'url' => new Fieldmanager_Textfield( array(
+										'label' => __( 'Url', 'tmsc' ),
+									) ),
+									'label' => new Fieldmanager_Textfield( array(
+										'label' => __( 'Label', 'tmsc' ),
+									) ),
+									'image' => new Fieldmanager_Textfield( array(
+										'label' => __( 'Image Url', 'tmsc' ),
+									) ),
+								),
+							) ),
+						),
+					) );
+					$fm->add_meta_box( $config['label'], $post_type );
+				}
 			}
 		}
 	}
 }
-
-/* begin fm:related_objects */
-/**
- * `related_objects` Fieldmanager fields.
- */
-function tmsc_fm_related_objects() {
-	$fm = new Fieldmanager_Autocomplete( array(
-		'name' => 'related_objects',
-		'limit' => 0,
-		'label' => __( 'TMS Object Name', 'tmsc' ),
-		'add_more_label' => __( 'Add another object', 'tmsc' ),
-		'datasource' => new Fieldmanager_Datasource_Post( array(
-			'query_args' => array(
-				'post_type' => array( 'tms_object' ),
-			),
-		) ),
-	) );
-	$fm->add_meta_box( __( 'Related Records', 'tmsc' ), array( 'tms_object' ) );
-}
-add_action( 'fm_post_tms_object', 'tmsc_fm_related_objects' );
-/* end fm:related_objects */
 
 /* begin fm:accession_number */
 /**
