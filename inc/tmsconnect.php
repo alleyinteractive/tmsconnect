@@ -120,11 +120,6 @@ function tmsc_init() {
 	// Nav items in the admin area.
 	require_once( TMSCONNECT_PATH . '/inc/nav.php' );
 
-	// Wp-cli command.
-	if ( defined( 'WP_CLI' ) && WP_CLI ) {
-		require_once TMSCONNECT_PATH . '/inc/class-tmsc-cli-command.php';
-	}
-
 	add_action( 'admin_enqueue_scripts', 'tmsc_enqueue_assets' );
 }
 add_action( 'plugins_loaded', 'tmsc_init' );

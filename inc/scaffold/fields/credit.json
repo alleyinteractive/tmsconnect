@@ -1,0 +1,12 @@
+{
+  "contexts": [
+    {
+      "type": "post",
+      "post_types": [ "tms_object" ],
+      "title": { "__": "Credit Line" },
+      "context": "normal"
+    }
+  ],
+  "label": true,
+  "type": "textfield"
+}

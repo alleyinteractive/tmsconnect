@@ -44,7 +44,7 @@ function tmsc_add_post_type_meta_boxes( $type ) {
 					);
 					$fm->add_meta_box( $config['label'], $post_type );
 				} elseif ( 'media' === $config['type'] ) {
-					new Fieldmanager_Group( array(
+					$fm = new Fieldmanager_Group( array(
 						'name' => $slug,
 						'limit' => 0,
 						'add_more_label' => __( 'Add', 'tmsc' ),

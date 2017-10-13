@@ -91,7 +91,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return int unix timestamp
 	 */
 	public function get_pubdate(){
-		$default = ( ! empty( $this->object ) ) ? $this->object->post_date : current_time();
+		$default = ( ! empty( $this->object ) && (int) date('Y', strtotime( $this->object->post_date ) ) > 1970 ) ? $this->object->post_date : current_time( 'mysql' );
 		return apply_filters( "tmsc_set_{$this->name}_pubdate", $default, $this->raw );
 	}
 

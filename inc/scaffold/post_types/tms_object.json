@@ -1,0 +1,7 @@
+{
+	"public": true,
+	"has_archive": true,
+	"menu_icon": "dashicons-book-alt",
+	"supports": ["title", "excerpt", "editor", "thumbnail"],
+	"rewrite": { "slug": "objects" }
+}
