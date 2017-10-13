@@ -20,8 +20,11 @@ class MySQL_Processor extends \TMSC\Database\Database_Processor {
 		$password = \TMSC\tmsc_sync()::$tms_db_password;
 		// Build the DSN string
 		$host = \TMSC\tmsc_sync()::$tms_db_host;
-		list( $host, $port ) = explode( ':', $host );
-		$port = ( empty( $port ) ) ? '3306' : $port;
+		$port = '3306';
+		if ( strpos( $host, ':' ) ) {
+			list( $host, $port ) = explode( ':', $host );
+		}
+
 		$dsn = "mysql:host={$host};port={$port};dbname={$dbname}";
 
 		$connection = new \PDO( $dsn, $username, $password, array(

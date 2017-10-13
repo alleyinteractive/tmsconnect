@@ -24,6 +24,12 @@
 				<input type="text" id="tmsc-image-url" name="tmsc-image-url" value="<?php echo esc_url( get_option( 'tmsc-ids-image-url', 'http://ids.si.edu/ids/deliveryService' ) ); ?>" class="regular-text code">
 			</p>
 			<p>
+				<label for="tmsc-migrateables"><?php esc_html_e( 'Migrate TMS Data: ', 'tmsc' );?></label>
+				<?php foreach ( tmsc_get_system_processors() as $slug => $label ) : ?>
+					<input type="checkbox" name="tmsc-processors[]" value="<?php echo esc_attr( $slug ); ?>" checked ><?php echo esc_html( $label ); ?>
+				<?php endforeach; ?>
+			</p>
+			<p>
 				<input type="submit" name="tmsc-sync-button" id="tmsc-sync-button" class="button button-primary" value="<?php esc_attr_e( 'Sync Objects', 'tmsc' ); ?>">
 			</p>
 			<p>
