@@ -282,20 +282,22 @@ class TMSC_Sync {
 				$data = maybe_unserialize( $row->meta_value );
 
 				foreach ( $data as $key => $ids ) {
-					if ( 'post' === $relationship_map[ $key ]['type'] && ! empty( $ids ) ) {
-						$related_posts = get_posts( array(
-							'fields' => 'ids',
-							'suppress_filters' => false,
-							'ignore_sticky_posts' => true,
-							'no_found_rows' => true,
-							'post_type' => $relationship_map[ $key ]['slug'],
-							'post_status' => 'publish',
-							'meta_key' => 'tmsc_legacy_id',
-							'meta_value' => $ids,
-							'meta_compare' => 'IN',
-						) );
-						if ( ! empty( $related_posts ) ) {
-							update_post_meta( $post_id, $key, $related_posts );
+					if ( ! empty( $ids ) ) {
+						if ( 'post' === $relationship_map[ $key ]['type'] ) {
+							$related_posts = get_posts( array(
+								'fields' => 'ids',
+								'suppress_filters' => false,
+								'ignore_sticky_posts' => true,
+								'no_found_rows' => true,
+								'post_type' => $relationship_map[ $key ]['slug'],
+								'post_status' => 'publish',
+								'meta_key' => 'tmsc_legacy_id',
+								'meta_value' => $ids,
+								'meta_compare' => 'IN',
+							) );
+							if ( ! empty( $related_posts ) ) {
+								update_post_meta( $post_id, $key, $related_posts );
+							}
 						}
 					}
 				}

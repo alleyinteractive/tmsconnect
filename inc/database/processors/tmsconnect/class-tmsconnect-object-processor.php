@@ -81,14 +81,18 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 	/**
 	 * Get the related WP terms of a given TMS Object ID.
 	 * @param int $object_id. TMS raw Object ID.
-	 * @return array. An associate array of taxonmies and it's term ids. array( 'taxonomy-slug' => array( 1, 2... ) ).
+	 * @param string $key. The slug to be used in the meta table.
+	 * @param array $config.
+	 * @return array. An array of legacy ids to be post processed.
 	 */
-	public function get_related_objects( $object_id ) {
-		$query_key = $this->object_query_key . '_related_objects';
-		$stmt = apply_filters( "tmsc_{$this->processor_type}_related_objects_stmt_query", '', $object_id );
+	public function get_related( $object_id, $key, $config = array() ) {
+		$query_key = $this->object_query_key . '_' . $key;
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_relationship_{$key}_stmt_query", '', $object_id, $config );
+		$relationship_data = array();
 		if ( ! empty( $stmt ) ) {
-			return $this->fetch_results( $stmt, $query_key );
+			$results = $this->fetch_results( $stmt, $query_key );
+			$relationship_data[ $key ] = wp_list_pluck( $results, 'ID' );
 		}
-		return array();
+		return $relationship_data;
 	}
 }

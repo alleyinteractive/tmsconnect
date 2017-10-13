@@ -36,24 +36,26 @@ function tmsc_add_post_type_meta_boxes( $type ) {
 		if ( ! empty( $post_processed_fields ) ) {
 			foreach ( $post_processed_fields as $slug => $config ) {
 				if ( 'post' === $config['type'] || 'page' === $config['type'] ) {
-					$fm = new Fieldmanager_Zone_Field(
-						array(
+					if ( 'attachment' === $config['slug'] ) {
+						$fm = new Fieldmanager_Group( array(
 							'name' => $slug,
-							'query_args' => array( 'post_type' => $config['slug'] ),
-						)
-					);
-					$fm->add_meta_box( $config['label'], $post_type );
-				} elseif ( 'media' === $config['type'] ) {
-					$fm = new Fieldmanager_Group( array(
-						'name' => $slug,
-						'limit' => 0,
-						'add_more_label' => __( 'Add', 'tmsc' ),
-						'sortable' => true,
-						'children' => array(
-							'ids' => new Fieldmanager_Media(),
-						),
-					) );
-					$fm->add_meta_box( $config['label'], $post_type );
+							'limit' => 0,
+							'add_more_label' => __( 'Add', 'tmsc' ),
+							'sortable' => true,
+							'children' => array(
+								'ids' => new Fieldmanager_Media(),
+							),
+						) );
+						$fm->add_meta_box( $config['label'], $post_type );
+					} else {
+						$fm = new Fieldmanager_Zone_Field(
+							array(
+								'name' => $slug,
+								'query_args' => array( 'post_type' => $config['slug'] ),
+							)
+						);
+						$fm->add_meta_box( $config['label'], $post_type );
+					}
 				} elseif ( 'link' === $config['type'] ) {
 					$fm = new Fieldmanager_Group( array (
 						'name' => $slug,
@@ -208,25 +210,6 @@ function tmsc_fm_references() {
 }
 add_action( 'fm_post_tms_object', 'tmsc_fm_references' );
 /* end fm:references */
-
-/* begin fm:web_resources */
-/**
- * `web_resources` Fieldmanager fields.
- */
-function tmsc_fm_web_resources() {
-	$fm = new Fieldmanager_Group( array(
-		'name' => 'web_resources',
-		'limit' => 0,
-		'add_more_label' => __( 'Add another resource', 'tmsc' ),
-		'children' => array(
-			'title' => new Fieldmanager_Textfield( __( 'Title', 'tmsc' ) ),
-			'url' => new Fieldmanager_Textfield( __( 'Web Resource', 'tmsc' ) ),
-		),
-	) );
-	$fm->add_meta_box( __( 'Web Resources', 'tmsc' ), array( 'tms_object' ) );
-}
-add_action( 'fm_post_tms_object', 'tmsc_fm_web_resources' );
-/* end fm:web_resources */
 
 /* begin fm:medium */
 /**

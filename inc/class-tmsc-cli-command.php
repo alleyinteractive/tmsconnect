@@ -7,7 +7,7 @@ WP_CLI::add_command( 'tmsconnect', 'TMSC_CLI_Command' );
  */
 class TMSC_CLI_Command extends WP_CLI_Command {
 
-	public $batch_size = 200;
+	public $batch_size = 50;
 
 	/**
 	 * Sync objects from TMS.
