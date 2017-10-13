@@ -80,7 +80,11 @@ class TMSC {
 		 * Allow manual edits of posts and prevent sync overwrites.
 		 */
 		add_action( 'post_submitbox_misc_actions', array( $this, 'add_sync_lock_meta_field' ) );
-		add_action( 'save_post', array( $this, 'set_sync_lock' ) );
+
+		// Sync locking is only handled with human interaction. So disable it for CLI.
+		if ( ! ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+			add_action( 'save_post', array( $this, 'set_sync_lock' ) );
+		}
 
 		// Setup our search class
 		require_once( TMSCONNECT_PATH . '/inc/class-search.php' );
@@ -285,7 +289,7 @@ class TMSC {
 	 */
 	public function set_sync_lock( $post_id ) {
 		if ( $this->sync_lock_enabled( $post_id ) ) {
-			if ( empty( absint( $_POST['sync_lock'] ) ) ) {
+			if ( empty( $_POST['sync_lock'] ) ) {
 				delete_post_meta( $post_id, 'tmsc_sync_lock' );
 			} else {
 				update_post_meta( $post_id, 'tmsc_sync_lock', true );

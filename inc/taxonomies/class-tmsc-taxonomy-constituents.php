@@ -24,7 +24,7 @@ class Tmsc_Taxonomy_Constituents extends Tmsc_Taxonomy {
 	 * Build the taxonomy object.
 	 */
 	public function __construct() {
-		$this->object_types = array( 'tms_object' );
+		$this->object_types = array();
 
 		parent::__construct();
 	}

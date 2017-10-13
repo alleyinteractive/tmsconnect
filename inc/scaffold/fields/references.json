@@ -1,0 +1,12 @@
+{
+  "contexts": [
+    {
+      "type": "post",
+      "post_types": [ "tms_object" ],
+      "title": { "__": "Published References" },
+      "context": "normal"
+    }
+  ],
+  "label": true,
+  "type": "RichTextArea"
+}

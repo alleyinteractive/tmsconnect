@@ -154,13 +154,7 @@ class TMSC_Sync {
 				}
 			}
 
-
-
 			// If we pressed the button manually, process any post processing data.
-			// self::$instance->do_post_processing();
-			// self::$instance->object_sync();
-
-			wp_schedule_single_event( time(), 'tmsc_do_post_processing', array() );
 			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 
 			echo 1;
@@ -286,6 +280,7 @@ class TMSC_Sync {
 			if ( ! empty( $processor_type ) ) {
 				$relationship_map = apply_filters( "tmsc_{$processor_type}_relationship_map", array() );
 				$data = maybe_unserialize( $row->meta_value );
+
 				foreach ( $data as $key => $ids ) {
 					if ( 'post' === $relationship_map[ $key ]['type'] && ! empty( $ids ) ) {
 						$related_posts = get_posts( array(
