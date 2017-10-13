@@ -17,6 +17,8 @@ define( 'TMSCONNECT_PATH', dirname( __FILE__ ) );
 
 require_once( TMSCONNECT_PATH . '/inc/class-tmsc.php' );
 require_once( TMSCONNECT_PATH . '/inc/class-plugin-dependency.php' );
+require_once( TMSCONNECT_PATH . '/inc/trait-singleton.php' );
+
 
 /**
  * Return an array of all the processors of the current system.
@@ -57,8 +59,6 @@ function tmsc_init() {
 	// Global functions
 	require_once( TMSCONNECT_PATH . '/functions.php' );
 
-	// Singleton
-	require_once( TMSCONNECT_PATH . '/inc/trait-singleton.php' );
 	// Helper functions
 	require_once( TMSCONNECT_PATH . '/inc/helper-functions.php' );
 
@@ -156,16 +156,16 @@ function tmsc_zone_init() {
 	if ( function_exists( 'z_get_zoninator' ) ) {
 
 		// Iterate through the defined zones. If any exist already, skip them.
-		foreach ( $default_zones as $zone ) {
+		foreach ( $default_zones as $slug => $zone ) {
 			// Make sure these zones are defined correctly.
-			if ( ! isset( $zone['slug'] ) || ! isset( $zone['name'] ) ) {
+			if ( ! isset( $slug ) || ! isset( $zone['name'] ) ) {
 				continue;
 			}
 
 			// Check if the zone exists before adding.
-			if ( false === z_get_zone( $zone['slug'] ) ) {
+			if ( false === z_get_zone( $slug ) ) {
 				// Add the zone.
-				$result = z_get_zoninator()->insert_zone( $zone['slug'], $zone['name'], array( 'description' => $zone['description'] ) );
+				$result = z_get_zoninator()->insert_zone( $slug, $zone['name'], array( 'description' => $zone['description'] ) );
 
 				// Set the message to display to the user based on the result.
 				if ( is_wp_error( $result ) ) {

@@ -11,7 +11,7 @@ namespace TMSC;
  * Search
  */
 class Search {
-	use Singleton;
+	use \TMSC\Singleton;
 
 	/**
 	 * Setup the singleton and kick off our search modifications.
@@ -131,6 +131,6 @@ function TMSC_Search() {
 	return \TMSC\Search::get_instance();
 }
 // Initial call to setup instance
-add_action( 'after_setup_theme', __NAMESPACE__ . '\\TMSC_Search' );
+add_action( 'after_setup_theme', __NAMESPACE__ . '\\TMSC_Search', 100 );
 
 
