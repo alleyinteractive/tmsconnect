@@ -34,6 +34,7 @@ function tmsc_get_system_processors() {
 		'exhibition' => __( 'Exhibition', 'tmsc' ),
 		'constituent' => __( 'Constituent', 'tmsc' ),
 		'object' => __( 'Object', 'tmsc' ),
+		'zone' => __( 'Zone', 'tmsc' ),
 	);
 	return apply_filters( 'tmsc_get_system_processors', $processors );
 }
@@ -105,6 +106,7 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-object.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-taxonomy.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-media.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-zone.php' );
 
 	// The system this plugin is active for. Built with Freer_Sackler using mySQL.
 	foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {

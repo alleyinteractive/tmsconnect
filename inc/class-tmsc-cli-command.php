@@ -64,13 +64,13 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 		if ( empty( $assoc_args['post-processing'] ) ) {
 			$processors = tmsc_get_system_processors();
 			if ( ! empty( $args ) ) {
-				$cursor = array();
+				$processors_cursor = array();
 				foreach ( $args as $processor ) {
 					if ( in_array( $processor, array_keys( $processors ), true ) ) {
-						$cursor[ $processor ] = $processors[ $processor ];
+						$processors_cursor[ $processor ] = $processors[ $processor ];
 					}
 				}
-				$processors = $cursor;
+				$processors = $processors_cursor;
 			}
 			WP_CLI::line( 'Setting up cursor for processors: ' . implode( ', ', array_values( $processors ) ) );
 			update_option( 'tmsc-processors-cursor', $processors );
@@ -89,19 +89,17 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 			// Register and instantiate processors
 			foreach ( $system_processors as $processor_slug => $processor_class_slug ) {
 				// Instantiate our processor.
-				$processor = \TMSC\TMSC::instance()->get_processor( $processor_class_slug );
+				$current_processor = \TMSC\TMSC::instance()->get_processor( $processor_class_slug );
 				$doing_migration = false;
-
+				$cursor = tmsc_get_cursor( $processor_slug );
 				do {
-					$cursor = tmsc_get_cursor( $processor_slug );
 
 					if ( empty( $cursor['completed'] ) ) {
 						WP_CLI::line( "Processing {$processor_slug} with offset {$cursor['offset']}" );
 
 						$doing_migration = true;
-
 						\TMSC\TMSC::instance()->migrate( $processor_class_slug );
-
+						$cursor = tmsc_get_cursor( $processor_slug );
 					} else {
 						WP_CLI::success( sprintf(
 							__( "Sync for %s Processor Complete!\n%d\tfinal offset", 'tmsc' ),
@@ -130,6 +128,7 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 	 * Wipe out our cursor data.
 	 */
 	private function reset() {
+		WP_CLI::line( 'Resetting Cursors' );
 		delete_option( 'tmsc-last-sync-date' );
 		wp_cache_delete( 'tmsc-last-sync-date', 'options' );
 		foreach ( tmsc_get_system_processors() as $type => $label ) {

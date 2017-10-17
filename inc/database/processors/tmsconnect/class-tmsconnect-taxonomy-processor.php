@@ -40,7 +40,7 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	public function run() {
 		$cursor = $this->get_taxonomy_cursor();
 		foreach ( $this->taxonomies as $index => $taxonomy ) {
-			if ( ! in_array( $taxonomy->taxonomy, $cursor['migrated'] ) ) {
+			if ( ! in_array( $taxonomy->taxonomy, $cursor['migrated'], true ) ) {
 				$this->current_tax = $taxonomy;
 				break;
 			}

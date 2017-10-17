@@ -239,12 +239,11 @@ class TMSC_Sync {
 		if ( ! empty( $current_processor_class_slug ) ) {
 			// Migrate our objects and taxonomies.
 			\TMSC\TMSC::instance()->migrate( $current_processor_class_slug );
-			self::$instance->terminate_connection();
 			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 		} else {
-			self::$instance->terminate_connection();
 			wp_schedule_single_event( time(), 'tmsc_complete_sync', array() );
 		}
+		self::$instance->terminate_connection();
 	}
 
 	/**

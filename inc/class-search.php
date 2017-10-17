@@ -131,6 +131,6 @@ function TMSC_Search() {
 	return \TMSC\Search::get_instance();
 }
 // Initial call to setup instance
-add_action( 'after_setup_theme', __NAMESPACE__ . '\\TMSC_Search', 100 );
+add_action( 'after_setup_theme', __NAMESPACE__ . '\\TMSC_Search' );
 
 

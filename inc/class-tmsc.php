@@ -40,7 +40,7 @@ class TMSC {
 		/**
 		 * Our Default Zones
 		 */
-		$this->default_zones = apply_filters( 'tmsc_curated_areas', array() );
+		$this->default_zones = apply_filters( 'tmsc_curated_zones', array() );
 
 		// Add zoninator post type support
 		add_action( 'zoninator_post_init', array( $this, 'zoninator_post_type_support' ), 99 );
