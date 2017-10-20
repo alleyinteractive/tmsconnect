@@ -7,7 +7,7 @@ WP_CLI::add_command( 'tmsconnect', 'TMSC_CLI_Command' );
  */
 class TMSC_CLI_Command extends WP_CLI_Command {
 
-	public $batch_size = 50;
+	public $batch_size = 40;
 
 	/**
 	 * Sync objects from TMS.
@@ -61,6 +61,11 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 			add_filter( 'tmsc_force_sync_update', '__return_true' );
 		}
 
+		if ( ! empty( $assoc_args['batch_size'] ) ) {
+			$this->batch_size = (int) $assoc_args['batch_size'];
+			add_filter( 'tmsc_sync_batch_size', array( $this, 'get_batch_size' ) );
+		}
+
 		if ( empty( $assoc_args['post-processing'] ) ) {
 			$processors = tmsc_get_system_processors();
 			if ( ! empty( $args ) ) {
@@ -76,12 +81,6 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 			update_option( 'tmsc-processors-cursor', $processors );
 			wp_cache_delete( 'tmsc-processors-cursor', 'options' );
 
-
-			if ( ! empty( $assoc_args['batch_size'] ) ) {
-				$this->batch_size = (int) $assoc_args['batch_size'];
-				add_filter( 'tmsc_sync_batch_size', array( $this, 'get_batch_size' ) );
-			}
-
 			// Set-up a persistant connection.
 			\TMSC\TMSC_Sync::instance()->get_connection();
 
@@ -90,7 +89,7 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 			foreach ( $system_processors as $processor_slug => $processor_class_slug ) {
 				// Instantiate our processor.
 				$current_processor = \TMSC\TMSC::instance()->get_processor( $processor_class_slug );
-				$doing_migration = false;
+				$doing_migration = true;
 				$cursor = tmsc_get_cursor( $processor_slug );
 				do {
 
@@ -108,11 +107,10 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 						) );
 						$doing_migration = false;
 					}
-
 					$this->contain_memory_leaks();
-
-				} while ( ! $doing_migration );
+				} while ( $doing_migration );
 			}
+
 			\TMSC\TMSC_Sync::instance()->terminate_connection();
 			WP_CLI::success( 'Processor Migrations Complete!' );
 		}

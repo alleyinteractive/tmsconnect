@@ -22,7 +22,7 @@ class TMSConnect_Zone_Processor extends \TMSC\Database\TMSC_Processor {
 	 * Current taxonomy being migrated.
 	 * @var object
 	 */
-	public $current_zone;
+	public $current_zone = '';
 
 	/**
 	 * Constructor
@@ -30,7 +30,6 @@ class TMSConnect_Zone_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function __construct( $type ) {
 		parent::__construct( $type );
-		$this->zones = apply_filters( 'tmsc_curated_zones', array() );
 	}
 
 	/**
@@ -38,7 +37,11 @@ class TMSConnect_Zone_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return void
 	 */
 	public function run() {
+		$this->zones = apply_filters( 'tmsc_curated_zones', array() );
+
 		$cursor = $this->get_zone_cursor();
+		$this->current_zone = '';
+
 		foreach ( $this->zones as $zone_slug => $config ) {
 			if ( ! in_array( $zone_slug, $cursor['migrated'], true ) ) {
 				$this->current_zone = $zone_slug;
@@ -49,11 +52,23 @@ class TMSConnect_Zone_Processor extends \TMSC\Database\TMSC_Processor {
 		// If we have migrated all zones, set it as completed.
 		if ( ! empty( $this->current_zone ) ) {
 			// Wipe our zone posts before we update.
-			if ( ! empty( $this->get_object_query_stmt() ) && ! in_array( $this->current_zone, $cursor['migrated'], true ) && 0 === $cursor['offset'] ) {
+			if ( ! in_array( $this->current_zone, $cursor['migrated'], true ) && 0 === $cursor['offset'] ) {
 				global $zoninator;
 				$zoninator->remove_zone_posts( $this->current_zone, null );
 			}
-			parent::run();
+
+			if ( ! empty( $this->get_object_query_stmt() ) ) {
+				parent::run();
+			} else {
+				if ( empty( $cursor['migrated'] ) ) {
+					$cursor['migrated'] = array();
+				}
+				$cursor['migrated'][] = $this->current_zone;
+				$cursor['complete'] = false;
+				$cursor['offset'] = 0;
+				update_option( "tmsc-cursor-{$this->processor_type}", $cursor, false );
+				wp_cache_delete( "tmsc-cursor-{$this->processor_type}", 'options' );
+			}
 		} else {
 			tmsc_update_cursor( $this->processor_type, $this->batch_size, true );
 		}

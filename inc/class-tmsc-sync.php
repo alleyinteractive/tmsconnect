@@ -272,7 +272,6 @@ class TMSC_Sync {
 		$post_processing_data = $wpdb->get_results(
 			$wpdb->prepare( "SELECT post_id, meta_value from {$wpdb->postmeta} WHERE meta_key = %s", 'tmsc_post_processing' )
 		);
-
 		foreach ( $post_processing_data as $row ) {
 			$post_id = $row->post_id;
 			$processor_type = get_post_meta( $post_id, 'tmsc_processor_type' ,true );
@@ -290,10 +289,15 @@ class TMSC_Sync {
 								'no_found_rows' => true,
 								'post_type' => $relationship_map[ $key ]['slug'],
 								'post_status' => 'publish',
-								'meta_key' => 'tmsc_legacy_id',
-								'meta_value' => $ids,
-								'meta_compare' => 'IN',
+								'meta_query' => array(
+									array(
+										'key'     => 'tmsc_legacy_id',
+										'value'   => $ids[ $key ],
+										'compare' => 'IN',
+									),
+								),
 							) );
+
 							if ( ! empty( $related_posts ) ) {
 								update_post_meta( $post_id, $key, $related_posts );
 							}

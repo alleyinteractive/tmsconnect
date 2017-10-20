@@ -44,16 +44,13 @@ class TMSC_Zone extends \TMSC\Database\Migrateable {
 	 * @return boolean true if successfully saved
 	 */
 	public function save() {
-		if ( $this->before_save() ) {
-			return;
-		}
 		$this->load_existing();
+
 		if ( ! empty( $this->object->ID ) ) {
 			global $zoninator;
-			$zoninator->add_zone_posts( $this->processor->current_zone, $this->object->ID, true );
-
-			$this->after_save();
-
+			$zoninator->add_zone_posts( $this->processor->current_zone, array( $this->object->ID ), true );
+			// We don't really have an object here. So wipe it.
+			$this->object = null;
 			return true;
 		}
 		return false;

@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Taxonomy for Keywords.
+ * Taxonomy for Keywords Used for TMSConnect Specific Searching.
+ * Allows for keyword aliases.
  */
 class Tmsc_Taxonomy_Keywords extends Tmsc_Taxonomy {
 

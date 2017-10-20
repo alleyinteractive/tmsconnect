@@ -14,6 +14,7 @@ Author URI: http://www.alleyinteractive.com/
 */
 
 define( 'TMSCONNECT_PATH', dirname( __FILE__ ) );
+define( 'TMSCONNECT_DEBUG', true );
 
 require_once( TMSCONNECT_PATH . '/inc/class-tmsc.php' );
 require_once( TMSCONNECT_PATH . '/inc/class-plugin-dependency.php' );
