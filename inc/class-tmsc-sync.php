@@ -189,10 +189,31 @@ class TMSC_Sync {
 		exit();
 	}
 
+	/**
+	 * Set our custom event schedule.
+	 */
+	public function add_cron_recurrence_interval( $schedules ) {
+		// TODO: Make this configurable with the UI
+		$schedules['weekly'] = array(
+			'interval' => 604800,
+			'display' => __( 'Weekly', 'tmsc' ),
+		);
+
+		return $schedules;
+	}
+
+	/**
+	 * Ensure the weekly event happens on Sunday Evenings.
+	 */
+	public function set_next_occurance_time(){
+		// TODO: Make this configurable with the UI
+		return strtotime( 'next sunday 20:00:00' );
+	}
+
 	public function cron_events_activation() {
-		// Run our once a day.
+		// Run our sync weekly.
 		if ( ! wp_next_scheduled( 'tmsc_cron_events' ) ) {
-			wp_schedule_event( time(), 'daily', 'tmsc_cron_events' );
+			wp_schedule_event( $this->set_next_occurance_time(), 'weekly', 'tmsc_cron_events' );
 		}
 	}
 

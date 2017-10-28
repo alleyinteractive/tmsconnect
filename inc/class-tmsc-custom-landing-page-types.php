@@ -129,6 +129,13 @@ class TMSC_Custom_Landing_Page_Types {
 		// Set up child pages to have a standard post editor and author etc.
 		add_action( 'init', array( $this, 'add_post_type_supports' ) );
 
+		add_action( 'rewrite_rules_array', array( $this, 'set_subpage_rewrites' ) );
+
+		// Set our status filter urls properly
+		foreach ( $this->linked_types as $post_type => $taxonomies ) {
+			add_filter( "views_edit-{$post_type}", array( $this, 'set_status_filter_urls' ), 50 );
+		}
+
 		// Set it up so our custom landing pages display the correct posts in the admin area.
 		if ( is_admin() && ! wp_doing_ajax() ) {
 
@@ -136,11 +143,6 @@ class TMSC_Custom_Landing_Page_Types {
 			add_action( 'admin_init', array( $this, 'set_as_hierarchical' ) );
 
 			add_filter( 'admin_url', array( $this, 'add_new_custom_landing_page_url' ), 20, 3 );
-
-			// Set our status filter urls properly
-			foreach ( $this->linked_types as $post_type => $taxonomies ) {
-				add_filter( "views_edit-{$post_type}", array( $this, 'set_status_filter_urls' ), 50 );
-			}
 
 			// Add in a link to subpages on parent page.
 			add_filter( 'post_row_actions', array( $this, 'add_view_subpage_link_action' ), 20, 2 );
@@ -572,6 +574,45 @@ class TMSC_Custom_Landing_Page_Types {
 		return $actions;
 	}
 
+	/**
+	 * Append child slug to taxonomy permalink.
+	 */
+	public function get_subpage_permalink( $post_link, $post, $type, $term_id ) {
+		if ( 'taxonomy' === $type && $this->is_custom_landing_page_post_type( $post->post_type ) && ! empty( $post->post_parent ) ) {
+			$post_link = trailingslashit( $post_link ) . $post->post_name;
+		}
+		return $post_link;
+	}
+
+	/**
+	 * Add in proper rewrite rules for our child subpages.
+	 */
+	public function set_subpage_rewrites( $rules ) {
+		$new_rules = array();
+		foreach ( $this->types as $taxonomy => $config ) {
+			$post_type = $this->types[ $taxonomy ]['post_type'];
+			if ( ! empty( $post_type ) ) {
+				$rule = $taxonomy . '/([^/]+)/([^/]+)/?$';
+				$rewrite = 'index.php?' . $post_type . '=$matches[2]';
+				$new_rules[ $rule ] = $rewrite;
+			}
+		}
+
+		return array_merge( $new_rules, $rules );
+	}
+
+	/**
+	 * If we are on a child landing-page, make sure we allow the post type in the query.
+	 */
+	public function set_subpage_post_type( $canonical_post_types = array(), $landing_page_type = null, $landing_page_slug = null, $landing_page_term = null ) {
+		if ( is_single() ) {
+			$post_type = get_query_var( 'post_type' );
+			if ( ! empty( $post_type ) && $this->is_custom_landing_page_post_type( $post_type ) ) {
+				$canonical_post_types[] = $post_type;
+			}
+		}
+		return $canonical_post_types;
+	}
 
 	/**
 	 * Add input fields to specfic post list tables to allow for proper searching.

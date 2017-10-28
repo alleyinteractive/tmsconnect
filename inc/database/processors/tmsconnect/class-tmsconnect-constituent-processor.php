@@ -93,22 +93,24 @@ class TMSConnect_Constituent_Processor extends \TMSC\Database\TMSC_Processor {
 	 * @return array. An array taxonomy terms.
 	 */
 	public function get_constituent_roles() {
-		$roles = array();
-		$query_key = "{$this->object_query_key}_roles";
-		$stmt = apply_filters( "tmsc_{$this->processor_type}_roles_stmt_query", '', $this );
-		if ( ! empty( $stmt ) ) {
-			$results = $this->fetch_results( $stmt, $query_key );
-			foreach ( $results as $role ) {
-				$legacy_id = "{$this->constituent_types[ $role->TypeID ]}-{$role->ID}";
-				$existing_term = tmsc_get_term_by_legacy_id( $legacy_id, 'constituent_type' );
-				if ( empty( $existing_term ) ) {
-					$new_term = wp_insert_term( $role->Name, 'constituent_type', array( 'parent' => $this->constituent_types[ $role->TypeID ] ) );
-					$term_id = $new_term['term_id'];
-					add_term_meta( $term_id, 'tmsc_legacy_id', $legacy_id );
-				} else{
-					$term_id = $existing_term->term_id;
+		$roles = apply_filters( 'tmsc_set_constituent_roles', array() );
+		if ( empty( $roles ) ) {
+			$query_key = "{$this->object_query_key}_roles";
+			$stmt = apply_filters( "tmsc_{$this->processor_type}_roles_stmt_query", '', $this );
+			if ( ! empty( $stmt ) ) {
+				$results = $this->fetch_results( $stmt, $query_key );
+				foreach ( $results as $role ) {
+					$legacy_id = "{$this->constituent_types[ $role->TypeID ]}-{$role->ID}";
+					$existing_term = tmsc_get_term_by_legacy_id( $legacy_id, 'constituent_type' );
+					if ( empty( $existing_term ) ) {
+						$new_term = wp_insert_term( $role->Name, 'constituent_type', array( 'parent' => $this->constituent_types[ $role->TypeID ] ) );
+						$term_id = $new_term['term_id'];
+						add_term_meta( $term_id, 'tmsc_legacy_id', $legacy_id );
+					} else{
+						$term_id = $existing_term->term_id;
+					}
+					$roles[ $legacy_id ] = $term_id;
 				}
-				$roles[ $legacy_id ] = $term_id;
 			}
 		}
 		return $roles;
