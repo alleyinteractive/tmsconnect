@@ -14,9 +14,12 @@ Author URI: http://www.alleyinteractive.com/
 */
 
 define( 'TMSCONNECT_PATH', dirname( __FILE__ ) );
+define( 'TMSCONNECT_DEBUG', true );
 
 require_once( TMSCONNECT_PATH . '/inc/class-tmsc.php' );
 require_once( TMSCONNECT_PATH . '/inc/class-plugin-dependency.php' );
+require_once( TMSCONNECT_PATH . '/inc/trait-singleton.php' );
+
 
 /**
  * Return an array of all the processors of the current system.
@@ -32,6 +35,7 @@ function tmsc_get_system_processors() {
 		'exhibition' => __( 'Exhibition', 'tmsc' ),
 		'constituent' => __( 'Constituent', 'tmsc' ),
 		'object' => __( 'Object', 'tmsc' ),
+		'zone' => __( 'Zone', 'tmsc' ),
 	);
 	return apply_filters( 'tmsc_get_system_processors', $processors );
 }
@@ -57,8 +61,6 @@ function tmsc_init() {
 	// Global functions
 	require_once( TMSCONNECT_PATH . '/functions.php' );
 
-	// Singleton
-	require_once( TMSCONNECT_PATH . '/inc/trait-singleton.php' );
 	// Helper functions
 	require_once( TMSCONNECT_PATH . '/inc/helper-functions.php' );
 
@@ -105,6 +107,7 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-object.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-taxonomy.php' );
 	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-media.php' );
+	require_once( TMSCONNECT_PATH . '/inc/database/class-tmsc-zone.php' );
 
 	// The system this plugin is active for. Built with Freer_Sackler using mySQL.
 	foreach ( tmsc_get_system_processors() as $processor_slug => $processor_class_slug ) {
@@ -156,16 +159,16 @@ function tmsc_zone_init() {
 	if ( function_exists( 'z_get_zoninator' ) ) {
 
 		// Iterate through the defined zones. If any exist already, skip them.
-		foreach ( $default_zones as $zone ) {
+		foreach ( $default_zones as $slug => $zone ) {
 			// Make sure these zones are defined correctly.
-			if ( ! isset( $zone['slug'] ) || ! isset( $zone['name'] ) ) {
+			if ( ! isset( $slug ) || ! isset( $zone['name'] ) ) {
 				continue;
 			}
 
 			// Check if the zone exists before adding.
-			if ( false === z_get_zone( $zone['slug'] ) ) {
+			if ( false === z_get_zone( $slug ) ) {
 				// Add the zone.
-				$result = z_get_zoninator()->insert_zone( $zone['slug'], $zone['name'], array( 'description' => $zone['description'] ) );
+				$result = z_get_zoninator()->insert_zone( $slug, $zone['name'], array( 'description' => $zone['description'] ) );
 
 				// Set the message to display to the user based on the result.
 				if ( is_wp_error( $result ) ) {

@@ -189,10 +189,31 @@ class TMSC_Sync {
 		exit();
 	}
 
+	/**
+	 * Set our custom event schedule.
+	 */
+	public function add_cron_recurrence_interval( $schedules ) {
+		// TODO: Make this configurable with the UI
+		$schedules['weekly'] = array(
+			'interval' => 604800,
+			'display' => __( 'Weekly', 'tmsc' ),
+		);
+
+		return $schedules;
+	}
+
+	/**
+	 * Ensure the weekly event happens on Sunday Evenings.
+	 */
+	public function set_next_occurance_time(){
+		// TODO: Make this configurable with the UI
+		return strtotime( 'next sunday 20:00:00' );
+	}
+
 	public function cron_events_activation() {
-		// Run our once a day.
+		// Run our sync weekly.
 		if ( ! wp_next_scheduled( 'tmsc_cron_events' ) ) {
-			wp_schedule_event( time(), 'daily', 'tmsc_cron_events' );
+			wp_schedule_event( $this->set_next_occurance_time(), 'weekly', 'tmsc_cron_events' );
 		}
 	}
 
@@ -239,12 +260,11 @@ class TMSC_Sync {
 		if ( ! empty( $current_processor_class_slug ) ) {
 			// Migrate our objects and taxonomies.
 			\TMSC\TMSC::instance()->migrate( $current_processor_class_slug );
-			self::$instance->terminate_connection();
 			wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
 		} else {
-			self::$instance->terminate_connection();
 			wp_schedule_single_event( time(), 'tmsc_complete_sync', array() );
 		}
+		self::$instance->terminate_connection();
 	}
 
 	/**
@@ -273,7 +293,6 @@ class TMSC_Sync {
 		$post_processing_data = $wpdb->get_results(
 			$wpdb->prepare( "SELECT post_id, meta_value from {$wpdb->postmeta} WHERE meta_key = %s", 'tmsc_post_processing' )
 		);
-
 		foreach ( $post_processing_data as $row ) {
 			$post_id = $row->post_id;
 			$processor_type = get_post_meta( $post_id, 'tmsc_processor_type' ,true );
@@ -282,20 +301,27 @@ class TMSC_Sync {
 				$data = maybe_unserialize( $row->meta_value );
 
 				foreach ( $data as $key => $ids ) {
-					if ( 'post' === $relationship_map[ $key ]['type'] && ! empty( $ids ) ) {
-						$related_posts = get_posts( array(
-							'fields' => 'ids',
-							'suppress_filters' => false,
-							'ignore_sticky_posts' => true,
-							'no_found_rows' => true,
-							'post_type' => $relationship_map[ $key ]['slug'],
-							'post_status' => 'publish',
-							'meta_key' => 'tmsc_legacy_id',
-							'meta_value' => $ids,
-							'meta_compare' => 'IN',
-						) );
-						if ( ! empty( $related_posts ) ) {
-							update_post_meta( $post_id, $key, $related_posts );
+					if ( ! empty( $ids ) ) {
+						if ( 'post' === $relationship_map[ $key ]['type'] ) {
+							$related_posts = get_posts( array(
+								'fields' => 'ids',
+								'suppress_filters' => false,
+								'ignore_sticky_posts' => true,
+								'no_found_rows' => true,
+								'post_type' => $relationship_map[ $key ]['slug'],
+								'post_status' => 'publish',
+								'meta_query' => array(
+									array(
+										'key'     => 'tmsc_legacy_id',
+										'value'   => $ids[ $key ],
+										'compare' => 'IN',
+									),
+								),
+							) );
+
+							if ( ! empty( $related_posts ) ) {
+								update_post_meta( $post_id, $key, $related_posts );
+							}
 						}
 					}
 				}

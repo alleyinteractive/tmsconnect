@@ -160,3 +160,33 @@ function tmsc_get_linked_types() {
  */
 function tmsc_get_related_tms_objects() {
 }
+
+/**
+ * A generic debugger function. Requires `TMSCONNECT_DEBUG` constant to be true.
+ * @param mixed $value. The value to output for debugging.
+ * @return void.
+ */
+function tmsc_debug( $value ) {
+	if ( defined( 'TMSCONNECT_DEBUG' ) && TMSCONNECT_DEBUG ) {
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			\WP_CLI::line( $value );
+		} else {
+			if ( 'STD_OUT' === TMSCONNECT_DEBUG ) {
+				echo '<pre>';
+				print_r( $value );
+				echo '</pre>';
+			} else {
+				error_log(
+					strtr(
+						print_r( $value, true),
+						array(
+							"\r\n"=>PHP_EOL,
+							"\r"=>PHP_EOL,
+							"\n"=>PHP_EOL,
+						)
+					)
+				);
+			}
+		}
+	}
+}

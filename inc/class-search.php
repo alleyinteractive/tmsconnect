@@ -11,7 +11,7 @@ namespace TMSC;
  * Search
  */
 class Search {
-	use Singleton;
+	use \TMSC\Singleton;
 
 	/**
 	 * Setup the singleton and kick off our search modifications.

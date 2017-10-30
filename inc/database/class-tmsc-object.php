@@ -91,7 +91,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return int unix timestamp
 	 */
 	public function get_pubdate(){
-		$default = ( ! empty( $this->object ) && (int) date('Y', strtotime( $this->object->post_date ) ) > 1970 ) ? $this->object->post_date : current_time( 'mysql' );
+		$default = ( ! empty( $this->object ) && (int) date('Y', strtotime( $this->object->post_date ) ) > 1970 ) ? $this->object->post_date : current_time( 'Y-m-d H:i:s' );
 		return apply_filters( "tmsc_set_{$this->name}_pubdate", $default, $this->raw );
 	}
 
@@ -219,7 +219,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * @return WP_Object Object
 	 */
 	public function save_post() {
-		$date = date( 'Y-m-d H:i:s', $this->get_pubdate() );
+		$date = $this->get_pubdate();
 
 		$post = array(
 			'ID' => empty( $this->object->ID ) ? 0 : $this->object->ID,
@@ -289,8 +289,12 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 */
 	public function save_related_objects() {
 		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ID ) ) {
-			// Store with migratable type as key.
-			$related_ids = $this->processor->get_related_objects( $this->raw->ID );
+			$relationships = apply_filters( 'tmsc_object_relationship_map', array() );
+			$related_ids = array();
+			foreach ( $relationships as $key => $config ) {
+				// Store with migratable type as key.
+				$related_ids[ $key ] = $this->processor->get_related( $this->raw->ID, $key, $config );
+			}
 			if ( ! empty( $related_ids ) ) {
 				$this->update_meta( 'tmsc_post_processing', $related_ids );
 			}
