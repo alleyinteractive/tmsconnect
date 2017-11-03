@@ -242,6 +242,15 @@ class TMSC_Sync {
 		// Set-up a persistant connection.
 		self::$instance->get_connection();
 
+		// Disable SearchPress so we don't index until we are completed.
+		if ( function_exists( 'SP_Config' ) ) {
+			if ( SP_Config()->get_setting( 'active' ) ) {
+				SP_Config()->update_settings( array( 'must_init' => false, 'active' => false, 'last_beat' => false ) );
+				SP_Config()->flush();
+			}
+		}
+
+
 		$system_processors = get_option( 'tmsc-processors-cursor', tmsc_get_system_processors() );
 		// Register and instantiate processors
 		foreach ( $system_processors as $processor_slug => $processor_class_slug ) {
@@ -279,6 +288,17 @@ class TMSC_Sync {
 		delete_option( 'tmsc-processors-cursor' );
 
 		$message = date( 'Y-m-d H:i:s' );
+
+		// Enable SP and index.
+		if ( function_exists( 'SP_Config' ) ) {
+			if ( ! SP_Config()->get_setting( 'active' ) ) {
+				SP_Config()->update_settings( array( 'must_init' => false, 'active' => false, 'last_beat' => false ) );
+				SP_Config()->flush();
+				SP_Config()->create_mapping();
+				SP_Sync_Manager()->do_cron_reindex();
+
+			}
+		}
 
 		// Set sync status and clear our message cache.
 		tmsc_set_sync_status( $message );
@@ -322,6 +342,38 @@ class TMSC_Sync {
 							if ( ! empty( $related_posts ) ) {
 								update_post_meta( $post_id, $key, $related_posts );
 							}
+						}
+					} elseif ( 'constituent' === $relationship_map[ $key ]['type'] ) {
+						foreach ( $ids as $constituent_type_slug => $role_data ) {
+							$meta_data = array();
+							foreach( $role_data as $role_slug => $constituent_ids ) {
+								$related_constituents = get_posts( array(
+									'fields' => 'ids',
+									'suppress_filters' => false,
+									'ignore_sticky_posts' => true,
+									'no_found_rows' => true,
+									'post_type' => $relationship_map[ $key ]['slug'],
+									'post_status' => 'publish',
+									'meta_query' => array(
+										array(
+											'key'     => 'tmsc_legacy_id',
+											'value'   => $constituent_ids,
+											'compare' => 'IN',
+										),
+									),
+								) );
+								if ( ! empty( $related_constituents ) ) {
+									$meta_data[ $role_slug ] = $related_constituents;
+								}
+							}
+							update_post_meta( $post_id, $constituent_type_slug, $meta_data );
+						}
+					} elseif ( 'link' === $relationship_map[ $key ]['type'] ) {
+						$link_meta = array();
+						foreach ( $ids as $resource_data ) {
+							$link_meta[] = array(
+								'link' => $resource_data,
+							);
 						}
 					}
 				}

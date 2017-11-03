@@ -72,7 +72,7 @@ function tmsc_add_post_type_meta_boxes( $type ) {
 						'add_more_label' => __( 'Add', 'tmsc' ),
 						'sortable' => true,
 						'children' => array(
-							'links' => new Fieldmanager_Group( array(
+							'link' => new Fieldmanager_Group( array(
 								'children' => array(
 									'url' => new Fieldmanager_Textfield( array(
 										'label' => __( 'Url', 'tmsc' ),
@@ -82,6 +82,7 @@ function tmsc_add_post_type_meta_boxes( $type ) {
 									) ),
 									'image' => new Fieldmanager_Textfield( array(
 										'label' => __( 'Image Url', 'tmsc' ),
+										'description' => __( 'Link to an external image', 'tmsc' ),
 									) ),
 								),
 							) ),
@@ -99,13 +100,13 @@ function tmsc_add_post_type_meta_boxes( $type ) {
 			$constituent_types = get_terms( array(
 				'taxonomy' => 'constituent_type',
 				'hide_empty' => false,
-				'child_of' => 0,
+				'parent' => 0,
 			) );
 			foreach ( $constituent_types as $type_term ) {
 				$type_roles = get_terms( array(
 					'taxonomy' => 'constituent_type',
 					'hide_empty' => false,
-					'child_of' => $type_term->term_id,
+					'parent' => $type_term->term_id,
 				) );
 				if ( ! empty( $type_roles ) ) {
 					$roles = array();
