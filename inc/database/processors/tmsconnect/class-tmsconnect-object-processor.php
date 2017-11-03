@@ -91,8 +91,49 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 		$relationship_data = array();
 		if ( ! empty( $stmt ) ) {
 			$results = $this->fetch_results( $stmt, $query_key );
-			$relationship_data[ $key ] = wp_list_pluck( $results, 'ID' );
+			// Check results and conditionally map data based on field vlaues of a result row. Used with constituents and any other complex meta mappings of legacy IDs.
+			if ( ! empty( $config['keys'] ) ) {
+				// Iterate through our results to map keys to data.
+				foreach ( $results as $row ) {
+					$relationship_keys = array();
+					foreach ( $config['keys'] as $conditional_key => $data ) {
+						if ( empty( $relationship_data[ $conditional_key ] ) ) {
+							$relationship_data[ $conditional_key ] = array();
+						}
+						if ( ! empty( $data['conditions'] ) ) {
+							$conditions = $data['conditions'];
+						} else {
+							$conditions = $data;
+						}
+
+						$meets_conditions = $this->meets_condtitons( $row, $conditions );
+						if ( $meets_conditions ) {
+							if ( ! empty( $data['subkey'] ) ) {
+								if ( empty( $relationship_data[ $conditional_key ][ $data['subkey'] ] ) ) {
+									$relationship_data[ $conditional_key ][ $data['subkey'] ] = array();
+								}
+								$relationship_data[ $conditional_key ][ $data['subkey'] ][] = $row->ID;
+							} else {
+								$relationship_data[ $conditional_key ][] = $row->ID;
+							}
+						}
+					}
+				}
+			} elseif ( 'link' === $config['type'] ) {
+				$relationship_data[ $key ] = $results;
+			} else {
+				$relationship_data[ $key ] = wp_list_pluck( $results, 'ID' );
+			}
 		}
 		return $relationship_data;
+	}
+
+	public function meet_conditions( $data, $conditions ) {
+		foreach ( $conditions as $field => $value ) {
+			if ( $data->{$field} !== $value ) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

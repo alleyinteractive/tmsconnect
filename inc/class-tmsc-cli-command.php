@@ -81,6 +81,9 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 			update_option( 'tmsc-processors-cursor', $processors );
 			wp_cache_delete( 'tmsc-processors-cursor', 'options' );
 
+			$message = __( 'Syncing TMS Objects', 'tmsc' );
+			tmsc_set_sync_status( $message );
+
 			// Set-up a persistant connection.
 			\TMSC\TMSC_Sync::instance()->get_connection();
 
