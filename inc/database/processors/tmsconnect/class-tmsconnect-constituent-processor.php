@@ -103,15 +103,20 @@ class TMSConnect_Constituent_Processor extends \TMSC\Database\TMSC_Processor {
 					$legacy_id = "{$this->constituent_types[ $role->ID ]}-{$role->RoleID}";
 					$existing_term = tmsc_get_term_by_legacy_id( $legacy_id, 'constituent_type' );
 					if ( empty( $existing_term ) ) {
-						$new_term = wp_insert_term( $role->Name, 'constituent_type', array( 'parent' => $this->constituent_types[ $role->TypeID ] ) );
-						$term_id = $new_term['term_id'];
-						add_term_meta( $term_id, 'tmsc_legacy_id', $legacy_id );
-						add_term_meta( $term_id, 'constituent_role_id', $role->RoleID );
-						add_term_meta( $term_id, 'constituent_type_id', $role->ID );
+						$parent_term = tmsc_get_term_by_legacy_id( $role->ID, 'constituent_type' );
+						$new_term = wp_insert_term( $role->Role, 'constituent_type', array( 'parent' => $parent_term->term_id ) );
+						if ( ! empty( $new_term ) && ! is_wp_error( $new_term ) ) {
+							$term_id = $new_term['term_id'];
+							add_term_meta( $term_id, 'tmsc_legacy_id', $legacy_id );
+							add_term_meta( $term_id, 'constituent_role_id', $role->RoleID );
+							add_term_meta( $term_id, 'constituent_type_id', $role->ID );
+						}
 					} else{
 						$term_id = $existing_term->term_id;
 					}
-					$roles[ $legacy_id ] = $term_id;
+					if ( ! empty( $term_id ) ) {
+						$roles[ $legacy_id ] = $term_id;
+					}
 				}
 			}
 		}
