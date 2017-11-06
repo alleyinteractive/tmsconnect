@@ -106,7 +106,7 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 							$conditions = $data;
 						}
 
-						$meets_conditions = $this->meets_condtitons( $row, $conditions );
+						$meets_conditions = $this->meets_condtitions( $row, $conditions );
 						if ( $meets_conditions ) {
 							if ( ! empty( $data['subkey'] ) ) {
 								if ( empty( $relationship_data[ $conditional_key ][ $data['subkey'] ] ) ) {
@@ -128,7 +128,7 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 		return $relationship_data;
 	}
 
-	public function meet_conditions( $data, $conditions ) {
+	public function meets_conditions( $data, $conditions ) {
 		foreach ( $conditions as $field => $value ) {
 			if ( $data->{$field} !== $value ) {
 				return false;
