@@ -378,7 +378,9 @@ class TMSC_Sync {
 					}
 				}
 			}
-			delete_post_meta( $post_id, 'tmsc_post_processing' );
+			if ( apply_filters( 'tmsc_delete_post_processing_data', false ) ) {
+				delete_post_meta( $post_id, 'tmsc_post_processing' );
+			}
 		}
 		self::$instance->update_term_count();
 	}
