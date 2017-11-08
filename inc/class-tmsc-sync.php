@@ -370,10 +370,14 @@ class TMSC_Sync {
 						}
 					} elseif ( 'link' === $relationship_map[ $key ]['type'] ) {
 						$link_meta = array();
-						foreach ( $ids as $resource_data ) {
-							$link_meta[] = array(
-								'link' => $resource_data,
-							);
+						if ( apply_filters( 'tmsc_enable_links', false ) ) {
+							// TODO: Bookmark Integration
+						} else {
+							foreach ( $ids as $resource_data ) {
+								$link_meta[] = array(
+									'link' => $resource_data,
+								);
+							}
 						}
 					}
 				}
