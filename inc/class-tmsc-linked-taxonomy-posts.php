@@ -72,7 +72,7 @@ class TMSC_Linked_Taxonomy_Posts {
 	public function set_hooks() {
 		add_action( 'init', array( $this, 'manage_linked_taxonomy_caps' ), 50 );
 
-		if ( is_admin() || defined( 'DOING_CRON' ) ) {
+		if ( is_admin() || defined( 'DOING_CRON' ) || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
 			// Save our linked taxonomies when a post is created/edited.
 			foreach ( $this->linked_types as $post_type => $tax ) {
 				// Our link save post logic

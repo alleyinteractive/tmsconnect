@@ -370,15 +370,21 @@ class TMSC_Sync {
 						}
 					} elseif ( 'link' === $relationship_map[ $key ]['type'] ) {
 						$link_meta = array();
-						foreach ( $ids as $resource_data ) {
-							$link_meta[] = array(
-								'link' => $resource_data,
-							);
+						if ( apply_filters( 'tmsc_enable_links', false ) ) {
+							// TODO: Bookmark Integration
+						} else {
+							foreach ( $ids as $resource_data ) {
+								$link_meta[] = array(
+									'link' => $resource_data,
+								);
+							}
 						}
 					}
 				}
 			}
-			delete_post_meta( $post_id, 'tmsc_post_processing' );
+			if ( apply_filters( 'tmsc_delete_post_processing_data', false ) ) {
+				delete_post_meta( $post_id, 'tmsc_post_processing' );
+			}
 		}
 		self::$instance->update_term_count();
 	}

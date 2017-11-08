@@ -67,6 +67,11 @@ class TMSC {
 
 		// Setup our search class
 		require_once( TMSCONNECT_PATH . '/inc/class-search.php' );
+
+		// Enable Links
+		if ( apply_filters( 'tmsc_enable_links', false ) ) {
+			add_filter( 'pre_option_link_manager_enabled', '__return_true' );
+		}
 	}
 
 	/**
