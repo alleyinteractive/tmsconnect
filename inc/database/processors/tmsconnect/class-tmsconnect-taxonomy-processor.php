@@ -125,4 +125,20 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 		}
 		return;
 	}
+
+	/**
+	 * Get the related WP terms of a given TMS Object ID.
+	 * @param int $object_id. TMS raw Object ID.
+	 * @return array. An associate array of taxonmies and it's term ids. array( 'taxonomy-slug' => array( 1, 2... ) ).
+	 */
+	public function get_related_terms( $object_id ) {
+		$terms = array();
+		$query_key = $this->object_query_key . '_terms';
+		$stmt = apply_filters( "tmsc_{$this->processor_type}_related_terms_stmt_query", '', $object_id );
+		if ( ! empty( $stmt ) ) {
+			return $this->fetch_results( $stmt, $query_key );
+		}
+		return $terms;
+	}
+
 }

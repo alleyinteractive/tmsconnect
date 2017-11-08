@@ -101,6 +101,9 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 				}
 			}
 
+			// Save term relationships
+			$this->save_related_terms();
+
 			$this->after_save();
 
 			return true;
@@ -142,6 +145,37 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 
 		// Return a pseudo term object
 		return (object) array( 'taxonomy' => $this->taxonomy, 'term_id' => $term_id );
+	}
+
+
+	/**
+	 * Save additional terms that might be related to the associated terms such as search term equivalents.
+	 * @return void
+	 */
+	public function save_related_terms() {
+		if ( ! empty( $this->object->term_id ) && ! empty( $this->raw->CN ) ) {
+			$terms = $this->processor->get_related_terms( $this->raw->CN );
+			if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
+				foreach ( $terms as $related_term ) {
+					$return = wp_insert_term( $related_term->Term, $related_term->taxonomy );
+					if ( is_wp_error( $return ) ) {
+						// This should not really fire once data has been properly loaded.
+						// Adding it in to rewrite incorrect data during testing phase.
+						if ( ! empty( $return->error_data['term_exists'] ) ) {
+							$term_id = $return->error_data['term_exists'];
+							$this->update( $term_id, $this->taxonomy, $args );
+						} else {
+							return false;
+						}
+					} else {
+						$term_id = $return['term_id'];
+					}
+					$this->stmt_queue[] = array( 'update_term_meta', array( $term_id, 'tmsc_legacy_CN', $this->raw->CN ) );
+					$this->stmt_queue[] = array( 'update_term_meta', array( $term_id, 'tmsc_legacy_id', $related_term->TermID ) );
+					$this->stmt_queue[] = array( 'update_term_meta', array( $term_id, 'tmsc_related_term_id', $this->object->term_id ) );
+				}
+			}
+		}
 	}
 
 	/**
