@@ -79,6 +79,7 @@ function tmsc_init() {
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-classification.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-collection.php' );
+	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-collection-area.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-constituents.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-constituent-type.php' );
 	require_once( TMSCONNECT_PATH . '/inc/taxonomies/class-tmsc-taxonomy-exhibitions.php' );

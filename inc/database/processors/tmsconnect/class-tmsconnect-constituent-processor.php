@@ -160,7 +160,7 @@ class TMSConnect_Constituent_Processor extends \TMSC\Database\TMSC_Processor {
 		$relationship_data = array();
 		if ( ! empty( $stmt ) ) {
 			$results = $this->fetch_results( $stmt, $query_key );
-			$relationship_data[ $key ] = wp_list_pluck( $results, 'ID' );
+			$relationship_data = wp_list_pluck( $results, 'ID' );
 		}
 		return $relationship_data;
 	}

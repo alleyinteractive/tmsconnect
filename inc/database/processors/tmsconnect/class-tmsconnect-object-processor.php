@@ -120,9 +120,9 @@ class TMSConnect_Object_Processor extends \TMSC\Database\TMSC_Processor {
 					}
 				}
 			} elseif ( 'link' === $config['type'] ) {
-				$relationship_data[ $key ] = $results;
+				$relationship_data = $results;
 			} else {
-				$relationship_data[ $key ] = wp_list_pluck( $results, 'ID' );
+				$relationship_data = wp_list_pluck( $results, 'ID' );
 			}
 		}
 		return $relationship_data;

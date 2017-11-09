@@ -296,7 +296,6 @@ class TMSC_Sync {
 				SP_Config()->flush();
 				SP_Config()->create_mapping();
 				SP_Sync_Manager()->do_cron_reindex();
-
 			}
 		}
 
