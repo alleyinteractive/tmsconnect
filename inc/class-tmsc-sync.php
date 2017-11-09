@@ -296,7 +296,6 @@ class TMSC_Sync {
 				SP_Config()->flush();
 				SP_Config()->create_mapping();
 				SP_Sync_Manager()->do_cron_reindex();
-
 			}
 		}
 
@@ -321,8 +320,8 @@ class TMSC_Sync {
 				$data = maybe_unserialize( $row->meta_value );
 
 				foreach ( $data as $key => $ids ) {
-					if ( ! empty( $ids ) ) {
-						if ( 'post' === $relationship_map[ $key ]['type'] ) {
+					if ( ! empty( $ids ) && ! empty( $relationship_map[ $key ]['type'] ) ) {
+						if ( 'post' === $relationship_map[ $key ]['type'] && ! empty( $ids[ $key ] ) ) {
 							$related_posts = get_posts( array(
 								'fields' => 'ids',
 								'suppress_filters' => false,
@@ -342,41 +341,48 @@ class TMSC_Sync {
 							if ( ! empty( $related_posts ) ) {
 								update_post_meta( $post_id, $key, $related_posts );
 							}
-						}
-					} elseif ( 'constituent' === $relationship_map[ $key ]['type'] ) {
-						foreach ( $ids as $constituent_type_slug => $role_data ) {
-							$meta_data = array();
-							foreach( $role_data as $role_slug => $constituent_ids ) {
-								$related_constituents = get_posts( array(
-									'fields' => 'ids',
-									'suppress_filters' => false,
-									'ignore_sticky_posts' => true,
-									'no_found_rows' => true,
-									'post_type' => $relationship_map[ $key ]['slug'],
-									'post_status' => 'publish',
-									'meta_query' => array(
-										array(
-											'key'     => 'tmsc_legacy_id',
-											'value'   => $constituent_ids,
-											'compare' => 'IN',
-										),
-									),
-								) );
-								if ( ! empty( $related_constituents ) ) {
-									$meta_data[ $role_slug ] = $related_constituents;
+						} elseif ( 'constituent' === $relationship_map[ $key ]['type'] ) {
+							foreach ( $ids as $constituent_type_slug => $role_data ) {
+								$meta_data = array();
+								foreach( $role_data as $role_slug => $constituent_ids ) {
+									if ( ! empty( $constituent_ids ) ) {
+										$related_constituents = get_posts( array(
+											'fields' => 'ids',
+											'suppress_filters' => false,
+											'ignore_sticky_posts' => true,
+											'no_found_rows' => true,
+											'post_type' => $relationship_map[ $key ]['slug'],
+											'post_status' => 'publish',
+											'meta_query' => array(
+												array(
+													'key'     => 'tmsc_legacy_id',
+													'value'   => $constituent_ids,
+													'compare' => 'IN',
+												),
+											),
+										) );
+										if ( ! empty( $related_constituents ) ) {
+											$meta_data[ $role_slug ] = $related_constituents;
+										}
+									}
+								}
+								if ( ! empty( $meta_data ) ) {
+									update_post_meta( $post_id, $constituent_type_slug, $meta_data );
 								}
 							}
-							update_post_meta( $post_id, $constituent_type_slug, $meta_data );
-						}
-					} elseif ( 'link' === $relationship_map[ $key ]['type'] ) {
-						$link_meta = array();
-						if ( apply_filters( 'tmsc_enable_links', false ) ) {
-							// TODO: Bookmark Integration
-						} else {
-							foreach ( $ids as $resource_data ) {
-								$link_meta[] = array(
-									'link' => $resource_data,
-								);
+						} elseif ( 'link' === $relationship_map[ $key ]['type'] ) {
+							$link_meta = array();
+							if ( apply_filters( 'tmsc_enable_links', false ) ) {
+								// TODO: Bookmark Integration
+							} else {
+								foreach ( $ids as $resource_data ) {
+									$link_meta[] = array(
+										'link' => $resource_data,
+									);
+								}
+								if ( ! empty( $link_meta ) ) {
+									update_post_meta( $post_id, $key, $link_meta );
+								}
 							}
 						}
 					}

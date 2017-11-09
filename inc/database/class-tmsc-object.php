@@ -289,7 +289,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 */
 	public function save_related_objects() {
 		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ID ) ) {
-			$relationships = apply_filters( 'tmsc_object_relationship_map', array() );
+			$relationships = apply_filters( "tmsc_{$this->processor->processor_type}_relationship_map", array() );
 			$related_ids = array();
 			foreach ( $relationships as $key => $config ) {
 				// Store with migratable type as key.
