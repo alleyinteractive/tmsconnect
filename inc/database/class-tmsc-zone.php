@@ -35,7 +35,7 @@ class TMSC_Zone extends \TMSC\Database\Migrateable {
 	public function load_existing() {
 		$this->object = null;
 		if ( ! empty( $this->get_legacy_id() ) ) {
-			$this->object = tmsc_get_object_by_legacy_id( $this->get_legacy_id(), 'tms_object' );
+			$this->object = tmsc_get_object_by_legacy_id( $this->get_legacy_id(), $this->processor->zone_post_type );
 		}
 	}
 
