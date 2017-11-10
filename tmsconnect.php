@@ -175,6 +175,28 @@ function tmsc_zone_init() {
 }
 register_activation_hook( __FILE__, 'tmsc_zone_init' );
 
+
+/**
+ * Add the Zoninator taxonomy to the custom post types that require it.
+ * The function calls below just return false if either the taxonomy or post type doesn't exist.
+ *
+ * @access public
+ * @return void
+ */
+function tmsc_zoninator_post_type_support() {
+	$post_types = apply_filters( 'tmsc_curated_zones_post_types', array( 'post', 'tms_object', 'exhibition', 'constituent' ) );
+	// Add the Zoninator taxonomy for the defined post types
+	foreach ( $post_types as $post_type ) {
+		add_post_type_support( $post_type, 'zoninator_zones' );
+		register_taxonomy_for_object_type( 'zoninator_zones', $post_type );
+	}
+	// The Zoninator internal post_types array has already been written and cached by this point.
+	// We must override it to enabled these post types for the recent posts dropdown and AJAX searches.
+	z_get_zoninator()->post_types = $post_types;
+}
+// Add post type support
+add_action( 'zoninator_post_init', 'tmsc_zoninator_post_type_support', 99 );
+
 /**
  * Get the base URL for this plugin.
  * @return string URL pointing to Fieldmanager Plugin top directory.

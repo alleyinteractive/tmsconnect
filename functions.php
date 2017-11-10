@@ -169,7 +169,7 @@ function tmsc_get_related_tms_objects() {
 function tmsc_debug( $value ) {
 	if ( defined( 'TMSCONNECT_DEBUG' ) && TMSCONNECT_DEBUG ) {
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			\WP_CLI::line( $value );
+			\WP_CLI::line( print_r( $value, true ) );
 		} else {
 			if ( 'STD_OUT' === TMSCONNECT_DEBUG ) {
 				echo '<pre>';

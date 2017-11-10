@@ -28,6 +28,21 @@ class Search {
 		add_filter( 'es_admin_query_attachments_searchable_fields', [ $this, 'es_admin_query_attachments_searchable_fields' ], 10, 2 );
 		add_action( 'es_admin_integration_pre_get_posts', [ $this, 'es_admin_integration_pre_get_posts' ] );
 		add_filter( 'es_admin_adapter', [ $this, 'es_admin_adapter' ] );
+
+		if ( class_exists( 'SP_Config' ) && SP_Config()->get_setting( 'active' ) && function_exists( 'es_get_posts' ) ) {
+			es_wp_query_load_adapter( 'searchpress' );
+			add_filter( 'fm_zones_get_posts_query_args', array( $this, 'es_for_fm_zones' ), 10, 1 );
+		}
+	}
+
+	/**
+	 * Turn on elastic search for fm_zones
+	 * @param  array  $args get_posts args for the fm_zone
+	 * @return array
+	 */
+	public function es_for_fm_zones( $args = array() ) {
+		$args['es'] = true;
+		return $args;
 	}
 
 	/**
@@ -132,5 +147,3 @@ function TMSC_Search() {
 }
 // Initial call to setup instance
 add_action( 'after_setup_theme', __NAMESPACE__ . '\\TMSC_Search' );
-
-

@@ -25,6 +25,12 @@ class TMSConnect_Zone_Processor extends \TMSC\Database\TMSC_Processor {
 	public $current_zone = '';
 
 	/**
+	 * Current taxonomy being migrated.
+	 * @var array|string.
+	 */
+	public $zone_post_type =  array();
+
+	/**
 	 * Constructor
 	 * @param string $type
 	 */
@@ -40,11 +46,13 @@ class TMSConnect_Zone_Processor extends \TMSC\Database\TMSC_Processor {
 		$this->zones = apply_filters( 'tmsc_curated_zones', array() );
 
 		$cursor = $this->get_zone_cursor();
+
 		$this->current_zone = '';
 
 		foreach ( $this->zones as $zone_slug => $config ) {
 			if ( ! in_array( $zone_slug, $cursor['migrated'], true ) ) {
 				$this->current_zone = $zone_slug;
+				$this->zone_post_type = ( ! empty( $config['post_type'] ) ) ? $config['post_type'] : 'tms_object';
 				break;
 			}
 		}
