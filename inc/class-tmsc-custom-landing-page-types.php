@@ -591,9 +591,11 @@ class TMSC_Custom_Landing_Page_Types {
 		foreach ( $this->types as $taxonomy => $config ) {
 			$post_type = $this->types[ $taxonomy ]['post_type'];
 			if ( ! empty( $post_type ) ) {
-				$rule = '^' . $taxonomy . '/([^/]+)/([^/]+)/?$';
+				$tax_rule = '^' . $taxonomy . '/([^/]+)/([^/]+)/?$';
+				$post_type_rule = '^' . $post_type . '/([^/]+)/([^/]+)/?$';
 				$rewrite = 'index.php?' . $post_type . '=$matches[2]';
-				add_rewrite_rule( $rule, $rewrite, 'top' );
+				add_rewrite_rule( $tax_rule, $rewrite, 'top' );
+				add_rewrite_rule( $post_type_rule, $rewrite, 'top' );
 			}
 		}
 	}
