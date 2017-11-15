@@ -587,18 +587,15 @@ class TMSC_Custom_Landing_Page_Types {
 	/**
 	 * Add in proper rewrite rules for our child subpages.
 	 */
-	public function set_subpage_rewrites( $rules ) {
-		$new_rules = array();
+	public function set_subpage_rewrites() {
 		foreach ( $this->types as $taxonomy => $config ) {
 			$post_type = $this->types[ $taxonomy ]['post_type'];
 			if ( ! empty( $post_type ) ) {
-				$rule = $taxonomy . '/([^/]+)/([^/]+)/?$';
+				$rule = '^' . $taxonomy . '/([^/]+)/([^/]+)/?$';
 				$rewrite = 'index.php?' . $post_type . '=$matches[2]';
-				$new_rules[ $rule ] = $rewrite;
+				add_rewrite_rule( $rule, $rewrite, 'top' );
 			}
 		}
-
-		return array_merge( $new_rules, $rules );
 	}
 
 	/**
