@@ -129,7 +129,7 @@ class TMSC_Custom_Landing_Page_Types {
 		// Set up child pages to have a standard post editor and author etc.
 		add_action( 'init', array( $this, 'add_post_type_supports' ) );
 
-		add_action( 'rewrite_rules_array', array( $this, 'set_subpage_rewrites' ) );
+		add_action( 'init', array( $this, 'set_subpage_rewrites' ) );
 
 		// Set our status filter urls properly
 		foreach ( $this->linked_types as $post_type => $taxonomies ) {
