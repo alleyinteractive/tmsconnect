@@ -71,5 +71,6 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 		if ( ! empty( $stmt ) ) {
 			return $this->fetch_results( $stmt, $query_key );
 		}
+		return array();
 	}
 }

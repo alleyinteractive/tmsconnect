@@ -101,7 +101,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 */
 	public function get_body(){
 		$default = ( ! empty( $this->object ) ) ? $this->object->post_content : '';
-		$content = apply_filters( "tmsc_set_{$this->name}_body", $default, $this->raw );
+		$content = apply_filters( "tmsc_set_{$this->name}_body", $this->raw->Description, $default, $this->raw );
 		return ( empty( $content ) ) ? $default : $content;
 	}
 
@@ -172,7 +172,14 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 		if ( ! empty( $legacy_id ) || '0' === $legacy_id ) {
 			$existing_post = tmsc_get_object_by_legacy_id( $legacy_id, $this->get_post_type() );
 			if ( ! empty( $existing_post ) ) {
-				$this->object = $existing_post;
+				if ( $existing_post instanceof WP_Post ) {
+					$this->object = $existing_post;
+				} elseif ( is_array( $existing_post ) ) {
+					// Our data is dirty. Wipe the duplicates and don't set an object.
+					foreach ( $existing_post as $dirty_post ) {
+						wp_delete_post( $dirty_post->ID, true );
+					}
+				}
 			}
 		}
 	}
