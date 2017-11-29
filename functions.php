@@ -101,6 +101,9 @@ function tmsc_get_object_by_legacy_id( $legacy_id, $post_type = 'tms_object' ) {
 	$posts = get_posts( $args );
 
 	if ( ! empty( $posts ) ) {
+		if ( count( $posts ) > 1 ) {
+			return $posts;
+		}
 		return reset( $posts );
 	}
 	return false;
@@ -122,6 +125,9 @@ function tmsc_get_term_by_legacy_id( $legacy_id, $taxonomy = null ) {
 	);
 	$terms = get_terms( $args );
 	if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
+		if ( count( $terms ) > 1 ) {
+			return $terms;
+		}
 		return reset( $terms );
 	}
 	return false;

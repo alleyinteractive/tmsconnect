@@ -29,10 +29,32 @@ class Search {
 		add_action( 'es_admin_integration_pre_get_posts', [ $this, 'es_admin_integration_pre_get_posts' ] );
 		add_filter( 'es_admin_adapter', [ $this, 'es_admin_adapter' ] );
 
+		add_filter( 'sp_search_wp_query_args', [ $this, 'search_wp_query_args' ], 10 );
+
 		if ( class_exists( 'SP_Config' ) && SP_Config()->get_setting( 'active' ) && function_exists( 'es_get_posts' ) ) {
 			es_wp_query_load_adapter( 'searchpress' );
 			add_filter( 'fm_zones_get_posts_query_args', array( $this, 'es_for_fm_zones' ), 10, 1 );
 		}
+	}
+
+	/**
+	 * Fix the SP args to include our custom post types.
+ 	 */
+	public function search_wp_query_args( $args ) {
+		if ( ! is_array( $args['post_type'] ) ) {
+			$searchable_post_types = [ $args['post_type'] ];
+		} else {
+			$searchable_post_types = $args['post_type'];
+		}
+
+		// Add in our searchable types;
+		$searchable_post_types[] = 'tms_object';
+		$searchable_post_types[] = 'exhibition';
+		$searchable_post_types[] = 'constituent';
+
+		$args['post_type'] = apply_filters( 'tmsc_search_post_types', $searchable_post_types );
+
+		return $args;
 	}
 
 	/**

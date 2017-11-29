@@ -47,11 +47,22 @@ class TMSC_Zone extends \TMSC\Database\Migrateable {
 		$this->load_existing();
 
 		if ( ! empty( $this->object->ID ) ) {
-			global $zoninator;
-			$zoninator->add_zone_posts( $this->processor->current_zone, array( $this->object->ID ), true );
-			// We don't really have an object here. So wipe it.
-			$this->object = null;
-			return true;
+			if ( z_get_zoninator()->zone_exists( $this->processor->current_zone_slug ) ) {
+				$zone_id = z_get_zoninator()->get_zone_id( $this->processor->current_zone_slug );
+				if ( ! empty( $zone_id ) && ! is_wp_error( $zone_id ) ) {
+					z_get_zoninator()->add_zone_posts( $zone_id, array( $this->object->ID ), true );
+					$zone = z_get_zone( $zone_id );
+					// If the Zone description is incorrect, update it. This should only happen on the first object added to a zone.
+					if ( $this->raw->Description !== $zone->description ) {
+						z_get_zoninator()->update_zone( $zone_id, array(
+							'description' => $this->raw->Description,
+						) );
+					}
+					// We don't really have an object here. So wipe it.
+					$this->object = null;
+					return true;
+				}
+			}
 		}
 		return false;
 	}

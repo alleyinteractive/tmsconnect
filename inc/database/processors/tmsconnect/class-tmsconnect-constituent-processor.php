@@ -137,9 +137,17 @@ class TMSConnect_Constituent_Processor extends \TMSC\Database\TMSC_Processor {
 
 			if ( ! empty( $results ) ) {
 				foreach ( $results as $row ) {
-					$term = tmsc_get_term_by_legacy_id( $row->TermID );
-					if ( ! empty( $term ) && ! is_wp_error( $term ) ) {
-						$terms[ $term->taxonomy ][] = $term->term_id;
+					$existing_term = tmsc_get_term_by_legacy_id( $row->TermID );
+
+					if ( ! empty( $existing_term ) && ! is_wp_error( $existing_term ) ) {
+						if ( $existing_term instanceof WP_Term ) {
+							$terms[ $existing_term->taxonomy ][] = $existing_term->term_id;
+						} elseif ( is_array( $existing_term ) ) {
+							// This will get triggered with search terms. So let's index both.
+							foreach ( $existing_term as $multi_term ) {
+								$terms[ $multi_term->taxonomy ][] = $multi_term->term_id;
+							}
+						}
 					}
 				}
 			}
