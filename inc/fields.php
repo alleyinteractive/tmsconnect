@@ -66,13 +66,14 @@ function tmsc_add_post_type_meta_boxes( $type ) {
 						$fm->add_meta_box( $config['label'], $post_type );
 					}
 				} elseif ( 'link' === $config['type'] ) {
-					$fm = new Fieldmanager_Group( array (
+					$fm = new Fieldmanager_Group( array(
 						'name' => $slug,
 						'limit' => 0,
 						'add_more_label' => __( 'Add', 'tmsc' ),
 						'sortable' => true,
 						'children' => array(
 							'link' => new Fieldmanager_Group( array(
+								'name' => 'link',
 								'children' => array(
 									'url' => new Fieldmanager_Textfield( array(
 										'label' => __( 'Url', 'tmsc' ),
@@ -128,7 +129,7 @@ function tmsc_add_post_type_meta_boxes( $type ) {
 						);
 					}
 
-					$fm_constituent = new Fieldmanager_Group( array (
+					$fm_constituent = new Fieldmanager_Group( array(
 						'name' => $type_term->slug,
 						'tabbed' => 'vertical',
 						'children' => $roles,

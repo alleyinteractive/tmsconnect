@@ -101,7 +101,8 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 */
 	public function get_body(){
 		$default = ( ! empty( $this->object ) ) ? $this->object->post_content : '';
-		$content = apply_filters( "tmsc_set_{$this->name}_body", $this->raw->Description, $default, $this->raw );
+		$decription = ( ! empty( $this->raw->Description ) ) ? $this->raw->Description : '';
+		$content = apply_filters( "tmsc_set_{$this->name}_body", $decription, $default, $this->raw );
 		return ( empty( $content ) ) ? $default : $content;
 	}
 
