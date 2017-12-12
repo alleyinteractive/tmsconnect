@@ -37,7 +37,18 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 
 	public function query( $key, $params = array(), $classname = 'stdClass' ) {
 		if ( empty( $this->queries[ $key ] ) ) {
-			throw new \Exception( "Tried to execute query '{$key}' which has not been prepared." );
+			// Return an empty PDO stmt and log missing key.
+			$this->queries[ $key ] = $this->pdo->prepare( '' );
+			error_log(
+				strtr(
+					print_r( array( 'Statemnt run on non-existant value: ', $this->data ), true ),
+					array(
+						"\r\n" => PHP_EOL,
+						"\r" => PHP_EOL,
+						"\n" => PHP_EOL,
+					)
+				)
+			);
 		}
 		$query = $this->queries[ $key ];
 		$query->execute( $params );

@@ -33,7 +33,7 @@ class Tmsc_Post_Type_TMS_Object extends Tmsc_Post_Type {
 			'public' => true,
 			'has_archive' => true,
 			'menu_icon' => 'dashicons-art',
-			'supports' => array( 'title', 'excerpt', 'editor', 'thumbnail' ),
+			'supports' => array( 'title', 'excerpt', 'editor', 'thumbnail', 'revisions' ),
 			'rewrite' => array(
 				'slug' => 'object',
 			),
