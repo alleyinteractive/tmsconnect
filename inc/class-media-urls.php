@@ -21,7 +21,7 @@ class Media_URLs {
 	 */
 	public function setup() {
 		add_filter( 'wp_get_attachment_image_attributes', [ $this, 'filter_image_attrs' ], 10, 3 );
-		add_filter( 'wp_get_attachment_image_src', [ $this, 'filter_image_source' ], 10, 4 );
+		add_filter( 'wp_get_attachment_image_src', [ $this, 'filter_image_source' ], 20, 4 );
 		add_filter( 'image_downsize', [ $this, 'filter_image_downsize' ], 10, 3 );
 		add_filter( 'load_image_to_edit_path', [ $this, 'filter_edit_image_path' ], 10, 3 );
 		add_filter( 'wp_prepare_attachment_for_js', [ $this, 'filter_attachment_js' ], 10, 3 );
