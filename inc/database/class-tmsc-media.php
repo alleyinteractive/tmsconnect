@@ -146,10 +146,14 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 				if ( $existing_post instanceof WP_Post ) {
 					$this->object = $existing_post;
 				} elseif ( is_array( $existing_post ) ) {
-					// Our data is dirty. Wipe the duplicates and don't set an object.
+					global $_wp_suspend_cache_invalidation;
+					$previous_state = $_wp_suspend_cache_invalidation;
+					wp_suspend_cache_invalidation( false );
 					foreach ( $existing_post as $dirty_post ) {
 						wp_delete_post( $dirty_post->ID, true );
+						clean_post_cache( $dirty_post->ID );
 					}
+					wp_suspend_cache_invalidation( $previous_state );
 				}
 			}
 		}
