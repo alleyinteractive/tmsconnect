@@ -71,6 +71,8 @@ class TMSC_Linked_Taxonomy_Posts {
 	 */
 	public function set_hooks() {
 		add_action( 'init', array( $this, 'manage_linked_taxonomy_caps' ), 50 );
+		add_filter( 'tmsc_register_taxonomy_object_types', array( $this, 'register_linked_taxonomies' ), 20, 2 );
+
 
 		if ( is_admin() || defined( 'DOING_CRON' ) || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
 			// Save our linked taxonomies when a post is created/edited.
@@ -83,6 +85,16 @@ class TMSC_Linked_Taxonomy_Posts {
 		// Ensure we delete the term data when we delete a post.
 		add_action( 'before_delete_post', array( $this, 'delete_linked_taxonomy' ) );
 		add_action( 'before_delete_post', array( $this, 'delete_child_posts' ) );
+	}
+
+	// Register linked post types to corresponding taxonomies.
+	public function register_linked_taxonomies( $object_types, $name ) {
+		foreach ( $this->linked_types as $post_type => $tax ) {
+			if ( $tax === $name ) {
+				$object_types[] = $post_type;
+			}
+		}
+		return $object_types;
 	}
 
 	/**
@@ -158,7 +170,6 @@ class TMSC_Linked_Taxonomy_Posts {
 				if ( 'auto-draft' !== $post->post_status ) {
 					// Often the top level posts will act as a container for child posts and we won't need terms for these.
 					// Use the filter hook||config below to enable it for child posts.
-
 					if ( empty( $post->post_parent ) || apply_filters( 'tmsc_link_child_posts', false, $post, $taxonomy ) ) {
 
 						// If filter hook above has been applied, then write a child term.
@@ -178,6 +189,9 @@ class TMSC_Linked_Taxonomy_Posts {
 							update_post_meta( $post_id, $this->linked_post_meta_key, $term['term_id'] );
 							update_post_meta( $post_id, $this->linked_taxonomy_meta_key, $taxonomy );
 							$term = get_term( $term['term_id'], $taxonomy );
+
+							// Overwrite associated term with post.
+							wp_set_post_terms( $post_id, [ (int) $term->term_id ], $taxonomy, false );
 						}
 					} else {
 
@@ -188,6 +202,8 @@ class TMSC_Linked_Taxonomy_Posts {
 						update_term_meta( $term->term_id, $this->linked_term_meta_key, $post->post_parent );
 						update_post_meta( $post_id, $this->linked_post_meta_key, $term->term_id );
 						update_post_meta( $post_id, $this->linked_taxonomy_meta_key, $taxonomy );
+
+						wp_set_post_terms( $post->ID, [ (int) $term->term_id ], $taxonomy, false );
 					}
 				}
 			} // End if().

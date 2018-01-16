@@ -61,8 +61,8 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 			add_filter( 'tmsc_force_sync_update', '__return_true' );
 		}
 
-		if ( ! empty( $assoc_args['batch_size'] ) ) {
-			$this->batch_size = (int) $assoc_args['batch_size'];
+		if ( ! empty( $assoc_args['batch-size'] ) ) {
+			$this->batch_size = (int) $assoc_args['batch-size'];
 			add_filter( 'tmsc_sync_batch_size', array( $this, 'get_batch_size' ) );
 		}
 
@@ -187,6 +187,40 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 		$wp_object_cache->cache = array();
 		if ( method_exists( $wp_object_cache, '__remoteset' ) ) {
 			$wp_object_cache->__remoteset();
+		}
+	}
+
+	/**
+	 * Associate all linked terms posts with corresponding terms.
+	 * ## OPTIONS
+	 *
+	 * [--post-type]
+	 * : Specify the post type you want to set linked terms for.
+	 */
+	public function set_linked_terms( $args, $assoc_args ) {
+		if ( ! empty( $assoc_args['post-type'] ) ) {
+			$post_type = $assoc_args['post-type'];
+			$offset = 0;
+			$num_posts = 200;
+			$batch_args = [
+				'post_type' => $post_type,
+				'offset' => $offset,
+				'posts_per_page' => $num_posts,
+			];
+			$posts = get_posts( $batch_args );
+			while ( ! empty( $posts ) ) {
+				foreach ( $posts as $post ) {
+					$term = tmsc_get_linked_term( $post->ID );
+					if ( ! empty( $term ) && ! is_wp_error( $term ) ) {
+						wp_set_object_terms( $post->ID, [ (int) $term->term_id ], $term->taxonomy, false );
+					}
+				}
+				$offset = $offset + $num_posts;
+				$batch_args['offset'] = $offset;
+				$posts = get_posts( $batch_args );
+			}
+		} else {
+			WP_CLI::error( 'Please specify a post type.', true );
 		}
 	}
 }
