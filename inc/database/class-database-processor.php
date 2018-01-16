@@ -38,6 +38,7 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 	public function query( $key, $params = array(), $classname = 'stdClass' ) {
 		if ( empty( $this->queries[ $key ] ) ) {
 			// Return an empty PDO stmt and log missing key.
+			$this->queries[ $key ] = $this->pdo->prepare( '' );
 			error_log(
 				strtr(
 					print_r( array( 'Statemnt run on non-existant value: ', $this->data ), true ),
@@ -48,9 +49,7 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 					)
 				)
 			);
-			return false;
 		}
-
 		$query = $this->queries[ $key ];
 		$query->execute( $params );
 		$query->setFetchMode( \PDO::FETCH_CLASS, $classname );
@@ -65,11 +64,8 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 	protected function before_run( $params = array() ) {
 		// Execute the query and store the results
 		$query = $this->query( $this->object_query_key, $params );
-		if ( ! empty( $query ) ) {
-			$this->data = $query->fetchAll();
-		} else {
-			$this->data = [];
-		}
+
+		$this->data = $query->fetchAll();
 	}
 
 	/**
