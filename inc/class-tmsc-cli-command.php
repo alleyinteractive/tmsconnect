@@ -143,7 +143,7 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 	/**
 	 * Get our batch size.
 	 */
-	private function get_batch_size() {
+	public function get_batch_size() {
 		return $this->batch_size;
 	}
 
