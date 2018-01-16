@@ -592,10 +592,24 @@ class TMSC_Custom_Landing_Page_Types {
 			$post_type = $this->types[ $taxonomy ]['post_type'];
 			if ( ! empty( $post_type ) ) {
 				$tax_rule = '^' . $taxonomy . '/([^/]+)/([^/]+)/?$';
+				$tax_feed_rule = '^' . $taxonomy . '/([^/]+)/feed/(feed|rdf|rss|rss2|atom)/?$';
+				$tax_feed_rule1 = '^' . $taxonomy . '/([^/]+)/(feed|rdf|rss|rss2|atom)/?$';
+
 				$post_type_rule = '^' . $post_type . '/([^/]+)/([^/]+)/?$';
+				$post_type_feed_rule = '^' . $post_type . '/([^/]+)/feed/(feed|rdf|rss|rss2|atom)/?$';
+				$post_type_feed_rule1 = '^' . $post_type . '/([^/]+)/feed/(feed|rdf|rss|rss2|atom)/?$';
+
 				$rewrite = 'index.php?' . $post_type . '=$matches[2]';
+				$feed_rewrite = 'index.php?' . $taxonomy . '=$matches[1]&feed=$matches[2]';
+
+				add_rewrite_rule( $tax_feed_rule, $feed_rewrite, 'top' );
+				add_rewrite_rule( $tax_feed_rule1, $feed_rewrite, 'top' );
 				add_rewrite_rule( $tax_rule, $rewrite, 'top' );
+
+				add_rewrite_rule( $post_type_feed_rule, $feed_rewrite, 'top' );
+				add_rewrite_rule( $post_type_feed_rule1, $feed_rewrite, 'top' );
 				add_rewrite_rule( $post_type_rule, $rewrite, 'top' );
+
 			}
 		}
 	}

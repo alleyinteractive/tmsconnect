@@ -79,7 +79,15 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 				} elseif ( is_array( $existing_term ) ) {
 					// Our data is dirty. Wipe the duplicates and don't set an object.
 					foreach ( $existing_term as $dirty_term ) {
-						wp_delete_term( $dirty_term->term_id, $dirty_term->taxonomy, array() );
+						// Our data is dirty. Wipe the duplicates and don't set an object.
+						global $_wp_suspend_cache_invalidation;
+						$previous_state = $_wp_suspend_cache_invalidation;
+						wp_suspend_cache_invalidation( false );
+						foreach ( $existing_term as $dirty_term ) {
+							wp_delete_term( $dirty_term->term_id, $dirty_term->taxonomy, array() );
+							clean_term_cache( $dirty_term->term_id, $dirty_term->taxonomy, false );
+						}
+						wp_suspend_cache_invalidation( $previous_state );
 					}
 				}
 			}
