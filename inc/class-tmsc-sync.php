@@ -321,7 +321,7 @@ class TMSC_Sync {
 
 				foreach ( $data as $key => $ids ) {
 					if ( ! empty( $ids ) && ! empty( $relationship_map[ $key ]['type'] ) ) {
-						if ( 'post' === $relationship_map[ $key ]['type'] && ! empty( $ids[ $key ] ) ) {
+						if ( 'post' === $relationship_map[ $key ]['type'] ) {
 							$related_posts = get_posts( array(
 								'fields' => 'ids',
 								'suppress_filters' => false,
@@ -332,7 +332,7 @@ class TMSC_Sync {
 								'meta_query' => array(
 									array(
 										'key'     => 'tmsc_legacy_id',
-										'value'   => $ids[ $key ],
+										'value'   => $ids,
 										'compare' => 'IN',
 									),
 								),
