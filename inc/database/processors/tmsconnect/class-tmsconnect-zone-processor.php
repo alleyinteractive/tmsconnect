@@ -2,7 +2,7 @@
 namespace TMSC\Database\Processors\TMSConnect;
 class TMSConnect_Zone_Processor extends \TMSC\Database\TMSC_Processor {
 	/**
-	 * Which migratable type the objects of this processor will be.
+	 * Which migrateable type the objects of this processor will be.
 	 */
 	public $migrateable_type = 'Zone';
 

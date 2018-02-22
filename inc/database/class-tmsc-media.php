@@ -143,7 +143,7 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 		if ( ! empty( $legacy_id ) || '0' === $legacy_id ) {
 			$existing_post = tmsc_get_object_by_legacy_id( $legacy_id, $this->get_post_type() );
 			if ( ! empty( $existing_post ) ) {
-				if ( $existing_post instanceof WP_Post ) {
+				if ( $existing_post instanceof \WP_Post ) {
 					$this->object = $existing_post;
 				} elseif ( is_array( $existing_post ) ) {
 					global $_wp_suspend_cache_invalidation;

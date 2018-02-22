@@ -25,10 +25,10 @@ abstract class Processor {
 	protected $data = array();
 
 	/**
-	 * The current migratable
+	 * The current migrateable
 	 * @var array
 	 */
-	public $migratable;
+	public $migrateable;
 
 
 	private $stop_processing = false;

@@ -51,7 +51,7 @@ abstract class Migrateable {
 	public $type;
 
 	/**
-	 * ID mapping for migratable type.
+	 * ID mapping for migrateable type.
 	 * @var array.
 	 */
 	public $id = array(
@@ -177,7 +177,7 @@ abstract class Migrateable {
 	}
 
 	/**
-	 * Save children migratables
+	 * Save children migrateables
 	 */
 	public function migrate_children(){
 		return true;

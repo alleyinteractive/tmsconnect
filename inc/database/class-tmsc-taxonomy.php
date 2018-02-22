@@ -71,7 +71,7 @@ class TMSC_Taxonomy extends \TMSC\Database\Migrateable {
 		if ( ( ! empty( $legacy_id ) || '0' === $legacy_id ) && ! empty( $this->taxonomy ) ) {
 			$existing_term = tmsc_get_term_by_legacy_id( $legacy_id, $this->taxonomy );
 			if ( ! empty( $existing_term ) ) {
-				if ( $existing_term instanceof WP_Term ) {
+				if ( $existing_term instanceof \WP_Term ) {
 					$this->object = $existing_term;
 					if ( ! empty( $this->raw->Children ) && ! empty( $this->raw->CN ) ) {
 						$this->parents[ $this->raw->CN ] = $this->object->term_id;

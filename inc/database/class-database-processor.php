@@ -69,7 +69,7 @@ abstract class Database_Processor extends \TMSC\Database\Processor {
 	}
 
 	/**
-	 * A helper function to fetch a custom set of results outside of the processors main migratables.
+	 * A helper function to fetch a custom set of results outside of the processors main migrateables.
 	 * @param string $stmt. An sql statement.
 	 * @param string $query_key. The key uses in $this->queries
 	 * @param array $params. Params to pass to query.

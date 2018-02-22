@@ -14,7 +14,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	public $type = 'post';
 
 	/**
-	 * The post type used with this migratable.
+	 * The post type used with this migrateable.
 	 */
 	public $post_type = '';
 
@@ -61,7 +61,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Get excerpt
 	 * @return html
 	 */
-	public function get_excerpt(){
+	public function get_excerpt() {
 		$default = ( ! empty( $this->object ) ) ? $this->object->post_excerpt : '';
 		return apply_filters( "tmsc_set_{$this->name}_excerpt", $default, $this->raw );
 	}
@@ -70,7 +70,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Get title
 	 * @return string
 	 */
-	public function get_title(){
+	public function get_title() {
 		$default = ( ! empty( $this->object ) ) ? $this->object->post_title : '';
 		$title = ( ! empty( $this->raw->Title ) ) ? $this->raw->Title : $default;
 		return apply_filters( "tmsc_set_{$this->name}_title", $title, $this->raw );
@@ -90,8 +90,8 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Get date of publication
 	 * @return int unix timestamp
 	 */
-	public function get_pubdate(){
-		$default = ( ! empty( $this->object ) && (int) date('Y', strtotime( $this->object->post_date ) ) > 1970 ) ? $this->object->post_date : current_time( 'Y-m-d H:i:s' );
+	public function get_pubdate() {
+		$default = ( ! empty( $this->object ) && (int) date( 'Y', strtotime( $this->object->post_date ) ) > 1970 ) ? $this->object->post_date : current_time( 'Y-m-d H:i:s' );
 		return apply_filters( "tmsc_set_{$this->name}_pubdate", $default, $this->raw );
 	}
 
@@ -99,7 +99,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Get body
 	 * @return HTML
 	 */
-	public function get_body(){
+	public function get_body() {
 		$default = ( ! empty( $this->object ) ) ? $this->object->post_content : '';
 		$decription = ( ! empty( $this->raw->Description ) ) ? $this->raw->Description : '';
 		$content = apply_filters( "tmsc_set_{$this->name}_body", $decription, $default, $this->raw );
@@ -173,7 +173,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 		if ( ! empty( $legacy_id ) || '0' === $legacy_id ) {
 			$existing_post = tmsc_get_object_by_legacy_id( $legacy_id, $this->get_post_type() );
 			if ( ! empty( $existing_post ) ) {
-				if ( $existing_post instanceof WP_Post ) {
+				if ( $existing_post instanceof \WP_Post ) {
 					$this->object = $existing_post;
 				} elseif ( is_array( $existing_post ) ) {
 					// Our data is dirty. Wipe the duplicates and don't set an object.
@@ -305,7 +305,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 			$relationships = apply_filters( "tmsc_{$this->processor->processor_type}_relationship_map", array() );
 			$related_ids = array();
 			foreach ( $relationships as $key => $config ) {
-				// Store with migratable type as key.
+				// Store with migrateable type as key.
 				$related_ids[ $key ] = $this->processor->get_related( $this->raw->ID, $key, $config );
 			}
 			if ( ! empty( $related_ids ) ) {
@@ -321,20 +321,20 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 		$this->children['Media'] = null;
 		if ( ! empty( $this->object->ID ) && ! empty( $this->raw->ID ) ) {
 			$this->raw->wp_parent_id = $this->object->ID;
-			// Store with migratable type as key.
+			// Store with migrateable type as key.
 			$this->children['Media'] = $this->raw;
 		}
 	}
 
 	/**
-	 * Save children migratables
-	 * This migratable expects objects and media as children.
+	 * Save children migrateables
+	 * This migrateable expects objects and media as children.
 	 */
-	public function migrate_children(){
+	public function migrate_children() {
 		if ( ! empty( $this->children ) ) {
-			foreach( $this->children as $migratable_type => $raw_data ) {
+			foreach ( $this->children as $migrateable_type => $raw_data ) {
 				if ( ! empty( $raw_data ) ) {
-					$child_processor = \TMSC\TMSC::instance()->get_processor( $migratable_type );
+					$child_processor = \TMSC\TMSC::instance()->get_processor( $migrateable_type );
 					$child_processor->set_parent_object( $raw_data );
 
 					if ( ! empty( $child_processor->get_object_query_stmt() ) ) {

@@ -23,7 +23,7 @@ require_once( TMSCONNECT_PATH . '/inc/trait-singleton.php' );
 
 /**
  * Return an array of all the processors of the current system.
- * Each processor requires a it's own migratable class and a processor class.
+ * Each processor requires a it's own migrateable class and a processor class.
  * (e.g.) "class-${file_prefix}-${processor}.php", "class-${file_prefix}-${processor}-processor.php"
  * @return array.
  */

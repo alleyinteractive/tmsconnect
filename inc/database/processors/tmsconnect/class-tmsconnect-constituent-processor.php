@@ -5,7 +5,7 @@
 namespace TMSC\Database\Processors\TMSConnect;
 class TMSConnect_Constituent_Processor extends \TMSC\Database\TMSC_Processor {
 	/**
-	 * Which migratable type the objects of this processor will be.
+	 * Which migrateable type the objects of this processor will be.
 	 */
 	public $migrateable_type = 'Object';
 
@@ -140,7 +140,7 @@ class TMSConnect_Constituent_Processor extends \TMSC\Database\TMSC_Processor {
 					$existing_term = tmsc_get_term_by_legacy_id( $row->TermID );
 
 					if ( ! empty( $existing_term ) && ! is_wp_error( $existing_term ) ) {
-						if ( $existing_term instanceof WP_Term ) {
+						if ( $existing_term instanceof \WP_Term ) {
 							$terms[ $existing_term->taxonomy ][] = $existing_term->term_id;
 						} elseif ( is_array( $existing_term ) ) {
 							// This will get triggered with search terms. So let's index both.
