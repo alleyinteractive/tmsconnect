@@ -2,7 +2,7 @@
 namespace TMSC\Database\Processors\TMSConnect;
 class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	/**
-	 * Which migratable type the objects of this processor will be.
+	 * Which migrateable type the objects of this processor will be.
 	 */
 	public $migrateable_type = 'Taxonomy';
 
@@ -30,7 +30,7 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	 */
 	public function __construct( $type ) {
 		parent::__construct( $type );
-		$this->taxonomies = $this->get_migratable_taxonomies();
+		$this->taxonomies = $this->get_migrateable_taxonomies();
 	}
 
 	/**
@@ -96,7 +96,7 @@ class TMSConnect_Taxonomy_Processor extends \TMSC\Database\TMSC_Processor {
 	/**
 	 * Get the taxonomies that we will be migrating.
 	 */
-	public function get_migratable_taxonomies() {
+	public function get_migrateable_taxonomies() {
 		$guide_terms = apply_filters( "tmsc_{$this->processor_type}_guide_terms", get_option( 'tmsc_guide_terms', array() ) );
 		$cns = array();
 		if ( ! empty( $guide_terms ) && ! empty( $guide_terms['term']['data'] ) ) {

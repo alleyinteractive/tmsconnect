@@ -86,7 +86,7 @@ function tmsc_get_linked_objects( int $post_id, $taxonomy ) {
 				$linked_post = tmsc_get_linked_post( $term->term_id );
 
 				// Add it to the linked objects.
-				if ( $linked_post instanceof WP_Post ) {
+				if ( $linked_post instanceof \WP_Post ) {
 					$linked_objects[] = $linked_post;
 				}
 			}
@@ -131,7 +131,7 @@ function tmsc_get_image_public_caption( $attachment_id ) : string {
 	$attachment = get_post( $attachment_id );
 
 	// The public image caption is saved as post content.
-	if ( $attachment instanceof WP_Post ) {
+	if ( $attachment instanceof \WP_Post ) {
 		return $attachment->post_content;
 	}
 

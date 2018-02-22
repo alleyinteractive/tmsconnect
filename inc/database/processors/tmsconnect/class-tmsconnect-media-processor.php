@@ -5,7 +5,7 @@
 namespace TMSC\Database\Processors\TMSConnect;
 class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	/**
-	 * Which migratable type the objects of this processor will be.
+	 * Which migrateable type the objects of this processor will be.
 	 */
 	public $migrateable_type = 'Media';
 
@@ -50,7 +50,7 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 	}
 
 	/**
-	 * make sure we know the parent object of this migratable media.
+	 * make sure we know the parent object of this migrateable media.
 	 */
 	public function set_parent_object( $object ) {
 		$this->parent_object = $object;
