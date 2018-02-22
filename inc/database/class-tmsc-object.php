@@ -90,8 +90,8 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Get date of publication
 	 * @return int unix timestamp
 	 */
-	public function get_pubdate(){
-		$default = ( ! empty( $this->object ) && (int) date('Y', strtotime( $this->object->post_date ) ) > 1970 ) ? $this->object->post_date : current_time( 'Y-m-d H:i:s' );
+	public function get_pubdate() {
+		$default = ( ! empty( $this->object ) && (int) date( 'Y', strtotime( $this->object->post_date ) ) > 1970 ) ? $this->object->post_date : current_time( 'Y-m-d H:i:s' );
 		return apply_filters( "tmsc_set_{$this->name}_pubdate", $default, $this->raw );
 	}
 
@@ -99,7 +99,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Get body
 	 * @return HTML
 	 */
-	public function get_body(){
+	public function get_body() {
 		$default = ( ! empty( $this->object ) ) ? $this->object->post_content : '';
 		$decription = ( ! empty( $this->raw->Description ) ) ? $this->raw->Description : '';
 		$content = apply_filters( "tmsc_set_{$this->name}_body", $decription, $default, $this->raw );
@@ -330,9 +330,9 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 	 * Save children migrateables
 	 * This migrateable expects objects and media as children.
 	 */
-	public function migrate_children(){
+	public function migrate_children() {
 		if ( ! empty( $this->children ) ) {
-			foreach( $this->children as $migrateable_type => $raw_data ) {
+			foreach ( $this->children as $migrateable_type => $raw_data ) {
 				if ( ! empty( $raw_data ) ) {
 					$child_processor = \TMSC\TMSC::instance()->get_processor( $migrateable_type );
 					$child_processor->set_parent_object( $raw_data );
