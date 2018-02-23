@@ -199,11 +199,13 @@ class TMSC_Linked_Taxonomy_Posts {
 						$term = $this->get_linked_term( $post->post_parent );
 
 						// Set the meta data for the children.
-						update_term_meta( $term->term_id, $this->linked_term_meta_key, $post->post_parent );
-						update_post_meta( $post_id, $this->linked_post_meta_key, $term->term_id );
-						update_post_meta( $post_id, $this->linked_taxonomy_meta_key, $taxonomy );
+						if ( $term instanceof \WP_Term ) {
+							update_term_meta( $term->term_id, $this->linked_term_meta_key, $post->post_parent );
+							update_post_meta( $post_id, $this->linked_post_meta_key, $term->term_id );
+							update_post_meta( $post_id, $this->linked_taxonomy_meta_key, $taxonomy );
 
-						wp_set_post_terms( $post->ID, [ (int) $term->term_id ], $taxonomy, false );
+							wp_set_post_terms( $post->ID, [ (int) $term->term_id ], $taxonomy, false );
+						}
 					}
 				}
 			} // End if().
