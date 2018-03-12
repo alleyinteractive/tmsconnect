@@ -349,7 +349,7 @@ class TMSC_Sync {
 
 				$post_processing_data = $wpdb->get_results(
 					$wpdb->prepare(
-						"SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s AND post_id = 436501 ORDER BY post_id LIMIT %d, %d",
+						"SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s ORDER BY post_id LIMIT %d, %d",
 						'tmsc_post_processing',
 						$batch_index,
 						$batch_size
@@ -367,80 +367,101 @@ class TMSC_Sync {
 						$processor_type = get_post_meta( $post_id, 'tmsc_processor_type' ,true );
 
 						if ( ! empty( $processor_type ) ) {
+							/**
+							 * Filters the maps that define how an object should
+							 * be related to other posts / taxonomies in WordPress.
+							 *
+							 * @param array $map The post relationship map.
+							 */
 							$relationship_map = apply_filters( "tmsc_{$processor_type}_relationship_map", array() );
 							$data = maybe_unserialize( $row->meta_value );
-							foreach ( $data as $key => $ids ) {
-								if ( ! empty( $ids ) && ! empty( $relationship_map[ $key ]['type'] ) ) {
+							if ( ! empty( $data ) && is_array( $data ) ) {
+								foreach ( $data as $key => $ids ) {
+									if ( ! empty( $ids ) && ! empty( $relationship_map[ $key ]['type'] ) ) {
 
-									$existing_relationships = get_post_meta( $post_id, $key, true );
+										$existing_relationships = get_post_meta( $post_id, $key, true );
 
-									if ( 'post' === $relationship_map[ $key ]['type'] ) {
-										$related_posts = get_posts( array(
-											'fields' => 'ids',
-											'suppress_filters' => false,
-											'ignore_sticky_posts' => true,
-											'no_found_rows' => true,
-											'post_type' => $relationship_map[ $key ]['slug'],
-											'post_status' => 'publish',
-											'meta_query' => array(
-												array(
-													'key'     => 'tmsc_legacy_id',
-													'value'   => $ids,
-													'compare' => 'IN',
+										if ( 'post' === $relationship_map[ $key ]['type'] ) {
+											$related_posts = get_posts( array(
+												'fields' => 'ids',
+												'suppress_filters' => false,
+												'ignore_sticky_posts' => true,
+												'no_found_rows' => true,
+												'post_type' => $relationship_map[ $key ]['slug'],
+												'post_status' => 'publish',
+												'meta_query' => array(
+													array(
+														'key'     => 'tmsc_legacy_id',
+														'value'   => $ids,
+														'compare' => 'IN',
+													),
 												),
-											),
-										) );
+											) );
 
-										if ( ! empty( $related_posts ) && $existing_relationships !== $related_posts ) {
-											update_post_meta( $post_id, $key, $related_posts );
-										}
-									} elseif ( 'constituent' === $relationship_map[ $key ]['type'] ) {
-										foreach ( $ids as $constituent_type_slug => $role_data ) {
-											$meta_data = array();
-											foreach( $role_data as $role_slug => $constituent_ids ) {
-												if ( ! empty( $constituent_ids ) ) {
-													$related_constituents = get_posts( array(
-														'fields' => 'ids',
-														'suppress_filters' => false,
-														'ignore_sticky_posts' => true,
-														'no_found_rows' => true,
-														'post_type' => $relationship_map[ $key ]['slug'],
-														'post_status' => 'publish',
-														'meta_query' => array(
-															array(
-																'key'     => 'tmsc_legacy_id',
-																'value'   => $constituent_ids,
-																'compare' => 'IN',
-															),
-														),
-													) );
-													if ( ! empty( $related_constituents ) ) {
-														$meta_data[ $role_slug ] = $related_constituents;
+											if ( ! empty( $related_posts ) && $existing_relationships !== $related_posts ) {
+												update_post_meta( $post_id, $key, $related_posts );
+											}
+										} elseif ( 'constituent' === $relationship_map[ $key ]['type'] ) {
+											foreach ( $ids as $constituent_type_slug => $role_data ) {
+												$meta_data = array();
+												if ( ! empty( $role_data ) && is_array( $role_data ) ) {
+													foreach( $role_data as $role_slug => $constituent_ids ) {
+														if ( ! empty( $constituent_ids ) ) {
+															$related_constituents = get_posts( array(
+																'fields' => 'ids',
+																'suppress_filters' => false,
+																'ignore_sticky_posts' => true,
+																'no_found_rows' => true,
+																'post_type' => $relationship_map[ $key ]['slug'],
+																'post_status' => 'publish',
+																'meta_query' => array(
+																	array(
+																		'key'     => 'tmsc_legacy_id',
+																		'value'   => $constituent_ids,
+																		'compare' => 'IN',
+																	),
+																),
+															) );
+															if ( ! empty( $related_constituents ) ) {
+																$meta_data[ $role_slug ] = $related_constituents;
+															}
+														}
 													}
 												}
+												if ( ! empty( $meta_data ) ) {
+													update_post_meta( $post_id, $constituent_type_slug, $meta_data );
+												}
 											}
-											if ( ! empty( $meta_data ) ) {
-												update_post_meta( $post_id, $constituent_type_slug, $meta_data );
-											}
-										}
-									} elseif ( 'link' === $relationship_map[ $key ]['type'] ) {
-										$link_meta = array();
-										if ( apply_filters( 'tmsc_enable_links', false ) ) {
-											// TODO: Bookmark Integration
-										} else {
-											foreach ( $ids as $resource_data ) {
-												$link_meta[] = array(
-													'link' => $resource_data,
-												);
-											}
-											if ( ! empty( $link_meta ) ) {
-												update_post_meta( $post_id, $key, $link_meta );
+										} elseif ( 'link' === $relationship_map[ $key ]['type'] ) {
+											$link_meta = array();
+											/**
+											 * Whether or not related links should be enabled.
+											 *
+											 * @param bool $enabled Whether related links are enabled.
+											 */
+											if ( apply_filters( 'tmsc_enable_links', false ) ) {
+												// TODO: Bookmark Integration
+											} else {
+												foreach ( $ids as $resource_data ) {
+													$link_meta[] = array(
+														'link' => $resource_data,
+													);
+												}
+												if ( ! empty( $link_meta ) ) {
+													update_post_meta( $post_id, $key, $link_meta );
+												}
 											}
 										}
 									}
 								}
 							}
 						}
+						/**
+						 * After the posts have finished processing, whether or not
+						 * the tmsc_post_processing meta data should be deleted.
+						 *
+						 * @param bool $enabled Whether the post processing data should be deleted.
+						 */
 						if ( apply_filters( 'tmsc_delete_post_processing_data', false ) ) {
 							delete_post_meta( $post_id, 'tmsc_post_processing' );
 						}
