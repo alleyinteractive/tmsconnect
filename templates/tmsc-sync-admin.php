@@ -30,6 +30,10 @@
 				<?php endforeach; ?>
 			</p>
 			<p>
+				<label for="tmsc-enable-cron"><?php esc_html_e( 'Enable auto-synchronization via WordPress Cron:', 'tmsc' );?></label>
+				<input type="checkbox" id="tmsc-enable-cron" name="tmsc-enable-cron" value="1" <?php checked( '1', get_option( 'tmsc-enable-cron', '' ) ); ?>>
+			</p>
+			<p>
 				<input type="submit" name="tmsc-sync-button" id="tmsc-sync-button" class="button button-primary" value="<?php esc_attr_e( 'Sync Objects', 'tmsc' ); ?>">
 			</p>
 			<p>

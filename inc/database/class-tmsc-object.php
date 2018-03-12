@@ -291,7 +291,7 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 			$terms = $this->processor->get_related_terms( $this->raw->ID );
 			if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
 				foreach ( $terms as $taxonomy => $term_ids ) {
-					wp_set_object_terms( $this->object->ID, $term_ids, $taxonomy );
+					$result = wp_set_object_terms( $this->object->ID, $term_ids, $taxonomy );
 				}
 			}
 		}
