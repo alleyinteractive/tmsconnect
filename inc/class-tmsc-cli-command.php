@@ -223,4 +223,43 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Please specify a post type.', true );
 		}
 	}
+
+	/**
+	 * Delete the TMS Objects that have been previously imported
+	 */
+	public function force_delete_objects() {
+		$args = [
+			'post_type' => 'tms_object',
+			'post_status' => 'any',
+			'fields' => 'ids',
+			'posts_per_page' => $this->batch_size,
+			'no_rows_found' => true,
+			'cache_results' => false,
+		];
+
+		WP_CLI::line( 'Beginning object deletion' );
+
+		wp_defer_term_counting( true );
+		wp_defer_comment_counting( true );
+
+		do {
+			$results = new WP_Query( $args );
+			if ( ! empty( $results->posts ) ) {
+				foreach ( $results->posts as $post_id ) {
+					wp_delete_post( $post_id, true );
+				}
+			}
+			WP_CLI::success( sprintf( 'Deleted %s objects', $this->batch_size ) );
+			WP_CLI::line( sprintf( '%s objects remaining...', $results->found_posts ) );
+
+			tmsc_stop_the_insanity();
+
+		} while ( $results->have_posts() );
+
+		wp_defer_term_counting( false );
+		wp_defer_comment_counting( false );
+		wp_cache_flush();
+
+		WP_CLI::success( 'Finished deleting all objects' );
+	}
 }

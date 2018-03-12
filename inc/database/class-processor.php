@@ -106,8 +106,12 @@ abstract class Processor {
 		}
 		$this->after_run();
 
-		wp_defer_term_counting( false );
-		wp_defer_comment_counting( false );
+		// Only enable term and comment counting if this object does
+		// not have a parent (i.e. if this object IS a parent).
+		if ( empty( $this->parent_object ) ) {
+			wp_defer_term_counting( false );
+			wp_defer_comment_counting( false );
+		}
 		wp_cache_flush();
 	}
 
