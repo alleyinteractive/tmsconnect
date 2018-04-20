@@ -221,10 +221,16 @@ class TMSC_Media extends \TMSC\Database\Migrateable {
 				'menu_order' => absint( $this->raw->Rank ),
 			);
 
+			// If we already have an attachment ID, run an update instead of a new insert
+			// by adding the post id to the attachment array data.
+			if ( ! empty( $this->object->ID ) ) {
+				$attachment['ID'] = $this->object->ID;
+			}
+
 			// Insert the attachment.
 			$attach_id = wp_insert_attachment( $attachment, $filename, $parent_post_id );
 			if ( ! empty( $attach_id ) ) {
-				if ( 1 === absint( $this->raw->PrimaryDisplay )  ) {
+				if ( 1 === absint( $this->raw->PrimaryDisplay ) ) {
 					set_post_thumbnail( $parent_post_id, $attach_id );
 				}
 				return get_post( $attach_id );

@@ -336,7 +336,6 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 				if ( ! empty( $raw_data ) ) {
 					$child_processor = \TMSC\TMSC::instance()->get_processor( $migrateable_type );
 					$child_processor->set_parent_object( $raw_data );
-
 					if ( ! empty( $child_processor->get_object_query_stmt() ) ) {
 						$child_processor->run();
 					}
