@@ -187,6 +187,11 @@ class TMSC {
 			define( 'WP_IMPORTING', true );
 		}
 
+		/**
+		 * Broadcast the fact that we are about to run all of the migration processors.
+		 */
+		do_action( 'tmsc_before_run_processors' );
+
 		foreach ( self::$instance->processors( $processor_class_slug ) as $processor ) {
 			if ( ! in_array( $processor->processor_type, self::$instance->get_child_processors(), true ) ) {
 				$processor->run();
