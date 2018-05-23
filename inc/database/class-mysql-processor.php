@@ -57,7 +57,9 @@ class MySQL_Processor extends \TMSC\Database\Database_Processor {
 
 		foreach ( $defaults as $key => $value ) {
 			$stmt = $connection->prepare("SET SESSION {$key} = {$value}");
-			$stmt->execute();
+			if ( ! $stmt->execute() ) {
+				return new WP_Error( 'set_global_default_failure', __( 'There was an error setting a global MySQL variable.', 'tmsc' ) );
+			}
 		}
 	}
 
