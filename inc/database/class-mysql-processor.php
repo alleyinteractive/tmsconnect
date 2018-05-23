@@ -37,7 +37,28 @@ class MySQL_Processor extends \TMSC\Database\Database_Processor {
 
 		// Uncomment to enable connection debugging.
 		$connection->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
+
+		$this->set_mysql_global_defaults( $connection );
 		return $connection;
+	}
+
+	/**
+	 * Set any global MySQL default settings and customizations
+	 * for this session.
+	 *
+	 * @param    PDO   $connection Current PDO connection
+	 *
+	 * @return   void
+	 */
+	public function set_mysql_global_defaults( $connection ) {
+		$defaults = [
+			'group_concat_max_len' => 50000,
+		];
+
+		foreach ( $defaults as $key => $value ) {
+			$stmt = $connection->prepare("SET SESSION {$key} = {$value}");
+			$stmt->execute();
+		}
 	}
 
 	/**
