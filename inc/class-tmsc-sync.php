@@ -389,6 +389,7 @@ class TMSC_Sync {
 												'no_found_rows' => true,
 												'post_type' => $relationship_map[ $key ]['slug'],
 												'post_status' => 'publish',
+												'posts_per_page' => 50,
 												'meta_query' => array(
 													array(
 														'key'     => 'tmsc_legacy_id',
