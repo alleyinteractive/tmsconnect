@@ -174,6 +174,12 @@ class TMSC_Object extends \TMSC\Database\Migrateable {
 			if ( ! empty( $existing_post ) ) {
 				if ( $existing_post instanceof \WP_Post ) {
 					$this->object = $existing_post;
+
+					// This requires is requires in while comparing raw hash for object,
+					// as `wp_parent_id` property is adding in `save_media_attachments()`
+					// which is storing as hash code of $this->raw object.
+					$this->raw->wp_parent_id = $this->object->ID;
+
 				} elseif ( is_array( $existing_post ) ) {
 					// Our data is dirty. Wipe the duplicates and don't set an object.
 					global $_wp_suspend_cache_invalidation;
