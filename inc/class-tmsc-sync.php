@@ -73,6 +73,21 @@ class TMSC_Sync {
 			add_action( 'tmsc_complete_sync', array( self::$instance, 'complete_sync' ), 10, 1 );
 			add_action( 'tmsc_do_post_processing', array( self::$instance, 'do_post_processing' ), 10, 1 );
 			add_action( 'wp', array( self::$instance, 'cron_events_activation' ) );
+			add_action( 'tmsc_actually_sync_objects', array( self::$instance, 'actually_sync_objects' ), 10, 1 );
+			add_filter( 'cron_schedules', function( $schedules ) {
+				$schedules['minutely'] = array(
+					'interval' => 60,
+					'display' => 'Every minute',
+				);
+
+				return $schedules;
+			}); 
+
+			if ( ! wp_next_scheduled ( 'tmsc_monitor_actually_sync_objects' ) ) {
+				wp_schedule_event( time(), 'minutely', 'tmsc_monitor_actually_sync_objects' );
+			}
+
+			add_action( 'tmsc_monitor_actually_sync_objects', array( self::$instance, 'monitor_actually_sync_objects' ) );
 		}
 
 		if ( current_user_can( self::$capability ) ) {
@@ -165,6 +180,10 @@ class TMSC_Sync {
 				self::$enable_cron = '';
 			}
 
+			//wp_clear_scheduled_hook( 'tmsc_actually_sync_objects' );
+			wp_schedule_single_event( time(), 'tmsc_actually_sync_objects', array() );
+			wp_mail( 'spencer@automattic.com', '[TMSC Sync Queued]', 'Queued' );
+
 			// If we pressed the button manually, process any post processing data.
 			if ( '1' === self::$enable_cron ) {
 				wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
@@ -178,6 +197,119 @@ class TMSC_Sync {
 		exit();
 	}
 
+	public function monitor_actually_sync_objects() {
+		$tmsc_sync_message = get_option( 'tmsc-last-sync-date' );
+
+		if( empty( get_option( 'tmsc_current_sync_state' ) ) ) {
+			update_option( 'tmsc_current_sync_state', array(
+				'sync_message_unchanged_count' => 0,
+				'sync_message' => $tmsc_sync_message,
+			));
+		}
+		
+		$previous_sync_state = get_option( 'tmsc_current_sync_state' );
+
+		if( $tmsc_sync_message === $previous_sync_state['sync_message'] ) {
+			$previous_sync_state['sync_message_unchanged_count']++;
+		} else {
+			$previous_sync_state['sync_message_unchanged_count'] = 0;
+			$previous_sync_state['sync_message'] = $tmsc_sync_message;
+		}
+
+		if( $previous_sync_state['sync_message_unchanged_count'] >= 10 ) {
+			wp_schedule_single_event( time(), 'tmsc_actually_sync_objects', array() );
+			$previous_sync_state['sync_message_unchanged_count'] = 0;
+		}
+
+		wp_mail( 'spencer@automattic.com', '[Sync Monitor has just run]', var_export( $previous_sync_state, true ) );
+		update_option( 'tmsc_current_sync_state', $previous_sync_state );
+	}
+
+	public function actually_sync_objects() {
+		$args = array(
+                        'taxonomy',
+                        'object',
+                );
+
+                $assoc_args = array(
+                        'batch_size' => 10,
+                );
+
+		wp_mail( 'spencer@automattic.com', '[TMSC Sync Attempting Batch]', var_export( $completed, true ) );
+
+		if ( ! empty( $assoc_args['reset'] ) ) {
+			$this->reset();
+		}
+
+		if ( ! empty( $assoc_args['force'] ) ) {
+			add_filter( 'tmsc_force_sync_update', '__return_true' );
+		}
+
+		if ( ! empty( $assoc_args['batch-size'] ) ) {
+			$this->batch_size = (int) $assoc_args['batch-size'];
+			add_filter( 'tmsc_sync_batch_size', function() {
+				return $this->batch_size;
+			});
+		}
+
+		if ( empty( $assoc_args['post-processing'] ) ) {
+			$processors = tmsc_get_system_processors();
+			if ( ! empty( $args ) ) {
+				$processors_cursor = array();
+				foreach ( $args as $processor ) {
+					if ( in_array( $processor, array_keys( $processors ), true ) ) {
+						$processors_cursor[ $processor ] = $processors[ $processor ];
+					}
+				}
+				$processors = $processors_cursor;
+			}
+
+			update_option( 'tmsc-processors-cursor', $processors );
+			wp_cache_delete( 'tmsc-processors-cursor', 'options' );
+
+			// Set-up a persistant connection.
+			\TMSC\TMSC_Sync::instance()->get_connection();
+
+			$system_processors = get_option( 'tmsc-processors-cursor', tmsc_get_system_processors() );
+			// Register and instantiate processors
+			foreach ( $system_processors as $processor_slug => $processor_class_slug ) {
+				// Instantiate our processor.
+				$current_processor = \TMSC\TMSC::instance()->get_processor( $processor_class_slug );
+				$doing_migration = true;
+				$cursor = tmsc_get_cursor( $processor_slug );
+				do {
+					if ( empty( $cursor['completed'] ) ) {
+						wp_mail( 'spencer@automattic.com', '[TMSC Sync Running Batch]', "Processing {$processor_slug} with offset {$cursor['offset']}" );	
+						tmsc_set_sync_status( "Processing {$processor_slug} with offset {$cursor['offset']}" );
+
+						$doing_migration = true;
+						\TMSC\TMSC::instance()->migrate( $processor_class_slug );
+						$cursor = tmsc_get_cursor( $processor_slug );
+						
+						// Only process one batch at a time. Requeue this job and bail.
+						wp_mail( 'spencer@automattic.com', '[TMSC Sync Requeued]', 'Requeued' );
+						wp_schedule_single_event( time(), 'tmsc_actually_sync_objects' );
+						return;
+					} else {
+						wp_mail( 'spencer@automattic.com', '[TMSC Sync Completed Processor]', sprintf(
+                                                        __( "Sync for %s Processor Complete!\n%d\tfinal offset", 'tmsc' ),
+                                                        $processor_class_slug,
+                                                        $cursor['offset']
+                                                ));
+						$doing_migration = false;
+					}
+				} while ( $doing_migration );
+			}
+
+			\TMSC\TMSC_Sync::instance()->terminate_connection();
+		}
+
+		\TMSC\TMSC_Sync::instance()->complete_sync();
+
+		wp_mail( 'spencer@automattic.com', '[TMSC Sync Complete!]', 'Done!' );
+	}
+
+	
 	/**
 	 * A generic ajax responder that spits back a option value or returns a boolean if a comparison value is passed.
 	 */
@@ -248,48 +380,7 @@ class TMSC_Sync {
 
 	// Connect to the feed and update our post types with the latest data.
 	public function object_sync() {
-
-		$current_processor = '';
-		$current_processor_class_slug = '';
-
-		// Set-up a persistant connection.
-		self::$instance->get_connection();
-
-		// Disable SearchPress so we don't index until we are completed.
-		if ( function_exists( 'SP_Config' ) ) {
-			if ( SP_Config()->get_setting( 'active' ) ) {
-				SP_Config()->update_settings( array( 'must_init' => false, 'active' => false, 'last_beat' => false ) );
-				SP_Config()->flush();
-			}
-		}
-
-
-		$system_processors = get_option( 'tmsc-processors-cursor', tmsc_get_system_processors() );
-		// Register and instantiate processors
-		foreach ( $system_processors as $processor_slug => $processor_class_slug ) {
-			if ( empty( $current_processor ) ) {
-				$processor = \TMSC\TMSC::instance()->get_processor( $processor_class_slug );
-				$cursor = tmsc_get_cursor( $processor_slug );
-
-				if ( empty( $cursor['completed'] ) ) {
-					$current_processor = $processor_slug;
-					$current_processor_class_slug = $processor_class_slug;
-					break;
-				}
-			}
-		}
-
-
-		if ( '1' === self::$enable_cron ) {
-			if ( ! empty( $current_processor_class_slug ) ) {
-				// Migrate our objects and taxonomies.
-				\TMSC\TMSC::instance()->migrate( $current_processor_class_slug );
-				wp_schedule_single_event( time(), 'tmsc_cron_events', array() );
-			} else {
-				wp_schedule_single_event( time(), 'tmsc_complete_sync', array() );
-			}
-		}
-		self::$instance->terminate_connection();
+		
 	}
 
 	/**
@@ -477,6 +568,10 @@ class TMSC_Sync {
 				$batch_number += 1;
 				$batch_index += $batch_size;
 
+				// Only process one batch at a time. Requeue the cron job to run again.
+				//$post_processing_data = false;	
+				wp_mail( 'spencer@automattic.com', '[TMSC Sync Running Batch]', "Doing post processing. Batch #$batch_number." );	
+				tmsc_set_sync_status( "Doing post processing. Batch #$batch_number." );
 			} while ( ! empty( $post_processing_data ) );
 
 			if ( $cli ) {
