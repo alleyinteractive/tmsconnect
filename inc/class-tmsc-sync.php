@@ -183,7 +183,6 @@ class TMSC_Sync {
 			wp_clear_scheduled_hook( 'tmsc_actually_sync_objects' );
 			wp_schedule_single_event( time(), 'tmsc_actually_sync_objects', array() );
 			update_option( 'tmsc-sync-complete', false );
-			wp_mail( 'spencer@automattic.com', '[TMSC Sync Queued]', 'Queued' );
 
 			// If we pressed the button manually, process any post processing data.
 			if ( '1' === self::$enable_cron ) {
@@ -222,7 +221,6 @@ class TMSC_Sync {
 			$previous_sync_state['sync_message_unchanged_count'] = 0;
 		}
 
-		wp_mail( 'spencer@automattic.com', '[Sync Monitor has just run]', var_export( $previous_sync_state, true ) );
 		update_option( 'tmsc_current_sync_state', $previous_sync_state );
 	}
 
@@ -235,8 +233,6 @@ class TMSC_Sync {
                 $assoc_args = array(
                         'batch_size' => 10,
                 );
-
-		wp_mail( 'spencer@automattic.com', '[TMSC Sync Attempting Batch]', var_export( $completed, true ) );
 
 		if ( ! empty( $assoc_args['reset'] ) ) {
 			$this->reset();
@@ -280,7 +276,6 @@ class TMSC_Sync {
 				$cursor = tmsc_get_cursor( $processor_slug );
 				do {
 					if ( empty( $cursor['completed'] ) ) {
-						wp_mail( 'spencer@automattic.com', '[TMSC Sync Running Batch]', "Processing {$processor_slug} with offset {$cursor['offset']}" );	
 						tmsc_set_sync_status( "Processing {$processor_slug} with offset {$cursor['offset']}" );
 
 						$doing_migration = true;
@@ -288,15 +283,9 @@ class TMSC_Sync {
 						$cursor = tmsc_get_cursor( $processor_slug );
 						
 						// Only process one batch at a time. Requeue this job and bail.
-						wp_mail( 'spencer@automattic.com', '[TMSC Sync Requeued]', 'Requeued' );
 						wp_schedule_single_event( time(), 'tmsc_actually_sync_objects' );
 						return;
 					} else {
-						wp_mail( 'spencer@automattic.com', '[TMSC Sync Completed Processor]', sprintf(
-                                                        __( "Sync for %s Processor Complete!\n%d\tfinal offset", 'tmsc' ),
-                                                        $processor_class_slug,
-                                                        $cursor['offset']
-                                                ));
 						$doing_migration = false;
 					}
 				} while ( $doing_migration );
@@ -306,8 +295,6 @@ class TMSC_Sync {
 		}
 
 		\TMSC\TMSC_Sync::instance()->complete_sync();
-
-		wp_mail( 'spencer@automattic.com', '[TMSC Sync Complete!]', 'Done!' );
 	}
 
 	
@@ -576,7 +563,6 @@ class TMSC_Sync {
 
 				// Only process one batch at a time. Requeue the cron job to run again.
 				//$post_processing_data = false;	
-				wp_mail( 'spencer@automattic.com', '[TMSC Sync Running Batch]', "Doing post processing. Batch #$batch_number." );	
 				tmsc_set_sync_status( "Doing post processing. Batch #$batch_number." );
 			} while ( ! empty( $post_processing_data ) );
 
