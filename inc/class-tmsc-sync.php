@@ -83,7 +83,7 @@ class TMSC_Sync {
 				return $schedules;
 			}); 
 
-			if ( ! wp_next_scheduled ( 'tmsc_monitor_actually_sync_objects' ) ) {
+			if ( ! wp_next_scheduled ( 'tmsc_monitor_actually_sync_objects' ) && ! get_option( 'tmsc-sync-complete' ) ) {
 				wp_schedule_event( time(), 'minutely', 'tmsc_monitor_actually_sync_objects' );
 			}
 
@@ -180,8 +180,9 @@ class TMSC_Sync {
 				self::$enable_cron = '';
 			}
 
-			//wp_clear_scheduled_hook( 'tmsc_actually_sync_objects' );
+			wp_clear_scheduled_hook( 'tmsc_actually_sync_objects' );
 			wp_schedule_single_event( time(), 'tmsc_actually_sync_objects', array() );
+			update_option( 'tmsc-sync-complete', false );
 			wp_mail( 'spencer@automattic.com', '[TMSC Sync Queued]', 'Queued' );
 
 			// If we pressed the button manually, process any post processing data.
@@ -216,7 +217,7 @@ class TMSC_Sync {
 			$previous_sync_state['sync_message'] = $tmsc_sync_message;
 		}
 
-		if( $previous_sync_state['sync_message_unchanged_count'] >= 10 ) {
+		if( $previous_sync_state['sync_message_unchanged_count'] >= 1 ) {
 			wp_schedule_single_event( time(), 'tmsc_actually_sync_objects', array() );
 			$previous_sync_state['sync_message_unchanged_count'] = 0;
 		}
@@ -393,6 +394,8 @@ class TMSC_Sync {
 			delete_option( "tmsc-cursor-{$processor_slug}" );
 		}
 		delete_option( 'tmsc-processors-cursor' );
+		update_option( 'tmsc-sync-complete', true );
+		wp_clear_scheduled_hook( 'tmsc_monitor_actually_sync_objects' );
 
 		$message = date( 'Y-m-d H:i:s' );
 
@@ -450,6 +453,9 @@ class TMSC_Sync {
 				if ( ! empty( $post_processing_data ) ) {
 
 					$batch_position = ( $batch_number * $batch_size ) - ( $batch_size - 1 );
+
+					tmsc_set_sync_status( sprintf( 'Beginning a batch of %s, post %s of %s', $batch_size, $batch_position, $total_count->total ) );
+
 					if ( $cli ) {
 						\WP_CLI::line( sprintf( 'Beginning a batch of %s, post %s of %s', $batch_size, $batch_position, $total_count->total ) );
 					}
