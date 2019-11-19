@@ -77,7 +77,9 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 				}
 				$processors = $processors_cursor;
 			}
-			WP_CLI::line( 'Setting up cursor for processors: ' . implode( ', ', array_values( $processors ) ) );
+			if( defined( 'WP_CLI' ) && WP_CLI ) {
+				WP_CLI::line( 'Setting up cursor for processors: ' . implode( ', ', array_values( $processors ) ) );
+			}
 			update_option( 'tmsc-processors-cursor', $processors );
 			wp_cache_delete( 'tmsc-processors-cursor', 'options' );
 
@@ -95,19 +97,29 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 				$doing_migration = true;
 				$cursor = tmsc_get_cursor( $processor_slug );
 				do {
-
 					if ( empty( $cursor['completed'] ) ) {
-						WP_CLI::line( "Processing {$processor_slug} with offset {$cursor['offset']}" );
+						wp_mail( 'spencer@automattic.com', '[TMSC Sync Running Batch]', "Processing {$processor_slug} with offset {$cursor['offset']}" );	
+						if( defined( 'WP_CLI' ) && WP_CLI ) {
+							WP_CLI::line( "Processing {$processor_slug} with offset {$cursor['offset']}" );
+						}
 
 						$doing_migration = true;
 						\TMSC\TMSC::instance()->migrate( $processor_class_slug );
 						$cursor = tmsc_get_cursor( $processor_slug );
+						
 					} else {
-						WP_CLI::success( sprintf(
-							__( "Sync for %s Processor Complete!\n%d\tfinal offset", 'tmsc' ),
-							$processor_class_slug,
-							$cursor['offset']
-						) );
+						if( defined( 'WP_CLI' ) && WP_CLI ) {
+							WP_CLI::success( sprintf(
+								__( "Sync for %s Processor Complete!\n%d\tfinal offset", 'tmsc' ),
+								$processor_class_slug,
+								$cursor['offset']
+							) );
+						}
+						wp_mail( 'spencer@automattic.com', '[TMSC Sync Completed Processor]', sprintf(
+                                                        __( "Sync for %s Processor Complete!\n%d\tfinal offset", 'tmsc' ),
+                                                        $processor_class_slug,
+                                                        $cursor['offset']
+                                                ));
 						$doing_migration = false;
 					}
 					$this->contain_memory_leaks();
@@ -115,21 +127,33 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 			}
 
 			\TMSC\TMSC_Sync::instance()->terminate_connection();
-			WP_CLI::success( 'Processor Migrations Complete!' );
+			if( defined( 'WP_CLI' ) && WP_CLI ) {
+				WP_CLI::success( 'Processor Migrations Complete!' );
+			}
 		}
 
-		WP_CLI::line( "Post Processing Meta Data" );
+		if( defined( 'WP_CLI' ) && WP_CLI ) {
+			WP_CLI::line( "Post Processing Meta Data" );
+		}
+
 		\TMSC\TMSC_Sync::instance()->complete_sync();
-		WP_CLI::success( 'Post Processing Complete!' );
+
+		if( defined( 'WP_CLI' ) && WP_CLI ) {
+			WP_CLI::success( 'Post Processing Complete!' );
+		}
 
 		$this->finish( $timestamp_start );
+		wp_mail( 'spencer@automattic.com', '[TMSC Sync Complete!]', 'Done!' );
+		return true;
 	}
 
 	/**
 	 * Wipe out our cursor data.
 	 */
 	private function reset() {
-		WP_CLI::line( 'Resetting Cursors' );
+		if( defined( 'WP_CLI' ) && WP_CLI ) {
+			WP_CLI::line( 'Resetting Cursors' );
+		}
 		delete_option( 'tmsc-last-sync-date' );
 		wp_cache_delete( 'tmsc-last-sync-date', 'options' );
 		foreach ( tmsc_get_system_processors() as $type => $label ) {
@@ -147,9 +171,11 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 		return $this->batch_size;
 	}
 
-	private function finish( $timestamp_start ) {
-		WP_CLI::line( "Process completed in " . $this->time_format( microtime( true ) - $timestamp_start ) );
-		WP_CLI::line( "Max memory usage was " . round( memory_get_peak_usage() / 1024 / 1024, 2 ) . "M" );
+	private function finish( $timestamp_start ) {	
+		if( defined( 'WP_CLI' ) && WP_CLI ) {
+			WP_CLI::line( "Process completed in " . $this->time_format( microtime( true ) - $timestamp_start ) );
+			WP_CLI::line( "Max memory usage was " . round( memory_get_peak_usage() / 1024 / 1024, 2 ) . "M" );
+		}
 	}
 
 	private function time_format( $seconds ) {
@@ -219,8 +245,10 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 				$batch_args['offset'] = $offset;
 				$posts = get_posts( $batch_args );
 			}
-		} else {
-			WP_CLI::error( 'Please specify a post type.', true );
+		} else {	
+			if( defined( 'WP_CLI' ) && WP_CLI ) {
+				WP_CLI::error( 'Please specify a post type.', true );
+			}
 		}
 	}
 
@@ -237,7 +265,9 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 			'cache_results' => false,
 		];
 
-		WP_CLI::line( 'Beginning object deletion' );
+		if( defined( 'WP_CLI' ) && WP_CLI ) {
+			WP_CLI::line( 'Beginning object deletion' );
+		}
 
 		wp_defer_term_counting( true );
 		wp_defer_comment_counting( true );
@@ -249,8 +279,11 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 					wp_delete_post( $post_id, true );
 				}
 			}
-			WP_CLI::success( sprintf( 'Deleted %s objects', $this->batch_size ) );
-			WP_CLI::line( sprintf( '%s objects remaining...', $results->found_posts ) );
+
+			if( defined( 'WP_CLI' ) && WP_CLI ) {
+				WP_CLI::success( sprintf( 'Deleted %s objects', $this->batch_size ) );
+				WP_CLI::line( sprintf( '%s objects remaining...', $results->found_posts ) );
+			}
 
 			tmsc_stop_the_insanity();
 
@@ -260,6 +293,8 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 		wp_defer_comment_counting( false );
 		wp_cache_flush();
 
-		WP_CLI::success( 'Finished deleting all objects' );
+		if( defined( 'WP_CLI' ) && WP_CLI ) {
+			WP_CLI::success( 'Finished deleting all objects' );
+		}
 	}
 }
