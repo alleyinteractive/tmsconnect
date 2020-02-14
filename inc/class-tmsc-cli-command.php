@@ -98,7 +98,6 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 				$cursor = tmsc_get_cursor( $processor_slug );
 				do {
 					if ( empty( $cursor['completed'] ) ) {
-						wp_mail( 'spencer@automattic.com', '[TMSC Sync Running Batch]', "Processing {$processor_slug} with offset {$cursor['offset']}" );	
 						if( defined( 'WP_CLI' ) && WP_CLI ) {
 							WP_CLI::line( "Processing {$processor_slug} with offset {$cursor['offset']}" );
 						}
@@ -115,11 +114,6 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 								$cursor['offset']
 							) );
 						}
-						wp_mail( 'spencer@automattic.com', '[TMSC Sync Completed Processor]', sprintf(
-                                                        __( "Sync for %s Processor Complete!\n%d\tfinal offset", 'tmsc' ),
-                                                        $processor_class_slug,
-                                                        $cursor['offset']
-                                                ));
 						$doing_migration = false;
 					}
 					$this->contain_memory_leaks();
@@ -143,7 +137,6 @@ class TMSC_CLI_Command extends WP_CLI_Command {
 		}
 
 		$this->finish( $timestamp_start );
-		wp_mail( 'spencer@automattic.com', '[TMSC Sync Complete!]', 'Done!' );
 		return true;
 	}
 
