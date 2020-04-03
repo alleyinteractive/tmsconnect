@@ -73,4 +73,44 @@ class TMSConnect_Media_Processor extends \TMSC\Database\TMSC_Processor {
 		}
 		return array();
 	}
+
+	/**
+	 * Trash attachments which are unlinked from TMS Object's database.
+	 *
+	 * @param array $params
+	 */
+	protected function after_run( $params = array() ) {
+
+		parent::after_run( $params );
+
+		if ( ! empty( $this->data ) && ! empty( $this->parent_object->wp_parent_id ) ) {
+
+			// First get all attachments for related to WP posts.
+			$medias = get_attached_media( 'image', $this->parent_object->wp_parent_id );
+
+			if ( ! empty( $medias ) ) {
+
+				$processed_medias = array();
+
+				// Get all media attachment object of TMS Object.
+				foreach ( $this->data as $media_object ) {
+
+					$processed_medias[ $media_object->MediaMasterID ] = $media_object;
+				}
+
+				foreach ( $medias as $media ) {
+
+					$media_legacy_id = get_post_meta( $media->ID, 'tmsc_legacy_id', true );
+
+					// If TMS object is not containing any attachment id of WP_Post then
+					if ( ! isset( $processed_medias[ $media_legacy_id ] ) ) {
+
+						// Move attachment to trash.
+						wp_delete_attachment( $media->ID );
+					}
+				}
+			}
+		}
+	}
+
 }
