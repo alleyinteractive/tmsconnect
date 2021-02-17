@@ -231,7 +231,7 @@ class TMSC_Sync {
                 );
 
                 $assoc_args = array(
-                        'batch_size' => 10,
+                        'batch_size' => 200,
                 );
 
 		if ( ! empty( $assoc_args['reset'] ) ) {
