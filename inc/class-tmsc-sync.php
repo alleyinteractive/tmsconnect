@@ -96,6 +96,48 @@ class TMSC_Sync {
 			add_action( 'wp_ajax_sync_objects', array( self::$instance, 'sync_objects' ) );
 			add_action( 'wp_ajax_get_option_value', array( self::$instance, 'ajax_get_option_value' ) );
 		}
+
+		add_action( 'rest_api_init', array( self::$instance, 'create_rest_endpoints' ) );
+	}
+
+	public function create_rest_endpoints() {
+		\register_rest_route( 'tmsc/v1', '/sync/', array(
+			'methods' => 'POST',
+			'callback' => array( self::$instance, 'sync_objects' ),
+			'permission_callback' => array( self::$instance, 'authorize_rest_request' ),
+		) );
+
+		\register_rest_route( 'tmsc/v1', '/sync-status/', array(
+			'methods' => 'POST',
+			'callback' => array( self::$instance, 'ajax_get_option_value' ),
+			'permission_callback' => array( self::$instance, 'authorize_rest_request' ),
+		) );
+
+		\register_rest_route( 'tmsc/v1', '/sync-nonce/', array(
+			'methods' => 'POST',
+			'callback' => array( self::$instance, 'get_sync_nonce' ),
+			'permission_callback' => array( self::$instance, 'authorize_rest_request' ),
+		) );
+
+		\register_rest_route( 'tmsc/v1', '/status-nonce/', array(
+			'methods' => 'POST',
+			'callback' => array( self::$instance, 'get_status_nonce' ),
+			'permission_callback' => array( self::$instance, 'authorize_rest_request' ),
+		) );
+	}
+
+	public function authorize_rest_request() {
+		return current_user_can('edit_pages');
+	}
+
+	public function get_sync_nonce() {
+		\wp_send_json_success( array( 'nonce' => \wp_create_nonce( 'tmsc_object_sync' ) ) );
+		exit();
+	}
+
+	public function get_status_nonce() {
+		\wp_send_json_success( array( 'nonce' => \wp_create_nonce( 'wp_admin_js_script' ) ) );
+		exit();
 	}
 
 	/**
