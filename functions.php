@@ -54,8 +54,7 @@ function tmsc_update_cursor( $processor, $batch_size = 0, $completed = false ) {
  * @return string
  */
 function tmsc_hash_data( $data ) {
-	$serialize = function_exists( 'igbinary_serialize' ) ? 'igbinary_serialize' : 'serialize';
-	return md5( $serialize( $data ) );
+	return md5( serialize( $data ) );
 }
 
 /**

@@ -185,6 +185,8 @@ class TMSC {
 	public function migrate( $processor_class_slug, $assc_args = array() ) {
 		if ( ! defined( 'WP_IMPORTING' ) ) {
 			define( 'WP_IMPORTING', true );
+			define( 'TMSC_IMPORTING', true );
+			define( 'DOING_CRON', true );
 		}
 
 		/**
