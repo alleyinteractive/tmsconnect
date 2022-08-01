@@ -268,13 +268,18 @@ class TMSC_Sync {
 
 	public function actually_sync_objects() {
 		$args = array(
-                        'taxonomy',
-                        'object',
-                );
+			'taxonomy',
+			'object',
+		);
 
-                $assoc_args = array(
-                        'batch_size' => 200,
-                );
+		$processors_cursor = get_option( 'tmsc-processors-cursor' );
+		if ( ! empty( $processors_cursor ) ) {
+			$args = array_keys( $processors_cursor );
+		}
+
+		$assoc_args = array(
+			'batch_size' => 200,
+		);
 
 		if ( ! empty( $assoc_args['reset'] ) ) {
 			$this->reset();
